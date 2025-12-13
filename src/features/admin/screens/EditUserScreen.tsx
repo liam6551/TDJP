@@ -111,14 +111,16 @@ const SelectButton = ({ label, value, placeholder, onPress, colors, style, isRTL
     </View>
 );
 
-const RoleButton = ({ label, checked, onPress, colors }: any) => (
+const RoleButton = ({ label, checked, onPress, colors, disabled }: any) => (
     <TouchableOpacity
         onPress={onPress}
+        disabled={disabled}
         style={[
             styles.roleBtn,
             {
                 backgroundColor: checked ? '#3b82f6' : 'transparent',
-                borderColor: checked ? '#3b82f6' : colors.border
+                borderColor: checked ? '#3b82f6' : colors.border,
+                opacity: disabled ? 0.6 : 1
             }
         ]}
     >
@@ -206,22 +208,54 @@ export default function EditUserScreen() {
     // Initial Population
     useEffect(() => {
         if (editUser) {
+            console.log('EditUserScreen initializing with:', JSON.stringify(editUser, null, 2));
             setFirstName(editUser.firstName || '');
             setLastName(editUser.lastName || '');
             setEmail(editUser.email || '');
 
-            const fullPhone = editUser.phone || '';
-            const c = COUNTRIES.find(x => fullPhone.startsWith(x.dial));
-            if (c) {
-                setCountryValue(c.value);
-                setLocalPhone(fullPhone.replace(c.dial, '').trim());
+            if (editUser.country) {
+                const c = COUNTRIES.find(x => x.value === editUser.country);
+                if (c) {
+                    setCountryValue(c.value);
+                    const fullPhone = editUser.phone || '';
+                    setLocalPhone(fullPhone.replace(c.dial, '').trim());
+                } else {
+                    // Fallback if country not in list but phone might match
+                    const fullPhone = editUser.phone || '';
+                    const inferred = COUNTRIES.find(x => fullPhone.startsWith(x.dial));
+                    if (inferred) {
+                        setCountryValue(inferred.value);
+                        setLocalPhone(fullPhone.replace(inferred.dial, '').trim());
+                    } else {
+                        setLocalPhone(fullPhone);
+                    }
+                }
             } else {
-                setLocalPhone(fullPhone);
+                // Legacy fallback: infer from phone
+                const fullPhone = editUser.phone || '';
+                const c = COUNTRIES.find(x => fullPhone.startsWith(x.dial));
+                if (c) {
+                    setCountryValue(c.value);
+                    setLocalPhone(fullPhone.replace(c.dial, '').trim());
+                } else {
+                    setLocalPhone(fullPhone);
+                }
             }
 
             // Simple role logic based on 'role' string or flags
-            if (editUser.role === 'judge' || editUser.is_judge) setIsJudge(true);
-            if (editUser.role === 'coach' || editUser.is_coach) setIsCoach(true);
+            // FIX: Prioritize explicit flags if available
+            // Also infer from data presence (if club exists, likely a coach)
+            const shouldBeCoach = !!(editUser.isCoach || editUser.is_coach || editUser.club);
+            const shouldBeJudge = !!(editUser.isJudge || editUser.is_judge || editUser.judgeLevel || editUser.judge_level);
+
+            if (shouldBeCoach) setIsCoach(true);
+            if (shouldBeJudge) setIsJudge(true);
+
+            // Also check role string as fallback if flags failed
+            if (!shouldBeCoach && !shouldBeJudge) {
+                if (editUser.role === 'judge') setIsJudge(true);
+                if (editUser.role === 'coach') setIsCoach(true);
+            }
 
             // Admin status
             if (editUser.isAdmin || editUser.is_admin) setIsAdmin(true);
@@ -682,8 +716,8 @@ export default function EditUserScreen() {
                             />
                         )}
 
-                        {/* Row 4: Toggles - Only Admin can change roles, but Self can see them (implicit via fields below) */}
-                        {!isSelf && (
+                        {/* Row 4: Toggles - If NOT pending, show here. If pending, show inside box. */}
+                        {!isPending && (
                             <View style={{ flexDirection: 'row', gap: 12, marginTop: 8 }}>
                                 <View style={{ flex: 1 }}>
                                     <RoleButton
@@ -700,6 +734,17 @@ export default function EditUserScreen() {
                                         onPress={() => setIsJudge(!isJudge)}
                                         colors={colors}
                                     />
+                                    {isJudge && !isCoach && (
+                                        <Text style={{
+                                            color: '#eab308', // Yellow-500
+                                            fontSize: 12,
+                                            fontWeight: 'bold',
+                                            textAlign: 'center',
+                                            marginTop: 4
+                                        }}>
+                                            {t(lang, 'auth.errors.neutralJudge' as any) || 'שופט ניטרלי'}
+                                        </Text>
+                                    )}
                                 </View>
                             </View>
                         )}
@@ -721,6 +766,39 @@ export default function EditUserScreen() {
                                     <Text style={{ color: '#92400e', fontWeight: 'bold', marginHorizontal: 8 }}>
                                         {isRTL ? 'ממתין לאישור מנהל' : 'Pending Admin Approval'}
                                     </Text>
+                                </View>
+
+                                {/* Roles (Inside Box) - Editable to allow corrections */}
+                                <View style={{ flexDirection: 'row', gap: 12 }}>
+                                    <View style={{ flex: 1 }}>
+                                        <RoleButton
+                                            label={coachLabel}
+                                            checked={isCoach}
+                                            onPress={() => setIsCoach(!isCoach)}
+                                            colors={colors}
+                                            disabled={!canApprove}
+                                        />
+                                    </View>
+                                    <View style={{ flex: 1 }}>
+                                        <RoleButton
+                                            label={judgeLabel}
+                                            checked={isJudge}
+                                            onPress={() => setIsJudge(!isJudge)}
+                                            colors={colors}
+                                            disabled={!canApprove}
+                                        />
+                                        {isJudge && !isCoach && (
+                                            <Text style={{
+                                                color: '#eab308', // Yellow-500
+                                                fontSize: 12,
+                                                fontWeight: 'bold',
+                                                textAlign: 'center',
+                                                marginTop: 4
+                                            }}>
+                                                {t(lang, 'auth.errors.neutralJudge' as any) || 'שופט ניטרלי'}
+                                            </Text>
+                                        )}
+                                    </View>
                                 </View>
 
                                 {/* Row 5: Club | Judge Level (Inside Box) */}
@@ -762,17 +840,19 @@ export default function EditUserScreen() {
                                             {t(lang, 'auth.brevet')}
                                         </Text>
                                         <View style={{ flexDirection: 'row', gap: 8, justifyContent: 'flex-end' }}>
-                                            {[4, 3, 2, 1].map(l => (
-                                                <View
+                                            {(isRTL ? [4, 3, 2, 1] : [1, 2, 3, 4]).map(l => (
+                                                <TouchableOpacity
                                                     key={l}
+                                                    onPress={() => setBrevet(String(l))}
+                                                    disabled={!canApprove}
                                                     style={[styles.circleBtn, {
                                                         borderColor: brevet === String(l) ? '#3b82f6' : colors.border,
                                                         backgroundColor: brevet === String(l) ? '#3b82f6' : 'white',
-                                                        opacity: 0.6
+                                                        opacity: canApprove ? 1 : 0.6
                                                     }]}
                                                 >
                                                     <Text style={{ color: brevet === String(l) ? 'white' : colors.text, fontWeight: 'bold' }}>{l}</Text>
-                                                </View>
+                                                </TouchableOpacity>
                                             ))}
                                         </View>
                                     </View>

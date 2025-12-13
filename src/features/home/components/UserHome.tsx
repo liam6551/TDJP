@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Alert, Modal } from 'react-native';
 import { useAppTheme } from '@/shared/theme/theme';
 import { useLang } from '@/shared/state/lang';
 import { t } from '@/shared/i18n';
@@ -9,31 +9,72 @@ import { Ionicons } from '@expo/vector-icons';
 import DailyQuote from './DailyQuote';
 import { useNotifications } from '@/shared/state/useNotifications';
 import NotificationsModal from '@/shared/ui/NotificationsModal';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+
+import * as SecureStore from 'expo-secure-store';
 
 export default function UserHome() {
     const { colors } = useAppTheme();
     const { lang } = useLang();
-    const { user, adminUpdateUser } = useAuth();
+    const { user, adminUpdateUser, refreshUser } = useAuth();
     const [showNotifications, setShowNotifications] = useState(false);
-    const { notifications, unreadCount, markRead } = useNotifications(!!user);
+    // const { notifications, unreadCount, markRead } = useNotifications(!!user); // Notification logic separate now
+    const { notifications, unreadCount, markRead, fetchNotifications, markAllRead } = useNotifications(!!user); // Keep for bell icon
     const navigation = useNavigation<any>();
+
+    const [statusDialog, setStatusDialog] = useState<{ visible: boolean, type: 'approved' | 'rejected' | null }>({ visible: false, type: null });
 
     const isRTL = lang === 'he';
     const textAlign = isRTL ? 'right' : 'left';
 
-    const isPending = user?.profileStatus === 'pending';
-    const isRejected = user?.profileStatus === 'rejected';
+    // Check statuses on focus (Show Once Logic)
+    useFocusEffect(
+        useCallback(() => {
+            if (!user) return;
+
+            const checkStatus = async () => {
+                // Fetch latest user data to ensure status is fresh
+                const freshUser = await refreshUser();
+
+                // Force notification refresh immediately
+                fetchNotifications();
+
+                if (!freshUser) return; // Should not happen if logged in
+
+                const key = `lastSeenStatus_${freshUser.id}`;
+                const lastSeen = await SecureStore.getItemAsync(key);
+                const current = freshUser.profileStatus;
+
+                // Reset logic: If pending, reset seen unless it's already pending
+                if (current === 'pending' && lastSeen !== 'pending') {
+                    await SecureStore.setItemAsync(key, 'pending');
+                    return;
+                }
+
+                // Show conditions
+                if (current === 'approved' && lastSeen !== 'approved') {
+                    setStatusDialog({ visible: true, type: 'approved' });
+                } else if (current === 'rejected' && lastSeen !== 'rejected') {
+                    setStatusDialog({ visible: true, type: 'rejected' });
+                }
+            };
+
+            checkStatus();
+        }, []) // Empty dependency array as we want this to run on every focus
+    );
+
+    const handleDialogClose = async () => {
+        if (user?.profileStatus && user?.id) {
+            const key = `lastSeenStatus_${user.id}`;
+            await SecureStore.setItemAsync(key, user.profileStatus);
+        }
+        setStatusDialog({ visible: false, type: null });
+    };
 
     const handleAction = async (action: 'approve' | 'reject' | 'edit', targetUserId: string) => {
         try {
             if (action === 'edit') {
                 setShowNotifications(false);
-                // We need to fetch the user object first ideally, but for now let's hope we can navigate or pass id
-                // But AdminUsersScreen passes a User object. 
-                // Let's assume we can navigate to AdminUsers or similar? 
-                // Actually, EditUser expects a User object. We might need to fetch it.
-                // For now, let's navigate to Admin User Management so they can find them.
                 navigation.navigate('AdminUsers');
                 return;
             }
@@ -52,151 +93,136 @@ export default function UserHome() {
     };
 
     return (
-        <ScrollView contentContainerStyle={styles.scroll}>
+        <View style={{ flex: 1 }}>
             <NotificationsModal
                 visible={showNotifications}
                 onClose={() => setShowNotifications(false)}
                 notifications={notifications}
                 markRead={markRead}
+                markAllRead={markAllRead}
                 onAction={handleAction}
                 colors={colors}
                 isRTL={isRTL}
             />
 
-            {/* Header Section */}
-            <View style={[styles.header, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
-                <View style={{ flex: 1, paddingHorizontal: 4 }}>
-                    <Text style={[styles.greeting, { color: colors.text, textAlign }]}>
-                        {t(lang, 'home.greeting')}
-                    </Text>
-                    <Text style={[styles.username, { color: colors.tint, textAlign }]}>
-                        {user?.fullName || user?.name}
-                    </Text>
-                </View>
-
-                <TouchableOpacity
-                    onPress={() => setShowNotifications(true)}
-                    style={{ position: 'relative', padding: 8 }}
-                >
-                    <Ionicons name="notifications-outline" size={28} color={colors.text} />
-                    {unreadCount > 0 && (
+            {/* Status Dialog (Success/Reject) */}
+            <Modal
+                transparent
+                visible={statusDialog.visible}
+                animationType="fade"
+                onRequestClose={handleDialogClose}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={[styles.modalCard, { backgroundColor: colors.card }]}>
                         <View style={{
-                            position: 'absolute', top: 4, right: 4,
-                            backgroundColor: 'red', borderRadius: 10,
-                            minWidth: 20, height: 20,
-                            justifyContent: 'center', alignItems: 'center'
+                            width: 60, height: 60, borderRadius: 30,
+                            backgroundColor: statusDialog.type === 'approved' ? '#dcfce7' : '#fee2e2',
+                            alignItems: 'center', justifyContent: 'center', marginBottom: 16
                         }}>
-                            <Text style={{ color: 'white', fontSize: 10, fontWeight: 'bold' }}>{unreadCount}</Text>
+                            <Ionicons
+                                name={statusDialog.type === 'approved' ? "checkmark-circle" : "close-circle"}
+                                size={40}
+                                color={statusDialog.type === 'approved' ? "#16a34a" : "#dc2626"}
+                            />
                         </View>
-                    )}
-                </TouchableOpacity>
-            </View>
 
-            {/* Status Banners */}
-            {isPending && (
-                <View style={{
-                    backgroundColor: '#fffbeb',
-                    padding: 12,
-                    marginHorizontal: 20,
-                    marginBottom: 16,
-                    borderRadius: 12,
-                    borderWidth: 1,
-                    borderColor: '#fcd34d',
-                    flexDirection: isRTL ? 'row-reverse' : 'row',
-                    alignItems: 'center',
-                    shadowColor: "#f59e0b",
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.1,
-                    shadowRadius: 4,
-                    elevation: 3
-                }}>
-                    <Ionicons name="alert-circle" size={28} color="#f59e0b" />
-                    <View style={{ flex: 1, marginHorizontal: 12 }}>
-                        <Text style={{ color: '#92400e', fontWeight: 'bold', fontSize: 16, textAlign: isRTL ? 'right' : 'left' }}>
-                            {isRTL ? 'ממתין לאישור' : 'Pending Approval'}
+                        <Text style={[styles.modalTitle, { color: colors.text }]}>
+                            {statusDialog.type === 'approved' ? t(lang, 'home.statusDialog.approved.title' as any) : t(lang, 'home.statusDialog.rejected.title' as any)}
                         </Text>
-                        <Text style={{ color: '#b45309', fontSize: 14, textAlign: isRTL ? 'right' : 'left', marginTop: 2 }}>
-                            {isRTL ? 'דרגת השיפוט והאגודה שלך ממתינים לאישור מנהל.' : 'Your judge level and club are pending administrator approval.'}
+
+                        <Text style={[styles.modalBody, { color: colors.muted }]}>
+                            {statusDialog.type === 'approved' ? t(lang, 'home.statusDialog.approved.body' as any) : t(lang, 'home.statusDialog.rejected.body' as any)}
                         </Text>
+
+                        <TouchableOpacity
+                            onPress={handleDialogClose}
+                            style={[
+                                styles.modalBtn,
+                                { backgroundColor: statusDialog.type === 'approved' ? '#16a34a' : '#dc2626' }
+                            ]}
+                        >
+                            <Text style={styles.modalBtnText}>{t(lang, 'home.statusDialog.ok' as any)}</Text>
+                        </TouchableOpacity>
                     </View>
                 </View>
-            )}
+            </Modal>
 
-            {isRejected && (
-                <View style={{
-                    backgroundColor: '#fef2f2',
-                    padding: 12,
-                    marginHorizontal: 20,
-                    marginBottom: 16,
-                    borderRadius: 12,
-                    borderWidth: 1,
-                    borderColor: '#fca5a5',
-                    flexDirection: isRTL ? 'row-reverse' : 'row',
-                    alignItems: 'center',
-                    shadowColor: "#ef4444",
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.1,
-                    shadowRadius: 4,
-                    elevation: 3
-                }}>
-                    <Ionicons name="close-circle" size={28} color="#ef4444" />
-                    <View style={{ flex: 1, marginHorizontal: 12 }}>
-                        <Text style={{ color: '#991b1b', fontWeight: 'bold', fontSize: 16, textAlign: isRTL ? 'right' : 'left' }}>
-                            {isRTL ? 'פרופיל נדחה' : 'Profile Rejected'}
+            <ScrollView contentContainerStyle={styles.scroll} style={{ flex: 1 }}>
+                {/* Header Section */}
+                <View style={[styles.header, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+                    <View style={{ flex: 1, paddingHorizontal: 4 }}>
+                        <Text style={[styles.greeting, { color: colors.text, textAlign }]}>
+                            {t(lang, 'home.greeting')}
                         </Text>
-                        <Text style={{ color: '#b91c1c', fontSize: 14, textAlign: isRTL ? 'right' : 'left', marginTop: 2 }}>
-                            {isRTL ? 'הבקשה שלך לא אושרה. אנא עדכן פרטים או צור קשר.' : 'Your request was not approved. Please update details or contact support.'}
+                        <Text style={[styles.username, { color: colors.tint, textAlign }]}>
+                            {user?.fullName || user?.name}
                         </Text>
                     </View>
+
+                    <TouchableOpacity
+                        onPress={() => setShowNotifications(true)}
+                        style={{ position: 'relative', padding: 8 }}
+                    >
+                        <Ionicons name="notifications-outline" size={28} color={colors.text} />
+                        {unreadCount > 0 && (
+                            <View style={{
+                                position: 'absolute', top: 4, right: 4,
+                                backgroundColor: 'red', borderRadius: 10,
+                                minWidth: 20, height: 20,
+                                justifyContent: 'center', alignItems: 'center'
+                            }}>
+                                <Text style={{ color: 'white', fontSize: 10, fontWeight: 'bold' }}>{unreadCount}</Text>
+                            </View>
+                        )}
+                    </TouchableOpacity>
                 </View>
-            )}
 
-            {/* Daily Quote - Hero Style (Replaces Daily Element) */}
-            <View style={styles.section}>
-                <LinearGradient
-                    colors={['#667eea', '#764ba2'] as const}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.heroCard}
-                >
-                    <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', width: '100%', marginBottom: 12 }}>
-                        <Ionicons name="bulb" size={24} color="rgba(255,255,255,0.9)" />
-                        <Text style={[styles.heroTitle, { marginHorizontal: 8, flex: 1, textAlign: isRTL ? 'right' : 'left' }]}>
-                            {isRTL ? 'הציטוט היומי' : 'Daily Quote'}
-                        </Text>
-                    </View>
+                {/* Daily Quote - Hero Style (Replaces Daily Element) */}
+                <View style={styles.section}>
+                    <LinearGradient
+                        colors={['#667eea', '#764ba2'] as const}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={styles.heroCard}
+                    >
+                        <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', width: '100%', marginBottom: 12 }}>
+                            <Ionicons name="bulb" size={24} color="rgba(255,255,255,0.9)" />
+                            <Text style={[styles.heroTitle, { marginHorizontal: 8, flex: 1, textAlign: isRTL ? 'right' : 'left' }]}>
+                                {isRTL ? 'הציטוט היומי' : 'Daily Quote'}
+                            </Text>
+                        </View>
 
-                    <View style={styles.heroContent}>
-                        <DailyQuote />
-                    </View>
-                </LinearGradient>
-            </View>
+                        <View style={styles.heroContent}>
+                            <DailyQuote />
+                        </View>
+                    </LinearGradient>
+                </View>
 
-            {/* Quick Actions */}
-            <View style={styles.grid}>
-                <QuickAction
-                    icon="flash"
-                    label={t(lang, 'home.quickActions.quiz')}
-                    color={['#ff9a9e', '#fecfef'] as const}
-                />
-                <QuickAction
-                    icon="calculator"
-                    label={t(lang, 'home.quickActions.calc')}
-                    color={['#a18cd1', '#fbc2eb'] as const}
-                />
-                <QuickAction
-                    icon="stats-chart"
-                    label={t(lang, 'home.quickActions.stats')}
-                    color={['#fbc2eb', '#a6c1ee'] as const}
-                />
-                <QuickAction
-                    icon="book"
-                    label={t(lang, 'home.quickActions.rules')}
-                    color={['#84fab0', '#8fd3f4'] as const}
-                />
-            </View>
-
-        </ScrollView>
+                {/* Quick Actions */}
+                <View style={styles.grid}>
+                    <QuickAction
+                        icon="flash"
+                        label={t(lang, 'home.quickActions.quiz')}
+                        color={['#ff9a9e', '#fecfef'] as const}
+                    />
+                    <QuickAction
+                        icon="calculator"
+                        label={t(lang, 'home.quickActions.calc')}
+                        color={['#a18cd1', '#fbc2eb'] as const}
+                    />
+                    <QuickAction
+                        icon="stats-chart"
+                        label={t(lang, 'home.quickActions.stats')}
+                        color={['#fbc2eb', '#a6c1ee'] as const}
+                    />
+                    <QuickAction
+                        icon="book"
+                        label={t(lang, 'home.quickActions.rules')}
+                        color={['#84fab0', '#8fd3f4'] as const}
+                    />
+                </View>
+            </ScrollView>
+        </View>
     );
 }
 
@@ -293,4 +319,45 @@ const styles = StyleSheet.create({
         fontSize: 14,
         textAlign: 'center',
     },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 24
+    },
+    modalCard: {
+        width: '100%',
+        borderRadius: 24,
+        padding: 24,
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 10
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 8,
+        textAlign: 'center'
+    },
+    modalBody: {
+        fontSize: 16,
+        textAlign: 'center',
+        marginBottom: 24,
+        lineHeight: 22
+    },
+    modalBtn: {
+        paddingHorizontal: 32,
+        paddingVertical: 12,
+        borderRadius: 16,
+        elevation: 2
+    },
+    modalBtnText: {
+        color: 'white',
+        fontWeight: 'bold',
+        fontSize: 16
+    }
 });

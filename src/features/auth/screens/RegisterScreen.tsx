@@ -186,13 +186,13 @@ export default function RegisterScreen() {
             }
 
             // Role
-            if (editUser.role === 'judge') setIsJudge(true);
-            if (editUser.role === 'coach') setIsCoach(true);
+            if (editUser.role === 'judge' || editUser.isJudge || editUser.is_judge) setIsJudge(true);
+            if (editUser.role === 'coach' || editUser.isCoach || editUser.is_coach) setIsCoach(true);
             // TODO: Club/Level/Avatar might need complex mapping if backend format differs, assuming standard for now
             if (editUser.club) setClub(editUser.club);
-            if (editUser.judgeLevel) setJudgeLevel(editUser.judgeLevel);
-            if (editUser.brevetLevel) setBrevet(String(editUser.brevetLevel));
-            if (editUser.avatarUrl) setAvatar(editUser.avatarUrl);
+            if (editUser.judgeLevel || editUser.judge_level) setJudgeLevel(editUser.judgeLevel || editUser.judge_level);
+            if (editUser.brevetLevel || editUser.brevet_level) setBrevet(String(editUser.brevetLevel || editUser.brevet_level));
+            if (editUser.avatarUrl || editUser.avatar_url) setAvatar(editUser.avatarUrl || editUser.avatar_url);
         }
     }, [editUser]);
 

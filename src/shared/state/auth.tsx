@@ -38,6 +38,7 @@ type AuthContextType = {
   changePasswordStart: () => Promise<string>; // Returns verificationId
   changePasswordVerify: (vid: string, code: string) => Promise<void>;
   changePasswordComplete: (vid: string, code: string, pass: string) => Promise<void>;
+  refreshUser: () => Promise<User | null>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -72,7 +73,7 @@ async function apiFetch(path: string, { method = 'GET', body, auth = true }: any
   try {
     data = JSON.parse(text);
   } catch (e) {
-    console.log('API Parse Error:', text); // Log raw output for debugging
+    // console.log('API Parse Error:', text);
   }
 
   if (!res.ok) {
@@ -94,6 +95,11 @@ function normalizeUser(u: any): User | null {
     fullName: full,
     isAdmin: (u.isAdmin != null ? u.isAdmin : u.is_admin),
     profileStatus: u.profileStatus || u.profile_status,
+    isCoach: (u.isCoach != null ? u.isCoach : u.is_coach),
+    isJudge: (u.isJudge != null ? u.isJudge : u.is_judge),
+    judgeLevel: u.judgeLevel || u.judge_level,
+    brevetLevel: u.brevetLevel || u.brevet_level,
+    avatarUrl: u.avatarUrl || u.avatar_url,
     createdAt: u.createdAt || u.created_at,
   };
 }
@@ -201,18 +207,13 @@ export async function apiForgotPasswordStart(email: string) {
 export async function apiForgotPasswordVerify(verificationId: string, code: string) {
   await apiFetch('/auth/forgot-password/verify', { method: 'POST', auth: false, body: { verificationId, code } });
 }
-
 export async function apiForgotPasswordComplete(verificationId: string, code: string, newPassword: string) {
   await apiFetch('/auth/forgot-password/complete', { method: 'POST', auth: false, body: { verificationId, code, newPassword } });
 }
 
-export async function apiGetNotifications() {
-  return await apiFetch('/notifications');
-}
-
-export async function apiMarkNotificationRead(id: string) {
-  return await apiFetch(`/notifications/${id}/read`, { method: 'POST' });
-}
+export const apiGetNotifications = async () => apiFetch('/notifications');
+export const apiMarkNotificationRead = async (id: string) => apiFetch(`/notifications/${id}/read`, { method: 'POST' });
+export const apiMarkAllNotificationsRead = async () => apiFetch(`/notifications/read-all`, { method: 'POST' });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -249,8 +250,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Safety: Fetch fresh user data from /me to ensure we have all fields (like profileStatus)
     try {
       const fullUser = await apiMe();
-      setUser(fullUser);
-      return fullUser;
+      if (fullUser) {
+        setUser(fullUser);
+        return fullUser;
+      } else {
+        console.warn('Login: /me returned empty, using initialUser');
+        setUser(initialUser);
+        return initialUser;
+      }
     } catch (e) {
       console.warn('Failed to fetch fresh /me on login, reusing login result', e);
       setUser(initialUser);
@@ -279,10 +286,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   };
 
+  const refreshUser = async () => {
+    try {
+      const u = await apiMe();
+      setUser(u);
+      return u;
+    } catch (e) {
+      console.warn('Failed to refresh user', e);
+      return null;
+    }
+  };
+
   return (
     <AuthContext.Provider value={{
       user, loading, login, register, registerStart, registerVerify, logout,
+      refreshUser,
       adminGetUsers: apiAdminGetUsers,
+
       adminGetRawUsers: apiAdminGetRawUsers,
       adminUpdateUser: apiAdminUpdateUser,
       adminRejectUser: apiAdminRejectUser,

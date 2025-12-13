@@ -1230,6 +1230,14 @@ app.post('/notifications/:id/read', requireAuth, async (req, res) => {
   res.json({ ok: true });
 });
 
+app.post('/notifications/read-all', requireAuth, async (req, res) => {
+  await pool.query(
+    `UPDATE notifications SET is_read=true WHERE user_id=$1`,
+    [req.user.uid]
+  );
+  res.json({ ok: true });
+});
+
 /* ---------- Global error handler ---------- */
 app.use((err, req, res, _next) => {
   console.error('Global error handler:', err);

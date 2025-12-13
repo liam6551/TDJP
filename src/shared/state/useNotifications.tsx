@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { apiGetNotifications, apiMarkNotificationRead } from './auth';
+import { apiGetNotifications, apiMarkNotificationRead, apiMarkAllNotificationsRead } from './auth';
 
 export type Notification = {
     id: string;
@@ -37,6 +37,15 @@ export function useNotifications(enabled: boolean = true) {
         }
     };
 
+    const markAllRead = async () => {
+        try {
+            await apiMarkAllNotificationsRead();
+            setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+        } catch (e) {
+            console.error('Failed to mark all read', e);
+        }
+    };
+
     useEffect(() => {
         if (enabled) {
             fetchNotifications();
@@ -47,5 +56,5 @@ export function useNotifications(enabled: boolean = true) {
 
     const unreadCount = notifications.filter(n => !n.is_read).length;
 
-    return { notifications, unreadCount, fetchNotifications, markRead, loading };
+    return { notifications, unreadCount, fetchNotifications, markRead, markAllRead, loading };
 }
