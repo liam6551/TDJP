@@ -10,7 +10,7 @@ const he = {
   },
 
   home: {
-    greeting: 'ברוך הבא',
+    greeting: 'ברוך הבא,',
     dailyQuoteTitle: 'הציטוט היומי',
     guestTitle: 'ברוכים הבאים ל-TDJP',
     guestSubtitle: 'העוזר האישי שלך לשיפוט טאמבלינג',
@@ -20,7 +20,14 @@ const he = {
       quiz: 'מבחן מהיר',
       calc: 'מחשבון',
       stats: 'הסטטיסטיקה שלי',
-      rules: 'חוקה'
+      rules: 'חומר עיוני',
+    },
+    theoretical: {
+      title: 'חומר עיוני',
+      code: 'חוקה בינלאומית 2025-2028',
+      ageGroups: 'שנתונים 2025-2026',
+      technical: 'תוכנית מקצועית 2025-2026',
+      open: 'פתח',
     },
     statusDialog: {
       approved: {
@@ -57,6 +64,7 @@ const he = {
     submitLogin: 'התחבר',
     submitRegister: 'הרשמה',
     rememberMe: 'זכור משתמש',
+    confirmPassword: 'אימות סיסמה',
     noAccount: 'אין לך חשבון? ',
     registerLink: 'הירשם כאן',
     placeholders: {
@@ -82,6 +90,7 @@ const he = {
       invalidPhone: 'מספר טלפון לא תקין',
       phoneTaken: 'מספר הטלפון כבר רשום במערכת',
       passwordShort: 'הסיסמה חייבת להכיל לפחות 8 תווים',
+      passwordMismatch: 'הסיסמאות אינן תואמות',
       selectClub: 'נא לבחור אגודה',
       invalidJudgeLevel: 'דרגת שיפוט לא חוקית',
       selectBrevet: 'נא לבחור דרגת ברווה',
@@ -118,7 +127,7 @@ const he = {
       sensitiveChangeBody: 'שינית פרטי שיפוט/אגודה.\nהבקשה הועברה לאישור מנהל.',
       deleteConfirmBtn: 'מחק',
       save: 'שמור',
-      reject: 'דחה בקשה',
+      reject: 'דחה',
       rejectConfirm: 'האם לדחות את המשתמש? פרטי האגודה/שיפוט יאופסו.',
       rejectSuccess: 'המשתמש נדחה בהצלחה',
       approveSuccess: 'המשתמש אושר בהצלחה',

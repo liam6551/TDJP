@@ -183,6 +183,8 @@ export default function EditUserScreen() {
     const [brevet, setBrevet] = useState('1');
 
     const [isSaving, setIsSaving] = useState(false);
+    const [isApproving, setIsApproving] = useState(false);
+    const [isRejecting, setIsRejecting] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [successDialog, setSuccessDialog] = useState<{ visible: boolean, title: string, message: string, onConfirm?: () => void }>({ visible: false, title: '', message: '' });
     const [showControls, setShowControls] = useState(false);
@@ -326,7 +328,7 @@ export default function EditUserScreen() {
     const canApprove = currentUser?.isAdmin && !isSelf && editUser?.profileStatus === 'pending';
 
     const handleApprove = async () => {
-        setIsSaving(true);
+        setIsApproving(true);
         try {
             await adminUpdateUser(editUser.id, {
                 // We send current state fields to ensure they are saved if edited
@@ -360,7 +362,7 @@ export default function EditUserScreen() {
                 confirmLabel: 'OK',
             });
         } finally {
-            setIsSaving(false);
+            setIsApproving(false);
         }
     };
 
@@ -380,7 +382,7 @@ export default function EditUserScreen() {
             cancelTextColor: colors.text,
             onConfirm: async () => {
                 setAlertConfig(prev => ({ ...prev, visible: false }));
-                setIsSaving(true);
+                setIsRejecting(true);
                 try {
                     await adminRejectUser(editUser.id);
                     setSuccessDialog({
@@ -401,7 +403,7 @@ export default function EditUserScreen() {
                         confirmLabel: 'OK',
                     });
                 } finally {
-                    setIsSaving(false);
+                    setIsRejecting(false);
                 }
             }
         });
@@ -584,28 +586,7 @@ export default function EditUserScreen() {
                     {/* Avatar Section */}
                     <View style={{ alignItems: 'center', marginBottom: 20 }}>
                         {canApprove && (
-                            <TouchableOpacity
-                                onPress={handleApprove}
-                                style={{
-                                    backgroundColor: '#f59e0b',
-                                    paddingHorizontal: 20,
-                                    paddingVertical: 10,
-                                    borderRadius: 20,
-                                    marginBottom: 20,
-                                    flexDirection: isRTL ? 'row-reverse' : 'row',
-                                    alignItems: 'center',
-                                    shadowColor: "#f59e0b",
-                                    shadowOffset: { width: 0, height: 2 },
-                                    shadowOpacity: 0.3,
-                                    shadowRadius: 4,
-                                    elevation: 5
-                                }}
-                            >
-                                <Ionicons name="checkmark-circle" size={20} color="white" />
-                                <Text style={{ color: 'white', fontWeight: 'bold', marginHorizontal: 8, fontSize: 16 }}>
-                                    {isRTL ? 'אשר משתמש' : 'Approve User'}
-                                </Text>
-                            </TouchableOpacity>
+                            <View />
                         )}
                         <TouchableOpacity onPress={() => setShowControls(!showControls)} activeOpacity={0.8}>
                             <View style={[styles.avatarCircle, { backgroundColor: '#3b82f6', overflow: 'hidden' }]}>
@@ -917,21 +898,21 @@ export default function EditUserScreen() {
                         {
                             canApprove ? (
                                 <View style={{ flexDirection: 'row', gap: 12, marginTop: 20 }}>
-                                    <TouchableOpacity onPress={handleReject} disabled={isSaving || isDeleting} style={{ flex: 1 }}>
+                                    <TouchableOpacity onPress={handleReject} disabled={isRejecting || isApproving || isDeleting} style={{ flex: 1 }}>
                                         <View style={[styles.submitBtn, { backgroundColor: '#ef4444' }]}>
-                                            {isSaving ? (
+                                            {isRejecting ? (
                                                 <ActivityIndicator color="white" />
                                             ) : (
                                                 <Text style={styles.submitBtnText}>{t(lang, 'auth.editUser.reject') || 'דחה'}</Text>
                                             )}
                                         </View>
                                     </TouchableOpacity>
-                                    <TouchableOpacity onPress={handleApprove} disabled={isSaving || isDeleting} style={{ flex: 1 }}>
+                                    <TouchableOpacity onPress={handleApprove} disabled={isRejecting || isApproving || isDeleting} style={{ flex: 1 }}>
                                         <LinearGradient
                                             colors={['#10b981', '#059669']}
                                             style={styles.submitBtn}
                                         >
-                                            {isSaving ? (
+                                            {isApproving ? (
                                                 <ActivityIndicator color="white" />
                                             ) : (
                                                 <Text style={styles.submitBtnText}>{'אשר'}</Text>

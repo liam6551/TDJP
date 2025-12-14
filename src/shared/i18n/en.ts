@@ -10,7 +10,7 @@ const en = {
   },
 
   home: {
-    greeting: 'Welcome Back',
+    greeting: 'Welcome Back,',
     dailyQuoteTitle: 'Daily Quote',
     guestTitle: 'Welcome to TDJP',
     guestSubtitle: 'Your personal tumbling judging companion',
@@ -20,8 +20,26 @@ const en = {
       quiz: 'Quick Quiz',
       calc: 'Calculator',
       stats: 'My Stats',
-      rules: 'Rulebook'
-    }
+      rules: 'Study Material',
+    },
+    theoretical: {
+      title: 'Study Material',
+      code: 'Intl. Code of Points 2025-2028',
+      ageGroups: 'Age Groups 2025-2026',
+      technical: 'Technical Program 2025-2026',
+      open: 'Open',
+    },
+    statusDialog: {
+      approved: {
+        title: 'Congratulations!',
+        body: 'Your judge and coach details have been approved successfully'
+      },
+      rejected: {
+        title: 'Request Rejected',
+        body: 'Your judge and coach details were rejected.\nPlease resubmit your request or contact us.'
+      },
+      ok: 'OK'
+    },
   },
 
   auth: {
@@ -46,6 +64,7 @@ const en = {
     submitLogin: 'Sign In',
     submitRegister: 'Sign Up',
     rememberMe: 'Remember me',
+    confirmPassword: 'Confirm Password',
     noAccount: "Don't have an account? ",
     registerLink: 'Sign up here',
     placeholders: {
@@ -71,6 +90,7 @@ const en = {
       invalidPhone: 'Invalid phone number',
       phoneTaken: 'Phone number is already registered',
       passwordShort: 'Password must be at least 8 characters',
+      passwordMismatch: 'Passwords do not match',
       selectClub: 'Please select a club',
       invalidJudgeLevel: 'Invalid judge level',
       selectBrevet: 'Please select a brevet level',

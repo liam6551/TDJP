@@ -46,28 +46,17 @@ export default function QuestionHeader({
     ratio <= 0
       ? ''
       : ratio >= 1
-      ? ''
-      : `M ${cx} ${cy} L ${sx} ${sy} A ${r} ${r} 0 ${largeArc} 1 ${ex} ${ey} Z`;
+        ? ''
+        : `M ${cx} ${cy} L ${sx} ${sy} A ${r} ${r} 0 ${largeArc} 1 ${ex} ${ey} Z`;
   // -------------------------------------
 
   // רכיב הטיימר
   const TimerNode = (
     <View style={styles.timerBox}>
-      <Svg width={size} height={size} style={{ transform: [{ rotate: '-90deg' }] }}>
+      <Svg width={size} height={size}>
         <Circle cx={cx} cy={cy} r={r} stroke={colors.border} strokeWidth={stroke} fill="none" />
         {timed && ratio > 0 && ratio < 1 && <Path d={pieD} fill={colors.tint} />}
         {timed && ratio >= 1 && <Circle cx={cx} cy={cy} r={r} fill={colors.tint} />}
-        {timed && (
-          <Circle
-            cx={cx} cy={cy} r={r}
-            stroke={colors.tint}
-            strokeWidth={stroke}
-            fill="none"
-            strokeDasharray={`${c} ${c}`}
-            strokeDashoffset={offset}
-            strokeLinecap="round"
-          />
-        )}
       </Svg>
       <View style={styles.timerCenter}>
         <Text style={[styles.timerText, { color: colors.text }]}>

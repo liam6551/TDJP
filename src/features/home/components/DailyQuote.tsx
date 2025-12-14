@@ -16,14 +16,14 @@ export default function DailyQuote() {
     return (
         <View style={styles.container}>
             {/* Decorative Icon or Quote Mark */}
-            <Text style={styles.quoteMark}>❝</Text>
+            {/* Decorative Icon or Quote Mark - Removed per user request */}
 
             <Text style={[styles.text, { textAlign }]}>
                 {lang === 'he' ? quote.text.he : quote.text.en}
             </Text>
 
             <Text style={[styles.author, { textAlign }]}>
-                — {quote.author}
+                — {quote.author} —
             </Text>
         </View>
     );

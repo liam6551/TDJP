@@ -29,17 +29,28 @@ export default function NotificationsModal({ visible, onClose, notifications, ma
         }
     }, [user?.id]);
 
+    const [sessionThreshold, setSessionThreshold] = useState<string | null>(null);
+
     // Update Timestamp on Tab View
     useEffect(() => {
         if (visible && user?.id) {
             const now = new Date().toISOString();
             if (activeTab === 'notifications') {
+                // Capture the PREVIOUS lastViewedNotifs into sessionThreshold for this session
+                // We do this only once per open session (if sessionThreshold is null)
+                // If lastViewedNotifs is null, it means first time ever, so we can treat all as new (or handle specifically)
+                if (sessionThreshold === null) {
+                    setSessionThreshold(lastViewedNotifs || '1970-01-01');
+                }
+
                 SecureStore.setItemAsync(`lastViewedNotifs_${user.id}`, now);
                 setLastViewedNotifs(now);
             } else if (activeTab === 'updates') {
                 SecureStore.setItemAsync(`lastViewedUpdates_${user.id}`, now);
                 setLastViewedUpdates(now);
             }
+        } else if (!visible) {
+            setSessionThreshold(null);
         }
     }, [visible, activeTab, user?.id]);
 
@@ -86,8 +97,12 @@ export default function NotificationsModal({ visible, onClose, notifications, ma
 
     return (
         <Modal visible={visible} transparent animationType="fade">
-            <Pressable style={styles.overlay} onPress={onClose}>
-                <Pressable style={[styles.content, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={() => { }}>
+            <View style={styles.overlayContainer}>
+                {/* Backdrop - Handles Close */}
+                <Pressable style={styles.backdrop} onPress={onClose} />
+
+                {/* Content - Sits on top */}
+                <View style={[styles.content, { backgroundColor: colors.card, borderColor: colors.border }]}>
 
                     {/* Header with Close Button */}
                     <View style={[styles.header, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
@@ -101,12 +116,12 @@ export default function NotificationsModal({ visible, onClose, notifications, ma
                         <TouchableOpacity
                             onPress={() => setActiveTab('notifications')}
                             style={[styles.tab, {
-                                borderBottomColor: activeTab === 'notifications' ? colors.primary : 'transparent',
+                                borderBottomColor: activeTab === 'notifications' ? colors.tint : 'transparent',
                                 flexDirection: isRTL ? 'row-reverse' : 'row'
                             }]}
                         >
                             <Text style={[styles.tabText, {
-                                color: activeTab === 'notifications' ? colors.primary : colors.muted,
+                                color: activeTab === 'notifications' ? colors.tint : colors.muted,
                                 fontWeight: activeTab === 'notifications' ? 'bold' : 'normal'
                             }]}>
                                 {isRTL ? "התראות" : "Notifications"}
@@ -116,12 +131,12 @@ export default function NotificationsModal({ visible, onClose, notifications, ma
                         <TouchableOpacity
                             onPress={() => setActiveTab('updates')}
                             style={[styles.tab, {
-                                borderBottomColor: activeTab === 'updates' ? colors.primary : 'transparent',
+                                borderBottomColor: activeTab === 'updates' ? colors.tint : 'transparent',
                                 flexDirection: isRTL ? 'row-reverse' : 'row'
                             }]}
                         >
                             <Text style={[styles.tabText, {
-                                color: activeTab === 'updates' ? colors.primary : colors.muted,
+                                color: activeTab === 'updates' ? colors.tint : colors.muted,
                                 fontWeight: activeTab === 'updates' ? 'bold' : 'normal'
                             }]}>
                                 {isRTL ? "מה חדש?" : "What's New?"}
@@ -143,55 +158,47 @@ export default function NotificationsModal({ visible, onClose, notifications, ma
                                 </Text>
                             }
                             renderItem={({ item }) => {
-                                const meta = item.metadata;
-                                const isVerification = meta?.type === 'verification';
+                                const isNew = sessionThreshold
+                                    ? new Date(item.created_at) > new Date(sessionThreshold)
+                                    : true;
+
+                                // SWAPPED LOGIC: We want "Read" items to have the emphasized style
+                                const isEmphasized = !isNew;
 
                                 return (
                                     <View
                                         style={[styles.item, {
-                                            backgroundColor: (colors.primary + '10'), // Always "unread" bg
-                                            borderColor: colors.border,
-                                            borderLeftWidth: isRTL ? 0 : 4,
-                                            borderRightWidth: isRTL ? 4 : 0,
-                                            borderLeftColor: colors.primary, // Always "unread" color
+                                            // Base style for all (bold/highlighted look)
+                                            backgroundColor: (colors.primary + '10'),
+                                            borderColor: isEmphasized ? colors.primary : colors.border,
+                                            borderWidth: isEmphasized ? 1 : 1,
+
+                                            // Side strip logic
+                                            borderLeftWidth: isRTL ? (isEmphasized ? 1 : 0) : 4,
+                                            borderRightWidth: isRTL ? 4 : (isEmphasized ? 1 : 0),
+                                            borderLeftColor: colors.primary,
                                             borderRightColor: colors.primary,
+
+                                            // Extra "Pop" for emphasized items (which are now the READ ones)
+                                            shadowColor: isEmphasized ? colors.primary : "transparent",
+                                            shadowOffset: { width: 0, height: 2 },
+                                            shadowOpacity: isEmphasized ? 0.2 : 0,
+                                            shadowRadius: 4,
+                                            elevation: isEmphasized ? 4 : 0,
+                                            transform: isEmphasized ? [{ scale: 1.02 }] : [],
+                                            marginHorizontal: isEmphasized ? 4 : 0,
                                         }]}
                                     >
                                         <View style={{ alignItems: isRTL ? 'flex-end' : 'flex-start' }}>
-                                            <Text style={[styles.itemTitle, { color: colors.text, fontWeight: 'bold' }]}>
+                                            <Text style={[styles.itemTitle, { color: colors.text, fontWeight: 'bold', width: '90%', textAlign: isRTL ? 'right' : 'left' }]}>
                                                 {item.title}
                                             </Text>
-                                            <Text style={[styles.itemBody, { color: colors.muted, textAlign: isRTL ? 'right' : 'left' }]}>
+                                            <Text style={[styles.itemBody, { color: colors.muted, textAlign: isRTL ? 'right' : 'left', marginTop: 4 }]}>
                                                 {item.body}
                                             </Text>
                                             <Text style={{ fontSize: 10, color: colors.muted, marginTop: 4 }}>
                                                 {new Date(item.created_at).toLocaleDateString()} {new Date(item.created_at).toLocaleTimeString().slice(0, 5)}
                                             </Text>
-
-                                            {isVerification && (
-                                                <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', gap: 8, marginTop: 12 }}>
-                                                    <TouchableOpacity
-                                                        onPress={() => onAction('approve', meta.userId)}
-                                                        style={[styles.actionBtn, { backgroundColor: '#22c55e' }]}
-                                                    >
-                                                        <Text style={{ color: 'white', fontWeight: 'bold' }}>{isRTL ? 'אשר' : 'Approve'}</Text>
-                                                    </TouchableOpacity>
-
-                                                    <TouchableOpacity
-                                                        onPress={() => onAction('reject', meta.userId)}
-                                                        style={[styles.actionBtn, { backgroundColor: '#ef4444' }]}
-                                                    >
-                                                        <Text style={{ color: 'white', fontWeight: 'bold' }}>{isRTL ? 'דחה' : 'Reject'}</Text>
-                                                    </TouchableOpacity>
-
-                                                    <TouchableOpacity
-                                                        onPress={() => onAction('edit', meta.userId)}
-                                                        style={[styles.actionBtn, { backgroundColor: '#3b82f6' }]}
-                                                    >
-                                                        <Text style={{ color: 'white', fontWeight: 'bold' }}>{isRTL ? 'ערוך' : 'Edit'}</Text>
-                                                    </TouchableOpacity>
-                                                </View>
-                                            )}
                                         </View>
                                     </View>
                                 );
@@ -205,18 +212,22 @@ export default function NotificationsModal({ visible, onClose, notifications, ma
                             </Text>
                         </View>
                     )}
-                </Pressable>
-            </Pressable>
+                </View>
+            </View>
         </Modal>
     );
 }
 
 const styles = StyleSheet.create({
-    overlay: {
+    overlayContainer: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
         justifyContent: 'center',
+        alignItems: 'center',
         padding: 20,
+    },
+    backdrop: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0,0,0,0.5)',
     },
     content: {
         borderRadius: 16,
@@ -224,7 +235,6 @@ const styles = StyleSheet.create({
         height: '70%',
         width: '100%',
         maxWidth: 500,
-        alignSelf: 'center',
         overflow: 'hidden',
     },
     header: {
@@ -256,11 +266,4 @@ const styles = StyleSheet.create({
         fontSize: 14,
         lineHeight: 20,
     },
-    actionBtn: {
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 8,
-        alignItems: 'center',
-        justifyContent: 'center',
-    }
 });

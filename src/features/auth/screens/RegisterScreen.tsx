@@ -152,6 +152,7 @@ export default function RegisterScreen() {
     const [email, setEmail] = useState('');
 
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [avatar, setAvatar] = useState<string | null>(null);
 
     const [countryValue, setCountryValue] = useState('');
@@ -280,6 +281,10 @@ export default function RegisterScreen() {
         // Validation: Password optional in edit mode
         if (!firstName || !lastName || !email || (!editUser && !password) || !localPhone || !countryValue) {
             setErr(t(lang, 'auth.errors.fillAll'));
+            return;
+        }
+        if (!editUser && password && password !== confirmPassword) {
+            setErr(t(lang, 'auth.errors.passwordMismatch'));
             return;
         }
         if (isCoach && !club) {
@@ -473,6 +478,17 @@ export default function RegisterScreen() {
                             isRTL={isRTL}
                             forcedContentDirection="ltr"
                         />
+                        {!editUser && (
+                            <InputField
+                                label={t(lang, 'auth.confirmPassword')}
+                                value={confirmPassword}
+                                onChange={setConfirmPassword}
+                                secure={true}
+                                colors={colors}
+                                isRTL={isRTL}
+                                forcedContentDirection="ltr"
+                            />
+                        )}
 
                         {/* Row 4: Toggles - Coach | Judge */}
                         <View style={{ flexDirection: 'row', gap: 12, marginTop: 8 }}>

@@ -9,8 +9,9 @@ import { Ionicons } from '@expo/vector-icons';
 import DailyQuote from './DailyQuote';
 import { useNotifications } from '@/shared/state/useNotifications';
 import NotificationsModal from '@/shared/ui/NotificationsModal';
+import QuickQuizModal from './QuickQuizModal';
+import TheoreticalMaterialModal from './TheoreticalMaterialModal';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
-
 import * as SecureStore from 'expo-secure-store';
 
 export default function UserHome() {
@@ -18,6 +19,9 @@ export default function UserHome() {
     const { lang } = useLang();
     const { user, adminUpdateUser, refreshUser } = useAuth();
     const [showNotifications, setShowNotifications] = useState(false);
+    const [showQuickQuiz, setShowQuickQuiz] = useState(false);
+    const [showTheoreticalModal, setShowTheoreticalModal] = useState(false);
+
     // const { notifications, unreadCount, markRead } = useNotifications(!!user); // Notification logic separate now
     const { notifications, unreadCount, markRead, fetchNotifications, markAllRead } = useNotifications(!!user); // Keep for bell icon
     const navigation = useNavigation<any>();
@@ -103,6 +107,16 @@ export default function UserHome() {
                 onAction={handleAction}
                 colors={colors}
                 isRTL={isRTL}
+            />
+
+            <QuickQuizModal
+                visible={showQuickQuiz}
+                onClose={() => setShowQuickQuiz(false)}
+            />
+
+            <TheoreticalMaterialModal
+                visible={showTheoreticalModal}
+                onClose={() => setShowTheoreticalModal(false)}
             />
 
             {/* Status Dialog (Success/Reject) */}
@@ -198,12 +212,12 @@ export default function UserHome() {
                     </LinearGradient>
                 </View>
 
-                {/* Quick Actions */}
                 <View style={styles.grid}>
                     <QuickAction
                         icon="flash"
                         label={t(lang, 'home.quickActions.quiz')}
                         color={['#ff9a9e', '#fecfef'] as const}
+                        onPress={() => setShowQuickQuiz(true)}
                     />
                     <QuickAction
                         icon="calculator"
@@ -219,6 +233,7 @@ export default function UserHome() {
                         icon="book"
                         label={t(lang, 'home.quickActions.rules')}
                         color={['#84fab0', '#8fd3f4'] as const}
+                        onPress={() => setShowTheoreticalModal(true)}
                     />
                 </View>
             </ScrollView>
@@ -226,10 +241,28 @@ export default function UserHome() {
     );
 }
 
-function QuickAction({ icon, label, color }: { icon: any, label: string, color: readonly [string, string, ...string[]] }) {
+function QuickAction({ icon, label, color, onPress }: { icon: any, label: string, color: readonly [string, string, ...string[]], onPress?: () => void }) {
     const { colors } = useAppTheme();
+    const navigation = useNavigation<any>(); // Access navigation
+
+    const handlePress = () => {
+        if (onPress) {
+            onPress();
+            return;
+        }
+
+        // Default navigation behavior if no onPress provided
+        if (icon === 'calculator') navigation.navigate('Calculator');
+        if (icon === 'stats-chart') navigation.navigate('Progress'); // Assuming stats usually goes to progress
+        // Rules? 
+    };
+
     return (
-        <TouchableOpacity style={[styles.actionBtn, { backgroundColor: colors.card }]} activeOpacity={0.8}>
+        <TouchableOpacity
+            style={[styles.actionBtn, { backgroundColor: colors.card }]}
+            activeOpacity={0.8}
+            onPress={handlePress}
+        >
             <LinearGradient
                 colors={color}
                 style={styles.iconCircle}
