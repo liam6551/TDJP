@@ -26,7 +26,7 @@ export default function InternationalCodeScreen() {
                 <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
                     <View style={styles.cardHeader}>
                         <Ionicons name="book-outline" size={28} color={colors.tint} />
-                        <Text style={[styles.cardTitle, { color: colors.text }]}>A. כללי</Text>
+                        <Text style={[styles.cardTitle, { color: colors.text }]}>כללי</Text>
                     </View>
                     <Text style={[styles.text, { color: colors.text }]}>
                         פס טאמבלינג מורכב מ-8 אלמנטים וצריך להראות מגוון של אלמנטים קדימה, אחורה והצידה.
@@ -193,7 +193,7 @@ export default function InternationalCodeScreen() {
                 <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
                     <View style={styles.cardHeader}>
                         <Ionicons name="shirt-outline" size={28} color={colors.tint} />
-                        <Text style={[styles.cardTitle, { color: colors.text }]}>4. לבוש מתעמלים</Text>
+                        <Text style={[styles.cardTitle, { color: colors.text }]}>לבוש מתעמלים</Text>
                     </View>
                     <Text style={[styles.text, { color: colors.text }]}>
                         <Text style={{ fontWeight: 'bold' }}>גברים:</Text>
@@ -238,13 +238,13 @@ export default function InternationalCodeScreen() {
                 <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
                     <View style={styles.cardHeader}>
                         <Ionicons name="document-text-outline" size={28} color={colors.tint} />
-                        <Text style={[styles.cardTitle, { color: colors.text }]}>5. כרטיסי תחרות</Text>
+                        <Text style={[styles.cardTitle, { color: colors.text }]}>כרטיסי תחרות</Text>
                     </View>
                     <Text style={[styles.text, { color: colors.text }]}>
                         • יש לרשום את כל האלמנטים ודרגות הקושי לפי סדר הביצוע בכרטיס התחרות.
-                        {"\n"}• חובה להשתמש בשיטה המספרית של FIG.
+                        {"\n"}• חובה להשתמש בסימבולס.
                         {"\n"}• הכרטיסים חייבים להימסר לפחות שעתיים לפני התחרות.
-                        {"\n"}• כל שינוי חייב להירשם על ידי שופטי הקושי.
+                        {"\n"}• כל שינוי באלמנטים יירשם על ידי שופטי דרגת הקושי.
                     </Text>
                 </View>
 
@@ -255,65 +255,85 @@ export default function InternationalCodeScreen() {
                         <Text style={[styles.cardTitle, { color: colors.text }]}>נהלי תחרות</Text>
                     </View>
 
-                    <Text style={[styles.subTitle, { color: colors.text }]}>10. חימום</Text>
+                    <Text style={[styles.subTitle, { color: colors.text }]}>חימום</Text>
                     <Text style={[styles.text, { color: colors.text }]}>
-                        • לכל מתעמל מותר חימום על המסלול כמספר הפסים שהוא מבצע בשלב התחרות (2 במוקדמות 1, 1 במוקדמות 2 וכו').
+                        • לכל מתעמל מותר חימום על הפיבר כמספר הפסים שהוא מבצע בשלב התחרות (2 פסים במוקדמות 1, פס אחד במוקדמות 2 וכו').
                         {"\n"}• חריגה בכמות החימום - ענישה של 0.2 נקודות.
                     </Text>
 
-                    <Text style={[styles.subTitle, { color: colors.text, marginTop: 12 }]}>11. תחילת הפס</Text>
+                    <Text style={[styles.subTitle, { color: colors.text, marginTop: 12 }]}>תחילת הפס</Text>
                     <Text style={[styles.text, { color: colors.text }]}>
-                        • יש להתחיל בתוך 20 שניות מסימן השופט הראשי (אחרת ענישה 0.2). מעבר ל-60 שניות - פסילה (DNS).
-                        {"\n"}• מותר להשתמש במקפצה רק לאלמנט הראשון.
-                        {"\n"}• הפס נחשב שהתחיל ברגע שהמתעמל מבצע את האלמנט הראשון.
-                        {"\n"}• אסור למאמן לדבר או לסמן למתעמל לאחר התחלת הפס (ענישה 0.6).
+                        • כל מתעמל יתחיל בעקבות סימן שיינתן על ידי השופט הראשי.
+                        {"\n\n"}• לאחר שהסימן ניתן, על המתעמל להתחיל את האלמנט הראשון בתוך 20 שניות.
+                        {"\n"}  - חריגה מהזמן: ענישה של 0.2 נקודות ע"י השופט הראשי.
+                        {"\n"}  - <Text style={{ fontWeight: 'bold' }}>61 שניות:</Text> המתעמל לא יורשה להתחיל, לא יינתן ניקוד והוא יסומן כ-DNS.
+                        {"\n"}  - אם החריגה נגרמה עקב ציוד תקול או סיבה משמעותית אחרת (לשיקול דעת השופט הראשי), לא תתבצע הפחתת ניקוד.
+                        {"\n\n"}• <Text style={{ fontWeight: 'bold' }}>שימוש במקפצה:</Text>
+                        {"\n"}  - מותר להשתמש במקפצה רק לצורך התחלת האלמנט הראשון.
+                        {"\n"}  - ניתן להניח אותה בכל מקום על הפיבר או על מסלול ההרצה.
+                        {"\n\n"}• <Text style={{ fontWeight: 'bold' }}>ביצוע:</Text>
+                        {"\n"}  - האלמנט הראשון חייב לנחות על הפיבר (גם אם התחיל במסלול ההרצה).
+                        {"\n"}  - הגדרת התחלה: כאשר המתעמל מתחיל את האלמנט הראשון (ידיים נוגעות בפיבר בערבית או ניתור לכל אלמנט קדימה).
+                        {"\n\n"}• לאחר שהתרגיל התחיל, דיבור או מתן סימן למתעמל על ידי המאמן יגרור ענישה של 0.6 נקודות (פעם אחת בלבד על ידי השופט הראשי).
                     </Text>
 
-                    <Text style={[styles.subTitle, { color: colors.text, marginTop: 12 }]}>12. מנחי גוף נדרשים</Text>
+                    <Text style={[styles.subTitle, { color: colors.text, marginTop: 12 }]}>מנחי גוף נדרשים</Text>
                     <Text style={[styles.text, { color: colors.text }]}>
-                        • סלטות אחוריות בודדות בגובה כתפיים ומטה ייחשבו כטמפו (Whipback).
-                        {"\n"}• דאבל סלטה בגוף ישר מותרת עם פישוק רגליים (מינימום 90 מעלות) אך חייבת להיסגר ב-3/4 מהסלטה.
+                        • סלטות אחוריות בודדות בגובה כתפיים ומטה ייחשבו כטמפו חוץ מבאלמנט האחרון.
+                        {"\n"}• דאבל סלטה בגוף ישר מותרת עם פסיעת רגליים (מינימום 60 מעלות) אך חייבת להיסגר בשעה 3.
                     </Text>
                 </View>
 
-                {/* 13-15. EXECUTION RULES */}
+                {/* REPETITIONS */}
                 <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
                     <View style={styles.cardHeader}>
-                        <Ionicons name="alert-circle-outline" size={28} color={colors.tint} />
-                        <Text style={[styles.cardTitle, { color: colors.text }]}>חוקי ביצוע</Text>
+                        <Ionicons name="repeat-outline" size={28} color={colors.tint} />
+                        <Text style={[styles.cardTitle, { color: colors.text }]}>חזרות</Text>
                     </View>
-
-                    <Text style={[styles.subTitle, { color: colors.text }]}>13. חזרות</Text>
                     <Text style={[styles.text, { color: colors.text }]}>
-                        • למעט: גלגלונים, ערביות, פליק פלאק, קפיצות ידיים וטמפו - אסור לחזור על אלמנט במוקדמות 1.
-                        {"\n"}• בורג (Full twist back) מותר עד 3 פעמים בפס, ורק פעם אחת כאלמנט מסיים (אלמנט 8).
+                        • למעט: גלגלון, ערבית, פליק פלאק, קפיצת ידיים וטמפו - אסור לחזור על אלמנט באותו הפס או בין שני הפסים.
+                        {"\n"}• בורג בודד מותר עד 3 פעמים בפס, ורק פעם אחת בסוף הפס (אלמנט 8).
                         {"\n"}• אלמנט חוזר לא יקבל ערך דרגת קושי.
                     </Text>
+                </View>
 
-                    <Text style={[styles.subTitle, { color: colors.text, marginTop: 12 }]}>14. הפסקת פס</Text>
+                {/* INTERRUPTING THE PASS */}
+                <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                    <View style={styles.cardHeader}>
+                        <Ionicons name="hand-left-outline" size={28} color={colors.tint} />
+                        <Text style={[styles.cardTitle, { color: colors.text }]}>הפרעת תרגיל</Text>
+                    </View>
                     <Text style={[styles.text, { color: colors.text }]}>
-                        הפס נחשב מופסק (ולא ינוקד האלמנט בו קרתה ההפסקה) במקרים:
-                        {"\n"}• מגע ספוטר.
+                        הפרעת תרגיל נחשבת כאשר:
+                        {"\n"}• מאמן שומר.
                         {"\n"}• צעדי ביניים או עצירה.
-                        {"\n"}• נפילה.
-                        {"\n"}• נגיעה מחוץ לקווים.
+                        {"\n"}• נפילה באמצע הפס.
+                        {"\n"}• יציאה מתחום הפיבר באמצע הפס.
                         {"\n"}• ביצוע תנועה ללא סיבוב בציר המתאים.
+                        {"\n"}
+                        {"\n"}במקרה זה האלמנט בו התרחשה ההפרעה לא נחשב וגם כל האלמנטים שאחריו.
                     </Text>
+                </View>
 
-                    <Text style={[styles.subTitle, { color: colors.text, marginTop: 12 }]}>15. סיום הפס</Text>
-                    <Text style={[styles.text, { color: colors.text }]}>
-                        • הפס חייב להסתיים על הרגליים.
-                        {"\n"}• חובה לעמוד יציב כ-3 שניות.
-                        {"\n"}• אם הפס לא מסתיים בסלטה - ענישה של 2.0 נקודות.
-                        {"\n"}• אם יש יותר מ-8 אלמנטים - הורדה של 1.0 נקודה.
-                    </Text>
+                {/* ENDING THE PASS */}
+                <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                    <View style={styles.cardHeader}>
+                        <Ionicons name="flag-outline" size={28} color={colors.tint} />
+                        <Text style={[styles.cardTitle, { color: colors.text }]}>סיום הפס</Text>
+                    </View>
+                    <Text style={[styles.text, { color: colors.text }]}>• על התרגיל להסתיים על הרגליים (על הפיבר או אזור הנחיתה), אחרת האלמנט האחרון לא ייספר.</Text>
+                    <Text style={[styles.text, { color: colors.text }]}>• לאחר האלמנט האחרון יש לעמוד זקוף ולהראות יציבות לכ-3 שניות, אחרת יחולו הורדות ניקוד.</Text>
+                    <Text style={[styles.text, { color: colors.text }]}>• האלמנט האחרון חייב להתבצע מהפיבר אל אזור הנחיתה (למעט האלמנט האחרון שיכול להיות בכיוון ההפוך). אי עמידה בכך תגרור ענישה של 0.4 נקודות ע"י השופט הראשי.</Text>
+                    <Text style={[styles.text, { color: colors.text }]}>• נחיתה ללא הכנה: אם המתעמל נוגע ברגליים בקרקע אך נופל מיד (פנים/ברכיים/ידיים וברכיים) ללא שליטה, האלמנט לא ייספר (ללא הורדה נוספת על הנפילה).</Text>
+                    <Text style={[styles.text, { color: colors.text }]}>• סיום בסלטה: חובה לסיים בסלטה. אי ביצוע סלטה בסיום יגרור ענישה של 2.0 נקודות ע"י השופט הראשי.</Text>
+                    <Text style={[styles.text, { color: colors.text }]}>• ביצוע יותר מ-8 אלמנטים: יגרור הורדה של 1.0 נקודה ע"י שופטי הביצוע.</Text>
                 </View>
 
                 {/* 16. SCORING */}
                 <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
                     <View style={styles.cardHeader}>
                         <Ionicons name="calculator-outline" size={28} color={colors.tint} />
-                        <Text style={[styles.cardTitle, { color: colors.text }]}>16. ניקוד (Score)</Text>
+                        <Text style={[styles.cardTitle, { color: colors.text }]}>ניקוד</Text>
                     </View>
                     <Text style={[styles.text, { color: colors.text, marginBottom: 16 }]}>
                         <Text style={{ fontWeight: 'bold', fontSize: 18 }}>Score = E (max 20) + D - P</Text>
@@ -324,30 +344,66 @@ export default function InternationalCodeScreen() {
                         <Text style={[styles.sectionTitle, { color: colors.tint }]}>D - דרגת קושי</Text>
 
                         {/* Values Table */}
-                        <View style={styles.table}>
-                            <View style={styles.tableRow}><Text style={styles.tableTextBold}>אלמנט</Text><Text style={styles.tableTextBold}>ניקוד</Text></View>
-                            <View style={styles.tableRow}><Text style={styles.tableText}>גלגלון, ערבית, פליק, קפיצת ידיים</Text><Text style={styles.tableText}>0.1</Text></View>
-                            <View style={styles.tableRow}><Text style={styles.tableText}>טמפו (Whipback)</Text><Text style={styles.tableText}>0.2</Text></View>
-                            <View style={styles.tableRow}><Text style={styles.tableText}>סלטה (360°)</Text><Text style={styles.tableText}>0.5</Text></View>
+                        {/* Values Table - Redesigned */}
+                        <View style={styles.difficultyContainer}>
 
-                            <View style={styles.tableRow}><Text style={styles.tableTextBold}>בונוסים וסיבובים:</Text><Text style={styles.tableText}></Text></View>
-                            <View style={styles.tableRow}><Text style={styles.tableText}>סלטה בודדת ישרה/מקופלת</Text><Text style={styles.tableText}>+0.1 בונוס</Text></View>
-                            <View style={styles.tableRow}><Text style={styles.tableText}>סלטה קדימה</Text><Text style={styles.tableText}>+0.1 בונוס</Text></View>
-                            <View style={styles.tableRow}><Text style={styles.tableText}>חצי בורג (180°)</Text><Text style={styles.tableText}>0.2</Text></View>
-                            <View style={styles.tableRow}><Text style={styles.tableText}>כל 1/2 בורג נוסף (מעל דאבל/טריפל)</Text><Text style={styles.tableText}>+0.2 / +0.3 / +0.4</Text></View>
+                            {/* Basic Elements */}
+                            <View style={styles.difficultySection}>
+                                <Text style={styles.difficultyTitle}>אלמנטים בסיסיים</Text>
+                                <View style={styles.difficultyRow}><Text style={styles.difficultyLabel}>גלגלון, ערבית, פליק, קפיצת ידיים</Text><Text style={styles.difficultyValue}>0.1</Text></View>
+                                <View style={styles.difficultyRow}><Text style={styles.difficultyLabel}>טמפו</Text><Text style={styles.difficultyValue}>0.2</Text></View>
+                                <View style={styles.difficultyRow}><Text style={styles.difficultyLabel}>סלטה</Text><Text style={styles.difficultyValue}>0.5</Text></View>
+                            </View>
 
-                            <View style={styles.tableRow}><Text style={styles.tableTextBold}>אלמנטים מרובי סלטות:</Text><Text style={styles.tableText}></Text></View>
-                            <View style={styles.tableRow}><Text style={styles.tableText}>דאבל סלטה (בסיס קיפול)</Text><Text style={styles.tableText}>2.0</Text></View>
-                            <View style={styles.tableRow}><Text style={styles.tableText}>טריפל סלטה (בסיס קיפול)</Text><Text style={styles.tableText}>4.5</Text></View>
-                            <View style={styles.tableRow}><Text style={styles.tableText}>בונוס גוף ישר (דאבל/טריפל)</Text><Text style={styles.tableText}>+0.2 / +0.4</Text></View>
-                            <View style={styles.tableRow}><Text style={styles.tableText}>בונוס גוף מקופל (דאבל/טריפל)</Text><Text style={styles.tableText}>+0.1 / +0.3</Text></View>
+                            {/* Single Salto Bonuses */}
+                            <View style={styles.difficultySection}>
+                                <Text style={styles.difficultyTitle}>בונוסים לסלטה בודדת</Text>
+                                <View style={styles.difficultyRow}><Text style={styles.difficultyLabel}>ללא בורג: מנח קיפול או גוף ישר</Text><Text style={styles.difficultyValue}>+0.1</Text></View>
+                                <View style={styles.difficultyRow}><Text style={styles.difficultyLabel}>סלטה קדימה</Text><Text style={styles.difficultyValue}>+0.1</Text></View>
+                            </View>
+
+                            {/* Single Salto Twisting */}
+                            <View style={styles.difficultySection}>
+                                <Text style={styles.difficultyTitle}>ברגים בסלטה בודדת</Text>
+                                <View style={styles.difficultyRow}><Text style={styles.difficultyLabel}>חצי בורג (180°)</Text><Text style={styles.difficultyValue}>0.2</Text></View>
+                                <View style={styles.difficultyRow}><Text style={styles.difficultyLabel}>כל חצי בורג נוסף מעל 2 ברגים (720°)</Text><Text style={styles.difficultyValue}>0.3</Text></View>
+                                <View style={styles.difficultyRow}><Text style={styles.difficultyLabel}>כל חצי בורג נוסף מעל 3 ברגים (1080°)</Text><Text style={styles.difficultyValue}>0.4</Text></View>
+                            </View>
+
+                            {/* Double Salto Twisting */}
+                            <View style={styles.difficultySection}>
+                                <Text style={styles.difficultyTitle}>ברגים בדאבל סלטה</Text>
+                                <View style={styles.difficultyRow}><Text style={styles.difficultyLabel}>חצי בורג (180°)</Text><Text style={styles.difficultyValue}>0.1</Text></View>
+                                <View style={styles.difficultyRow}><Text style={styles.difficultyLabel}>כל חצי בורג נוסף מעל בורג אחד (360°)</Text><Text style={styles.difficultyValue}>0.2</Text></View>
+                                <View style={styles.difficultyRow}><Text style={styles.difficultyLabel}>כל חצי בורג נוסף מעל 2 ברגים (720°)</Text><Text style={styles.difficultyValue}>0.3</Text></View>
+                                <View style={styles.difficultyRow}><Text style={styles.difficultyLabel}>כל חצי בורג נוסף מעל 3 ברגים (1080°)</Text><Text style={styles.difficultyValue}>0.4</Text></View>
+                            </View>
+
+                            {/* Triple Salto Twisting */}
+                            <View style={styles.difficultySection}>
+                                <Text style={styles.difficultyTitle}>ברגים בטריפל סלטה</Text>
+                                <View style={styles.difficultyRow}><Text style={styles.difficultyLabel}>כל חצי בורג (עד 360°)</Text><Text style={styles.difficultyValue}>0.3</Text></View>
+                                <View style={styles.difficultyRow}><Text style={styles.difficultyLabel}>כל חצי בורג נוסף מעל בורג אחד (360°)</Text><Text style={styles.difficultyValue}>0.4</Text></View>
+                            </View>
+
+                            {/* Multiple Salto Bonuses */}
+                            <View style={styles.difficultySection}>
+                                <Text style={styles.difficultyTitle}>בונוסים בסלטות מרובות (עם/בלי בורג)</Text>
+
+                                <Text style={{ color: colors.text, marginTop: 4, textDecorationLine: 'underline', fontWeight: 'bold', fontSize: 14, textAlign: 'right' }}>מנח קיפול:</Text>
+                                <View style={styles.difficultyRow}><Text style={styles.difficultyLabel}>דאבל / טריפל / קוואדרופל</Text><Text style={styles.difficultyValue}>0.1 / 0.2 / 0.3</Text></View>
+
+                                <Text style={{ color: colors.text, marginTop: 8, textDecorationLine: 'underline', fontWeight: 'bold', fontSize: 14, textAlign: 'right' }}>מנח גוף ישר:</Text>
+                                <View style={styles.difficultyRow}><Text style={styles.difficultyLabel}>דאבל / טריפל</Text><Text style={styles.difficultyValue}>0.2 / 0.4</Text></View>
+                            </View>
+
                         </View>
 
                         <Text style={[styles.text, { color: colors.text, marginTop: 8, fontSize: 14 }]}>
                             * נשים: בונוס 1.0 על כל אלמנט מעל D=2.0 (החל מהשני).
                             {"\n"}* גברים: בונוס 1.0 על כל אלמנט מעל D=4.4 (החל מהשני).
                             {"\n"}* דאבל סלטה בפישוק מקבלת ניקוד זהה לגוף ישר.
-                            {"\n"}* בסלטות כפולות/משולשות - מכפילים/משלשים את הערך כולל הבונוסים.
+                            {"\n"}* בסלטות כפולות - הערך של האלמנט (כולל ברגים ובונוס מנח) מוכפל.
                         </Text>
                     </View>
 
@@ -355,7 +411,7 @@ export default function InternationalCodeScreen() {
 
                     {/* Execution (E) - Detailed 19.2 */}
                     <View style={styles.section}>
-                        <Text style={[styles.sectionTitle, { color: colors.tint }]}>E - ביצוע (19.2)</Text>
+                        <Text style={[styles.sectionTitle, { color: colors.tint }]}>E - ביצוע</Text>
                         <Text style={[styles.text, { color: colors.text }]}>
                             הציון מתחיל מ-20 נקודות.
                             {"\n"}הורדות על כל אלמנט (0.1-0.5):
@@ -383,7 +439,7 @@ export default function InternationalCodeScreen() {
                             <View style={styles.tableRow}><Text style={styles.tableText}>נגיעה בידיים בנחיתה</Text><Text style={styles.tableText}>0.5</Text></View>
                             <View style={styles.tableRow}><Text style={styles.tableText}>נחיתה/נפילה על גוף/ברכיים/ידיים</Text><Text style={styles.tableText}>1.0</Text></View>
                             <View style={styles.tableRow}><Text style={styles.tableText}>עזרה מספוטר בנחיתה</Text><Text style={styles.tableText}>1.0</Text></View>
-                            <View style={styles.tableRow}><Text style={styles.tableText}>יציאה מהמסלול/נחיתה בחוץ/אלמנט נוסף</Text><Text style={styles.tableText}>1.0</Text></View>
+                            <View style={styles.tableRow}><Text style={styles.tableText}>יציאה מהפיבר/נחיתה בחוץ/אלמנט נוסף</Text><Text style={styles.tableText}>1.0</Text></View>
                         </View>
                     </View>
 
@@ -400,7 +456,7 @@ export default function InternationalCodeScreen() {
                             {"\n"}• אי עמידה בזמן (20 שניות): 0.2.
                             {"\n"}• שימוש בחימום יתר: 0.2.
                             {"\n"}• אי ביצוע סלטה בסיום: 2.0.
-                            {"\n"}• אלמנט אחרון לא יוצא מהמסלול (אלא אם הפוך): 0.4.
+                            {"\n"}• אלמנט אחרון לא יוצא מהפיבר (אלא אם הפוך): 0.4.
                         </Text>
                     </View>
                 </View>
@@ -419,7 +475,7 @@ export default function InternationalCodeScreen() {
                         {"\n"}סה"כ: 9 שופטים.
                         {"\n\n"}
                         <Text style={{ fontWeight: 'bold' }}>תפקידי השופט הראשי (CJP):</Text>
-                        {"\n"}שולט על המתקנים, מנהל את התחרות, קובע לגבי ניסיון שני, מחיל ענישות (P) על יציאה מהמסלול, לבוש, זמן, ועוד.
+                        {"\n"}שולט על המתקנים, מנהל את התחרות, קובע לגבי ניסיון שני, מחיל ענישות (P) על יציאה מהפיבר, לבוש, זמן, ועוד.
                         {"\n\n"}
                         <Text style={{ fontWeight: 'bold' }}>תפקידי שופטי ביצוע (E):</Text>
                         {"\n"}מעריכים את הביצוע (0.0-0.5) ורושמים הורדות. ציון הביצוע מחושב מתוך מקסימום 20 (מפחיתים את חציון ההורדות).
@@ -456,8 +512,8 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1, borderBottomColor: '#eee', paddingBottom: 12
     },
     cardTitle: { fontSize: 22, fontWeight: 'bold' },
-    text: { fontSize: 16, lineHeight: 26, textAlign: 'right', marginBottom: 6 },
-    subTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 6, textAlign: 'right', color: '#666' },
+    text: { fontSize: 16, lineHeight: 26, textAlign: 'right', marginBottom: 6, width: '100%', paddingHorizontal: 4 },
+    subTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 6, textAlign: 'right', color: '#666', width: '100%' },
     subText: { fontSize: 14, textAlign: 'right' },
     section: { marginTop: 12 },
     sectionTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 10, textAlign: 'right' },
@@ -473,5 +529,11 @@ const styles = StyleSheet.create({
     tableRow: { flexDirection: 'row-reverse', padding: 10, borderBottomWidth: 1, borderBottomColor: '#eee' },
     tableCell: { justifyContent: 'center' },
     tableText: { textAlign: 'right', fontSize: 15, flex: 1 },
-    tableTextBold: { textAlign: 'right', fontSize: 15, fontWeight: 'bold', flex: 1 }
+    tableTextBold: { textAlign: 'right', fontSize: 15, fontWeight: 'bold', flex: 1 },
+    difficultyContainer: { gap: 12 },
+    difficultySection: { borderWidth: 1, borderColor: '#eee', borderRadius: 8, padding: 12, marginBottom: 8 },
+    difficultyTitle: { fontSize: 16, fontWeight: 'bold', marginBottom: 8, textAlign: 'right', color: '#fa7e1e' },
+    difficultyRow: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 },
+    difficultyLabel: { flex: 1, textAlign: 'right', fontSize: 15, paddingLeft: 8, flexWrap: 'wrap' },
+    difficultyValue: { fontSize: 15, fontWeight: 'bold', textAlign: 'left', minWidth: 40 }
 });

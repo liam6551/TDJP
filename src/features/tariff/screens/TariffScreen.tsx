@@ -29,6 +29,8 @@ import { validatePasses } from '@/features/tariff/logic/tariffLegality';
 import TariffIllegalToast from '@/features/tariff/components/TariffIllegalToast';
 import TariffIllegalExportConfirm from '@/features/tariff/components/TariffIllegalExportConfirm';
 
+import { saveFileToAppFolder } from '@/shared/filesystem/storage';
+
 const TARIFF_DIR_KEY = 'tariffExportDirUri'
 const ALLOW_ILLEGAL_TARIFF_KEY = 'tariffAllowIllegalExport'
 
@@ -318,7 +320,11 @@ export default function TariffScreen() {
 
       let finalUri = result.uri
       try {
-        finalUri = await savePdfToDownloads(result.uri)
+        const fileName = `TDJP Tariff - ${athlete.name || 'Athlete'} - ${Date.now()}.pdf`;
+        const storedUri = await saveFileToAppFolder(result.uri, fileName);
+        if (storedUri) {
+          finalUri = storedUri;
+        }
       } catch (e) {
         console.warn('Tariff save to downloads failed', e)
       }

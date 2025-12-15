@@ -8,6 +8,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
+import { chatWithAI } from './controllers/aiController.js';
 
 const app = express();
 
@@ -396,6 +397,9 @@ app.get('/_debug/db', async (_req, res) => {
   try { const r = await pool.query('SELECT now() as now'); res.json({ ok: true, now: r.rows[0].now }); }
   catch (e) { console.error('DB debug error:', e); res.status(500).json({ ok: false, error: e.message }); }
 });
+
+/* ---------- AI Chat ---------- */
+app.post('/ai/chat', requireAuth, chatWithAI);
 
 /* ---------- Registration validation ---------- */
 function validateRegistration({

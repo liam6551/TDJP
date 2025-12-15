@@ -21,7 +21,9 @@ const en = {
       calc: 'Calculator',
       stats: 'My Stats',
       rules: 'Study Material',
+      ai: 'Twist & Flicki',
     },
+
     theoretical: {
       title: 'Study Material',
       code: 'Intl. Code of Points 2025-2028',
@@ -373,6 +375,22 @@ const en = {
     successBugTitle: 'Thanks for the report!',
     successBugBody: 'We will fix it soon.',
     close: 'Close',
+  },
+  aiChat: {
+    title: 'My Assistants',
+    twistName: 'Twist (Judge)',
+    flickiName: 'Flicki (Coach)',
+    discussionMode: 'Joint Discussion',
+    welcomeTwist: "Greetings, colleague. I am Twist, your Virtual Head Judge. I am here to provide accurate and objective analysis according to the Code of Points. With me, there are no shortcuts – only professional truth.",
+    welcomeFlicki: "Hey Coach! I'm Flicki! ⚡ I'm here to identify the potential and explosive power in your athletes. Let's look at the glass half full and push them forward!",
+    welcomeDiscussion: "We are pleased to assist you. Twist will provide the strict judging deduction, while Flicki will offer the coaching perspective on potential. We help you see the full picture of the athlete.",
+    discussionIntroTwist: "In this discussion, I represent the judge's stance. Competitive sport requires precision, and we must not ignore deviations from the Code.",
+    discussionIntroFlicki: "And I'm here to balance it out! I'll remind us that the athlete's heart matters too. Let's spot the potential we can polish.",
+    inputPlaceholder: 'Type a message...',
+    agreeWithTwist: 'As Twist correctly noted, there is a technical issue here.',
+    disagreeWithTwist: 'Twist is being a bit too harsh in my opinion, the energy was good!',
+    agreeWithFlicki: 'I agree with Flicki that the performance is dynamic, but the Code is clear.',
+    disagreeWithFlicki: 'Flicki is optimistic, but strictly speaking, this does not pass.',
   },
 } as const;
 

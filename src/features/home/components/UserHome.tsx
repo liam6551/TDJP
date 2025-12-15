@@ -13,6 +13,8 @@ import QuickQuizModal from './QuickQuizModal';
 import TheoreticalMaterialModal from './TheoreticalMaterialModal';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import * as SecureStore from 'expo-secure-store';
+import { getStoredUri, setStoredUri, requestAndroidPermissions } from '@/shared/filesystem/storage';
+import { Platform } from 'react-native';
 
 export default function UserHome() {
     const { colors } = useAppTheme();
@@ -96,8 +98,78 @@ export default function UserHome() {
         }
     };
 
+
+
+    const [showStorageSetup, setShowStorageSetup] = useState(false);
+
+    // Initial Storage Check (Android Only)
+    useFocusEffect(
+        useCallback(() => {
+            if (Platform.OS !== 'android') return;
+
+            checkStorageSetup();
+        }, [])
+    );
+
+    const checkStorageSetup = async () => {
+        const hasUri = await getStoredUri();
+        if (!hasUri) {
+            setShowStorageSetup(true);
+        }
+    };
+
+    const handleStorageSetup = async () => {
+        try {
+            const uri = await requestAndroidPermissions();
+            if (uri) {
+                await setStoredUri(uri);
+                setShowStorageSetup(false);
+                Alert.alert(isRTL ? 'הצלחה' : 'Success', t(lang, 'settings.storageSetup.success' as any));
+            } else {
+                // User cancelled or failed
+                Alert.alert(isRTL ? 'שגיאה' : 'Error', t(lang, 'settings.storageSetup.error' as any));
+            }
+        } catch (e) {
+            console.error('Setup failed', e);
+        }
+    };
+
     return (
         <View style={{ flex: 1 }}>
+            {/* Storage Setup Modal (Android) */}
+            <Modal
+                transparent
+                visible={showStorageSetup}
+                animationType="slide"
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={[styles.modalCard, { backgroundColor: colors.card }]}>
+                        <View style={{
+                            width: 60, height: 60, borderRadius: 30,
+                            backgroundColor: colors.tint + '20',
+                            alignItems: 'center', justifyContent: 'center', marginBottom: 16
+                        }}>
+                            <Ionicons name="folder-open" size={32} color={colors.tint} />
+                        </View>
+
+                        <Text style={[styles.modalTitle, { color: colors.text }]}>
+                            {t(lang, 'settings.storageSetup.title' as any)}
+                        </Text>
+
+                        <Text style={[styles.modalBody, { color: colors.text }]}>
+                            {t(lang, 'settings.storageSetup.message' as any)}
+                        </Text>
+
+                        <TouchableOpacity
+                            onPress={handleStorageSetup}
+                            style={[styles.modalBtn, { backgroundColor: colors.tint }]}
+                        >
+                            <Text style={styles.modalBtnText}>{t(lang, 'settings.storageSetup.button' as any)}</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
+
             <NotificationsModal
                 visible={showNotifications}
                 onClose={() => setShowNotifications(false)}
@@ -220,9 +292,10 @@ export default function UserHome() {
                         onPress={() => setShowQuickQuiz(true)}
                     />
                     <QuickAction
-                        icon="calculator"
-                        label={t(lang, 'home.quickActions.calc')}
+                        icon="chatbubbles"
+                        label={t(lang, 'home.quickActions.ai' as any)}
                         color={['#a18cd1', '#fbc2eb'] as const}
+                        onPress={() => navigation.navigate('AIChat')}
                     />
                     <QuickAction
                         icon="stats-chart"

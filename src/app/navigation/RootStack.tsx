@@ -6,6 +6,7 @@ import RegisterScreen from '@/features/auth/screens/RegisterScreen';
 import AdminUsersScreen from '@/features/admin/screens/AdminUsersScreen';
 import EditUserScreen from '@/features/admin/screens/EditUserScreen';
 import InternationalCodeScreen from '@/features/home/screens/InternationalCodeScreen';
+import AIChatScreen from '@/features/ai/screens/AIChatScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -18,6 +19,7 @@ export default function RootStack() {
       <Stack.Screen name="AdminUsers" component={AdminUsersScreen} />
       <Stack.Screen name="EditUser" component={EditUserScreen} />
       <Stack.Screen name="InternationalCode" component={InternationalCodeScreen} />
+      <Stack.Screen name="AIChat" component={AIChatScreen} />
     </Stack.Navigator>
   );
 }

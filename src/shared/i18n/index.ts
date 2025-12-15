@@ -5,6 +5,7 @@ export type Lang = 'he' | 'en';
 
 const dictionaries = { he, en } as const;
 
+// Translation utility
 export function t(lang: Lang, path: string): string {
   const parts = path.split('.');
   let value: any = dictionaries[lang];
