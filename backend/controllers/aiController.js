@@ -57,10 +57,39 @@ const loadKnowledgeBase = async () => {
 loadKnowledgeBase();
 
 
-// Debug endpoint to check RAG status
+// Debug endpoint to check RAG status and Filesystem
 export const debugRag = async (req, res) => {
+    let debugInfo = {
+        status: "?",
+        dirname: __dirname,
+        structure: {}
+    };
+
+    try {
+        const assetsPath = path.join(__dirname, '../assets');
+        debugInfo.assetsPath = assetsPath;
+
+        // List files in current controller dir
+        try {
+            debugInfo.structure.controllers = fs.readdirSync(__dirname);
+        } catch (e) { debugInfo.structure.controllers = e.message; }
+
+        // List files in assets dir
+        try {
+            debugInfo.structure.assets = fs.readdirSync(assetsPath);
+        } catch (e) { debugInfo.structure.assets = e.message; }
+
+        // List files in parent dir (backend root)
+        try {
+            debugInfo.structure.root = fs.readdirSync(path.join(__dirname, '../'));
+        } catch (e) { debugInfo.structure.root = e.message; }
+
+    } catch (e) {
+        debugInfo.error = e.message;
+    }
+
     res.json({
-        status: "ok",
+        ...debugInfo,
         contextLength: KNOWLEDGE_CONTEXT.length,
         sample: KNOWLEDGE_CONTEXT.substring(0, 500) + "..."
     });
