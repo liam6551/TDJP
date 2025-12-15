@@ -159,8 +159,9 @@ export const chatWithAI = async (req, res) => {
         if (!text) return res.status(400).json({ error: 'Missing text' });
 
         let responses = [];
-        // Use 'gemini-flash-latest' for speed and context
-        const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+        // Use 'gemini-1.5-flash' explicitly for stable free tier quotas (15 RPM / 1500 RPD)
+        // 'gemini-flash-latest' was resolving to a restricted preview model.
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         // --- TWIST (Gemini + RAG) ---
         if (mode === 'twist') {
