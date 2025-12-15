@@ -49,7 +49,8 @@ export const chatWithAI = async (req, res) => {
         if (!text) return res.status(400).json({ error: 'Missing text' });
 
         let responses = [];
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        // Try to use the stable 001 version or latest alias
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
 
         // --- TWIST (Gemini) ---
         if (mode === 'twist') {
