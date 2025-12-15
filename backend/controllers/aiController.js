@@ -5,7 +5,8 @@ import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
 
 const require = createRequire(import.meta.url);
-const pdf = require('pdf-parse');
+const pdfRaw = require('pdf-parse');
+const pdf = (typeof pdfRaw === 'function') ? pdfRaw : pdfRaw.default;
 
 // Utilities for path resolution in ESM
 const __filename = fileURLToPath(import.meta.url);
