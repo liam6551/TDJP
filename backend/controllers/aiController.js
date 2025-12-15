@@ -159,9 +159,9 @@ export const chatWithAI = async (req, res) => {
         if (!text) return res.status(400).json({ error: 'Missing text' });
 
         let responses = [];
-        // Use 'gemini-2.0-flash' as it is the stable available model for this key.
-        // (1.5-flash is missing, and 2.5-flash has strict preview quotas).
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        // Use 'gemini-flash-latest' - verified as the ONLY working model for this key currently.
+        // (2.0-flash hit limit 0, 1.5-flash hit 404).
+        const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
         // --- TWIST (Gemini + RAG) ---
         if (mode === 'twist') {
