@@ -5,8 +5,7 @@ import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
 
 const require = createRequire(import.meta.url);
-const pdfRaw = require('pdf-parse');
-const pdf = (typeof pdfRaw === 'function') ? pdfRaw : pdfRaw.default;
+const mammoth = require('mammoth');
 
 // Utilities for path resolution in ESM
 const __filename = fileURLToPath(import.meta.url);
@@ -20,46 +19,70 @@ const MAX_TOKENS = 800;
 // --- KNOWLEDGE BASE ---
 let KNOWLEDGE_CONTEXT = "";
 let LOADING_STATUS = "idle";
-let LOADING_ERROR = null;
+let LOADING_DETAILS = {
+    code: "pending",
+    yearbook: "pending",
+    summary: "pending"
+};
 
 const loadKnowledgeBase = async () => {
     LOADING_STATUS = "loading";
+    let contextParts = [];
+
     try {
-        console.log("Loading Knowledge Base...");
+        console.log("Loading Knowledge Base (TXT/DOCX)...");
         const assetsPath = path.join(__dirname, '../assets');
 
-        // 1. Loading FIG Code of Points
-        const codePath = path.join(assetsPath, 'TumblingCodeOfPoints_2025-2028.pdf');
+        // 1. Loading FIG Code of Points (TXT)
+        const codePath = path.join(assetsPath, 'TRACoP2025-2028.txt');
         if (fs.existsSync(codePath)) {
-            console.log("Parsing Code of Points...");
-            const dataBuffer = fs.readFileSync(codePath);
-            const data = await pdf(dataBuffer);
-            KNOWLEDGE_CONTEXT += `\n--- FIG TUMBLING CODE OF POINTS 2025-2028 ---\n${data.text.substring(0, 800000)}...`;
-            console.log("Loaded Code of Points. Length:", data.text.length);
+            const text = fs.readFileSync(codePath, 'utf-8');
+            contextParts.push(`\n--- FIG TUMBLING CODE OF POINTS 2025-2028 ---\n${text}`);
+            LOADING_DETAILS.code = "success (" + text.length + " chars)";
+            console.log("Loaded Code of Points (TXT)");
         } else {
-            console.warn("Code of Points PDF not found at:", codePath);
-            LOADING_ERROR = "Code Path Missing: " + codePath;
+            console.warn("Code (TXT) not found:", codePath);
+            LOADING_DETAILS.code = "missing";
         }
 
-        // 2. Loading Yearbook (English filename)
-        const yearbookPath = path.join(assetsPath, 'Yearbook_2025.pdf');
-        if (fs.existsSync(yearbookPath)) {
-            console.log("Parsing Yearbook...");
-            const dataBuffer = fs.readFileSync(yearbookPath);
-            const data = await pdf(dataBuffer);
-            KNOWLEDGE_CONTEXT += `\n--- ISRAELI GYMNASTICS ASSOCIATION YEARBOOK/RULES ---\n${data.text}`;
-            console.log("Loaded Yearbook. Length:", data.text.length);
+        // 2. Loading Age Levels / Yearbook (TXT)
+        const agePath = path.join(assetsPath, 'AgeLevels.txt');
+        if (fs.existsSync(agePath)) {
+            const text = fs.readFileSync(agePath, 'utf-8');
+            contextParts.push(`\n--- COMPETITION AGE LEVELS & RULES ---\n${text}`);
+            LOADING_DETAILS.yearbook = "success (" + text.length + " chars)";
+            console.log("Loaded Age Levels (TXT)");
         } else {
-            console.warn("Yearbook PDF not found at:", yearbookPath);
-            // Don't fail completely if only yearbook is missing but code is there
+            console.warn("Age Levels (TXT) not found:", agePath);
+            LOADING_DETAILS.yearbook = "missing";
         }
 
+        // 3. Loading Judging Summary (DOCX)
+        const summaryPath = path.join(assetsPath, 'TumblingJudgingSummery.docx');
+        if (fs.existsSync(summaryPath)) {
+            try {
+                const buffer = fs.readFileSync(summaryPath);
+                const result = await mammoth.extractRawText({ buffer: buffer });
+                const text = result.value;
+                contextParts.push(`\n--- JUDGING SUMMARY TABLE & NOTES ---\n${text}`);
+                LOADING_DETAILS.summary = "success (" + text.length + " chars)";
+                console.log("Loaded Judging Summary (DOCX)");
+            } catch (err) {
+                console.error("Error parsing DOCX:", err);
+                LOADING_DETAILS.summary = "error: " + err.message;
+            }
+        } else {
+            console.warn("Summary (DOCX) not found:", summaryPath);
+            LOADING_DETAILS.summary = "missing";
+        }
+
+        KNOWLEDGE_CONTEXT = contextParts.join("\n\n");
         LOADING_STATUS = (KNOWLEDGE_CONTEXT.length > 0) ? "done" : "empty";
 
     } catch (error) {
         console.error("Failed to load knowledge base:", error);
         LOADING_STATUS = "error";
-        LOADING_ERROR = error.message;
+        LOADING_DETAILS.globalError = error.message;
     }
 };
 
@@ -67,40 +90,12 @@ const loadKnowledgeBase = async () => {
 loadKnowledgeBase();
 
 
-// Debug endpoint to check RAG status and Filesystem
+// Debug endpoint
 export const debugRag = async (req, res) => {
-    let debugInfo = {
-        status: LOADING_STATUS,
-        loadError: LOADING_ERROR,
-        dirname: __dirname,
-        structure: {}
-    };
-
-    try {
-        const assetsPath = path.join(__dirname, '../assets');
-        debugInfo.assetsPath = assetsPath;
-
-        // List files in current controller dir
-        try {
-            debugInfo.structure.controllers = fs.readdirSync(__dirname);
-        } catch (e) { debugInfo.structure.controllers = e.message; }
-
-        // List files in assets dir
-        try {
-            debugInfo.structure.assets = fs.readdirSync(assetsPath);
-        } catch (e) { debugInfo.structure.assets = e.message; }
-
-        // List files in parent dir (backend root)
-        try {
-            debugInfo.structure.root = fs.readdirSync(path.join(__dirname, '../'));
-        } catch (e) { debugInfo.structure.root = e.message; }
-
-    } catch (e) {
-        debugInfo.debugError = e.message;
-    }
-
     res.json({
-        ...debugInfo,
+        status: LOADING_STATUS,
+        details: LOADING_DETAILS,
+        assetsPath: path.join(__dirname, '../assets'),
         contextLength: KNOWLEDGE_CONTEXT.length,
         sample: KNOWLEDGE_CONTEXT ? KNOWLEDGE_CONTEXT.substring(0, 500) + "..." : "EMPTY"
     });
@@ -110,36 +105,40 @@ export const debugRag = async (req, res) => {
 
 const TWIST_SYSTEM_PROMPT = () => `
 You are **Twist**, a senior International Gymnastics Judge (FIG Brevet).
-**ROLE**: You are the automated enforcement of the **Code of Points**. You do not guess.
+**ROLE**: You are the automated enforcement of the **Code of Points**. you are NOT a generative creative writer. You are a retrieval engine.
 **SOURCE OF TRUTH**: You MUST answer strictly based on the **KNOWLEDGE BASE** provided below.
-If the rule exists in the text, CITE IT (e.g., "Page 45 states...").
-If the rule is NOT in the text, admit it: "I cannot find a specific reference to this in the loaded Code of Points."
+The Knowledge Base contains:
+1. FIG Code of Points 2025-2028 (Technical Regulations).
+2. Age Levels / Yearbook Rules.
+3. Judging Summary (Tables and Deductions).
 
-**KEY BEHAVIOR**:
-1. **Precision**: Use exact deduction values (0.1, 0.3, 0.5, 1.0).
-2. **No Hallucinations**: Do not invent rules. Use the text.
-3. **Tone**: Professional, firm, fair.
+**INSTRUCTIONS**:
+1. If the info exists in the text, usage it and CITE it.
+2. Be precise with numbers (deductions, values).
+3. If the rules say "0.3", do NOT say "small deduction", say "0.3".
+4. If you cannot find the answer in the text, say: "I cannot find a specific reference to this in the loaded documents."
+5. **Tone**: Professional, direct, authoritative.
 
 **KNOWLEDGE BASE**:
 ${KNOWLEDGE_CONTEXT}
 `;
 
 const FLICKI_SYSTEM_PROMPT = `
-You are **Flicki**, an AI Coach that **learns and evolves** with every interaction.
-**Your Philosophy**: "There is always a better way. I learn from the athlete, I learn from the judge, I learn from the physics."
+You are **Flicki**, an AI Coach that **learns and evolves**.
+**Philosophy**: "There is always a better way."
 **Behavior**:
--   You don't just give advice; you **analyze potential**.
--   You are curious. You assume the user (Head Coach) knows the athlete best.
--   **Adaptive**: If Twist gives a harsh deduction, you analyze *why* and propose a specific drill to fix it, framing it as "New data received: knee separation. Solution: Adductor drills."
--   Tone: Energetic but intelligent. Use emojis sparingly to highlight key insights (💡, 📈).
--   "I am learning from this movement..."
+-   Analyze potential and physics.
+-   Be curious. Respect the Head Coach (user).
+-   **Adaptive**: If Twist gives a deduction, you analyze *why* (biomechanics) and propose a drill.
+-   Tone: Energetic but intelligent (💡, 📈).
+-   "I see what Twist is saying, let's look at the takeoff..."
 `;
 
 const DISCUSSION_SYSTEM_PROMPT = () => `
-Generate a **realistic** professional dialogue between Twist and Flicki.
+Generate a **realistic** professional dialogue between Twist (Judge) and Flicki (Coach).
 
-**Twist**: Quotes the rule/deduction from the text.
-**Flicki**: Accepts the data ("Good catch, Twist") and proposes a training fix to the Head Coach.
+**Twist**: Quotes the rule/deduction strictly from the text.
+**Flicki**: Accepts the data and proposes a biomechanical/training fix.
 
 Structure: JSON Array strictly: [{"sender": "twist", "text": "..."}, {"sender": "flicki", "text": "..."}]
 Output: RAW JSON ONLY.
@@ -152,7 +151,7 @@ export const chatWithAI = async (req, res) => {
         if (!text) return res.status(400).json({ error: 'Missing text' });
 
         let responses = [];
-        // Use 'gemini-flash-latest' as confirmed available
+        // Use 'gemini-flash-latest' for speed and context
         const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
         // --- TWIST (Gemini + RAG) ---
@@ -160,7 +159,7 @@ export const chatWithAI = async (req, res) => {
             const chat = model.startChat({
                 history: [
                     { role: 'user', parts: [{ text: TWIST_SYSTEM_PROMPT() }] },
-                    { role: 'model', parts: [{ text: "Understood. I'm ready to judge." }] }
+                    { role: 'model', parts: [{ text: "Understood. I am ready to judge based on the text." }] }
                 ]
             });
             const result = await chat.sendMessage(text);
@@ -181,8 +180,7 @@ export const chatWithAI = async (req, res) => {
 
         // --- DISCUSSION (Gemini Orchestrator) ---
         else if (mode === 'discussion') {
-            // Include knowledge base in discussion context too
-            const systemMsg = DISCUSSION_SYSTEM_PROMPT() + `\n\n**CONTEXT FROM CODE:**\n${KNOWLEDGE_CONTEXT.substring(0, 50000)}...`;
+            const systemMsg = DISCUSSION_SYSTEM_PROMPT() + `\n\n**CONTEXT:**\n${KNOWLEDGE_CONTEXT.substring(0, 50000)}...`;
 
             const result = await model.generateContent({
                 contents: [
@@ -203,8 +201,8 @@ export const chatWithAI = async (req, res) => {
             } catch (e) {
                 console.error("JSON Parse Error (Gemini):", e);
                 responses = [
-                    { sender: 'twist', text: "I noticed a form break there." },
-                    { sender: 'flicki', text: "We can fix that with more conditioning drills." }
+                    { sender: 'twist', text: "Verification needed on that element." },
+                    { sender: 'flicki', text: "Let's review the video." }
                 ];
             }
         }
