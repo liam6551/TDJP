@@ -49,8 +49,8 @@ export const chatWithAI = async (req, res) => {
         if (!text) return res.status(400).json({ error: 'Missing text' });
 
         let responses = [];
-        // Fallback to the most stable model 'gemini-pro'
-        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+        // Use 'gemini-flash-latest' as confirmed by ListModels
+        const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
         // --- TWIST (Gemini) ---
         if (mode === 'twist') {
