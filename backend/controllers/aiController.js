@@ -159,9 +159,9 @@ export const chatWithAI = async (req, res) => {
         if (!text) return res.status(400).json({ error: 'Missing text' });
 
         let responses = [];
-        // Use 'gemini-flash-latest' - verified as the ONLY working model for this key currently.
-        // (2.0-flash hit limit 0, 1.5-flash hit 404).
-        const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+        // Use 'gemini-2.0-flash' - Billing enabled, so Quota limits (429) should be resolved.
+        // This is a superior model to 1.5-flash.
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
         // --- TWIST (Gemini + RAG) ---
         if (mode === 'twist') {
