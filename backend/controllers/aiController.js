@@ -18,38 +18,47 @@ const MAX_TOKENS = 800;
 
 // --- KNOWLEDGE BASE ---
 let KNOWLEDGE_CONTEXT = "";
+let LOADING_STATUS = "idle";
+let LOADING_ERROR = null;
 
 const loadKnowledgeBase = async () => {
+    LOADING_STATUS = "loading";
     try {
         console.log("Loading Knowledge Base...");
-        // Path to assets relative to backend folder
-        const assetsPath = path.join(__dirname, '../../assets');
+        const assetsPath = path.join(__dirname, '../assets');
 
         // 1. Loading FIG Code of Points
         const codePath = path.join(assetsPath, 'TumblingCodeOfPoints_2025-2028.pdf');
         if (fs.existsSync(codePath)) {
+            console.log("Parsing Code of Points...");
             const dataBuffer = fs.readFileSync(codePath);
             const data = await pdf(dataBuffer);
-            // Limit context if huge, but typically FIG code fits in Gemini's context
             KNOWLEDGE_CONTEXT += `\n--- FIG TUMBLING CODE OF POINTS 2025-2028 ---\n${data.text.substring(0, 800000)}...`;
-            console.log("Loaded Code of Points");
+            console.log("Loaded Code of Points. Length:", data.text.length);
         } else {
             console.warn("Code of Points PDF not found at:", codePath);
+            LOADING_ERROR = "Code Path Missing: " + codePath;
         }
 
-        // 2. Loading Hebrew Yearbook/Additions
-        const yearbookPath = path.join(assetsPath, 'שנתונים 2025-2026.pdf');
+        // 2. Loading Yearbook (English filename)
+        const yearbookPath = path.join(assetsPath, 'Yearbook_2025.pdf');
         if (fs.existsSync(yearbookPath)) {
+            console.log("Parsing Yearbook...");
             const dataBuffer = fs.readFileSync(yearbookPath);
             const data = await pdf(dataBuffer);
             KNOWLEDGE_CONTEXT += `\n--- ISRAELI GYMNASTICS ASSOCIATION YEARBOOK/RULES ---\n${data.text}`;
-            console.log("Loaded Yearbook");
+            console.log("Loaded Yearbook. Length:", data.text.length);
         } else {
             console.warn("Yearbook PDF not found at:", yearbookPath);
+            // Don't fail completely if only yearbook is missing but code is there
         }
+
+        LOADING_STATUS = (KNOWLEDGE_CONTEXT.length > 0) ? "done" : "empty";
 
     } catch (error) {
         console.error("Failed to load knowledge base:", error);
+        LOADING_STATUS = "error";
+        LOADING_ERROR = error.message;
     }
 };
 
@@ -60,7 +69,8 @@ loadKnowledgeBase();
 // Debug endpoint to check RAG status and Filesystem
 export const debugRag = async (req, res) => {
     let debugInfo = {
-        status: "?",
+        status: LOADING_STATUS,
+        loadError: LOADING_ERROR,
         dirname: __dirname,
         structure: {}
     };
@@ -85,13 +95,13 @@ export const debugRag = async (req, res) => {
         } catch (e) { debugInfo.structure.root = e.message; }
 
     } catch (e) {
-        debugInfo.error = e.message;
+        debugInfo.debugError = e.message;
     }
 
     res.json({
         ...debugInfo,
         contextLength: KNOWLEDGE_CONTEXT.length,
-        sample: KNOWLEDGE_CONTEXT.substring(0, 500) + "..."
+        sample: KNOWLEDGE_CONTEXT ? KNOWLEDGE_CONTEXT.substring(0, 500) + "..." : "EMPTY"
     });
 };
 
