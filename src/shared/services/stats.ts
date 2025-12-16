@@ -3,7 +3,7 @@ import Constants from 'expo-constants';
 
 const debuggerHost = Constants.expoConfig?.hostUri ?? Constants.manifest2?.extra?.expoClient?.hostUri ?? Constants.manifest?.debuggerHost;
 const localhost = debuggerHost?.split(':').shift() || 'localhost';
-const BACKEND_URL = `http://${localhost}:3000`;
+const BACKEND_URL = `http://${localhost}:10000`;
 
 export type StatResult = {
     elementId: string;

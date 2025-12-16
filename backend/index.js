@@ -379,7 +379,10 @@ function requireAuth(req, res, next) {
   try {
     req.user = jwt.verify(token, JWT_SECRET);
     next();
-  } catch {
+  } catch (err) {
+    console.error('[AUTH DEBUG] Token Verification Failed:', err.message);
+    console.error('[AUTH DEBUG] Token start:', token.substring(0, 10) + '...');
+    console.error('[AUTH DEBUG] Secret used (start):', JWT_SECRET.substring(0, 3) + '...');
     return res.status(401).json({ error: 'Invalid token' });
   }
 }
