@@ -291,44 +291,49 @@ export default function AIChatScreen() {
                         ? { backgroundColor: bubbleColor, borderBottomRightRadius: 4, marginRight: 10 }
                         : { backgroundColor: '#fff', borderTopLeftRadius: 4, elevation: 2, marginLeft: 10, flexShrink: 1 }
                 ]}>
-                    {!isUser && mode === 'discussion' && (
-                        <Text style={{
-                            fontSize: 10,
-                            fontWeight: 'bold',
-                            color: bubbleColor,
-                            marginBottom: 4,
-                            textAlign: isRTL ? 'right' : 'left'
-                        }}>
-                            {senderName}
+                    <View style={{ padding: 4, minWidth: 20 }}>
+                        {!isUser && mode === 'discussion' && (
+                            <Text style={{
+                                fontSize: 10,
+                                fontWeight: 'bold',
+                                color: bubbleColor,
+                                marginBottom: 4,
+                                textAlign: isRTL ? 'right' : 'left'
+                            }}>
+                                {senderName}
+                            </Text>
+                        )}
+
+                        {item.imageUri && (
+                            <Image source={{ uri: item.imageUri }} style={styles.msgImage} />
+                        )}
+
+                        <Text
+                            style={{
+                                color: isUser ? '#fff' : '#1e293b',
+                                textAlign: isRTL ? 'right' : 'left',
+                                writingDirection: isRTL ? 'rtl' : 'ltr',
+                                fontSize: 16,
+                                lineHeight: 26, // Increased again
+                            }}
+                        >
+                            {item.text.split(/(`[^`]+`)/g).map((part, index) => {
+                                if (index % 2 === 1) {
+                                    return (
+                                        <Text key={index} style={{
+                                            fontWeight: 'bold',
+                                            color: isUser ? '#fff' : '#0f172a',
+                                            backgroundColor: isUser ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.05)',
+                                        }}>
+                                            {part}
+                                        </Text>
+                                    );
+                                }
+                                return <Text key={index}>{part}</Text>;
+                            })}
+                            {"\u3000"} {/* Ideographic Space (wide) to force layout safety */}
                         </Text>
-                    )}
-
-                    {item.imageUri && (
-                        <Image source={{ uri: item.imageUri }} style={styles.msgImage} />
-                    )}
-
-                    <Text
-                        style={{
-                            color: isUser ? '#fff' : '#1e293b',
-                            textAlign: isRTL ? 'right' : 'left',
-                            writingDirection: isRTL ? 'rtl' : 'ltr', // Restore this for correct flow
-                            fontSize: 16,
-                            lineHeight: 22,
-                        }}
-                    >
-                        {item.text.split(/(`[^`]+`)/g).map((part, index) => {
-                            if (index % 2 === 1) {
-                                <Text key={index} style={{
-                                    fontWeight: 'bold',
-                                }}>
-                                    {content}
-                                </Text>
-                            }
-                            return <Text key={index}>{part}</Text>;
-                        })}
-                        {/* Trailing spaces to prevent last-word clipping on Android */}
-                        {"   "}
-                    </Text>
+                    </View>
                 </View>
             </View >
         );
