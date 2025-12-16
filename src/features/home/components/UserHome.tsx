@@ -344,7 +344,7 @@ function QuickAction({ icon, label, color, onPress, imageSource }: { icon: any, 
                 style={styles.iconCircle}
             >
                 {imageSource ? (
-                    <Image source={imageSource} style={{ width: 32, height: 32, tintColor: 'white' }} resizeMode="contain" />
+                    <Image source={imageSource} style={{ width: 32, height: 32 }} resizeMode="contain" />
                 ) : (
                     <Ionicons name={icon} size={24} color="white" />
                 )}
