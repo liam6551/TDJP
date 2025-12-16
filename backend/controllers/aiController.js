@@ -248,7 +248,7 @@ Generate a ** realistic ** professional dialogue between Twist(Judge) and Flicki
 ** Twist **: Uses strict judging emojis(🔴, 🟡, 📏).Quotes the rule.
 ** Flicki **: Uses coaching emojis(🚀, 💡, 🛠️).Proposes a fix.
 
-** CRITICAL RULE **: Do NOT use asterisks(*) or backticks(\`) in the output text inside the JSON.
+** CRITICAL RULE **: Do NOT use asterisks(*) or backticks in the output text inside the JSON.
 
     Structure: JSON Array strictly: [{ "sender": "twist", "text": "..." }, { "sender": "flicki", "text": "..." }]
 Output: RAW JSON ONLY.
