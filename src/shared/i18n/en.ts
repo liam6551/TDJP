@@ -21,7 +21,7 @@ const en = {
       calc: 'Calculator',
       stats: 'My Stats',
       rules: 'Study Material',
-      ai: 'Twist & Flicki',
+      ai: 'AI',
     },
 
     theoretical: {
