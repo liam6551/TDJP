@@ -12,7 +12,20 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Initialize Gemini Client
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// Initialize Gemini Client Lazily
+let genAI = null;
+const getGenAI = () => {
+    if (!genAI) {
+        const key = process.env.GEMINI_API_KEY;
+        if (!key) {
+            console.error("CRITICAL: GEMINI_API_KEY is missing from process.env when initializing client.");
+            // Fallback or throw? better to throw to see the error explicitly
+            throw new Error("GEMINI_API_KEY is missing");
+        }
+        genAI = new GoogleGenerativeAI(key);
+    }
+    return genAI;
+};
 
 import pool from '../db.js';
 
@@ -188,7 +201,7 @@ const loadKnowledgeBase = async () => {
 // Helper: Smart Classify & Save (DB Version) - LOGIC V3 (Multi-Rule)
 const classifyAndSaveRule = async (newRule) => {
     try {
-        const model = genAI.getGenerativeModel({
+        const model = getGenAI().getGenerativeModel({
             model: "gemini-flash-latest",
             generationConfig: { responseMimeType: "application/json" }
         });
@@ -451,7 +464,7 @@ export const chatWithAI = async (req, res) => {
         let responses = [];
         // Using 'gemini-flash-latest' (Auto-updates to latest stable Flash version)
         // 'gemini-1.5-flash' returned 404 for this API key/region.
-        const model = genAI.getGenerativeModel({
+        const model = getGenAI().getGenerativeModel({
             model: "gemini-flash-latest",
             generationConfig: {
                 maxOutputTokens: 8192, // Increased significantly to ensuring NO cutoff
