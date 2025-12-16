@@ -317,20 +317,8 @@ export default function AIChatScreen() {
                                 lineHeight: 26, // Increased again
                             }}
                         >
-                            {item.text.split(/(`[^`]+`)/g).map((part, index) => {
-                                if (index % 2 === 1) {
-                                    return (
-                                        <Text key={index} style={{
-                                            fontWeight: 'bold',
-                                            color: isUser ? '#fff' : '#0f172a',
-                                            backgroundColor: isUser ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.05)',
-                                        }}>
-                                            {part}
-                                        </Text>
-                                    );
-                                }
-                                return <Text key={index}>{part}</Text>;
-                            })}
+                            {/* Just render the text mostly as is, but keeping the split to handle potential legacy backticks gracefully without styling */}
+                            {item.text.replace(/`/g, '')}
                             {"\u3000"} {/* Ideographic Space (wide) to force layout safety */}
                         </Text>
                     </View>

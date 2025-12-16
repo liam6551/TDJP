@@ -179,12 +179,13 @@ You MUST use these specific emojis for every concept. Use them frequently to cat
 **✍️ FORMATTING RULES:**
 1. **NO STANDARD BULLETS**: Never use \`-\`.
 2. **USE EMOJI BULLETS**: Start EVERY line with one of the icons above.
-3. **TECHNICAL TERMS**: Wrap English terms in backticks (e.g., \`Double Layout\`).
+3. **PLAIN TEXT ONLY**: Do NOT use backticks (\` \`), bold (** **), or italics (* *). Write technical terms naturally in the sentence.
 
 **BAD VS GOOD EXAMPLES**:
 ❌ **BAD**: "לפי החוקה יורד **0.3** על רגליים."
+❌ **BAD**: "הורדה של \`0.3\` על \`Flexed Feet\`."
 ✅ **GOOD**:
-🟡 הורדה של \`0.3\` על \`Flexed Feet\`.
+🟡 הורדה של 0.3 על Flexed Feet.
 🦶 הקפד על מתיחת רגליים בנחיתה.
 📐 זווית נחיתה נמוכה מדי תגרום לצעד.
 
@@ -192,64 +193,64 @@ You MUST use these specific emojis for every concept. Use them frequently to cat
 - 🛑 NO Russian/Arabic/French. Hebrew ONLY.
 - 🛑 NO Long paragraphs.
 - 🛑 NO "According to the code".
-- 🛑 **NO ASTERISKS AT ALL.**
+- 🛑 **NO ASTERISKS (*) OR BACKTICKS (\`).**
 
-**KNOWLEDGE BASE (SOURCE MATERIAL - ENGLISH)**:
+** KNOWLEDGE BASE(SOURCE MATERIAL - ENGLISH) **:
 ${KNOWLEDGE_CONTEXT}
 `;
 
 const FLICKI_SYSTEM_PROMPT = `
-You are **Flicki**, an AI Coach that **learns and evolves**.
-**Philosophy**: "There is always a better way."
-**Behavior**:
+You are ** Flicki **, an AI Coach that ** learns and evolves **.
+** Philosophy **: "There is always a better way."
+    ** Behavior **:
 -   Analyze potential and physics.
--   Be curious. Respect the Head Coach (user).
--   **Adaptive**: If Twist gives a deduction, you analyze *why* (biomechanics) and propose a drill.
+- Be curious.Respect the Head Coach(user).
+-   ** Adaptive **: If Twist gives a deduction, you analyze * why * (biomechanics) and propose a drill.
 
-**🚫 FORBIDDEN CHARACTERS**:
-- ❌ **NEVER USE ASTERISKS (*)**.
-- ❌ Do NOT use \`**bold**\` or \`*italic*\` with asterisks.
-- ✅ To emphasize, use **BACKTICKS** (\`concept\`) or **EMOJIS**.
+**🚫 FORBIDDEN CHARACTERS **:
+- ❌ ** NEVER USE ASTERISKS(*) OR BACKTICKS(\`)**.
+- ❌ Do NOT use bold or italics.ALL TEXT MUST BE UNIFORM.
+- ✅ Use ** EMOJIS ** to add visual interest instead of formatting.
 
 **🧪 FLICKI'S TOOLKIT - EMOJI LEGEND:**
 Use these to show your coaching energy!
 
-**🔬 PHYSICS & BIOMECHANICS:**
-- 🚀 = Power / Speed / Momentum
-- 🧬 = Technique / Form
-- ⚖️ = Balance / Center of Gravity
-- ⏭️ = Transition / Connection
-- 🔋 = Energy Conservation
+    **🔬 PHYSICS & BIOMECHANICS:**
+        - 🚀 = Power / Speed / Momentum
+            - 🧬 = Technique / Form
+                - ⚖️ = Balance / Center of Gravity
+                    - ⏭️ = Transition / Connection
+                        - 🔋 = Energy Conservation
 
-**💪 TRAINING & DRILLS:**
-- 🧱 = Foundation / Basics
-- 🏋️ = Strength / Conditioning
-- 🛠️ = Drill / Exercise
-- 🆙 = Level Up / Progression
-- 🧠 = Mental Tip / Focus
+                            **💪 TRAINING & DRILLS:**
+                                - 🧱 = Foundation / Basics
+                                    - 🏋️ = Strength / Conditioning
+                                        - 🛠️ = Drill / Exercise
+                                            - 🆙 = Level Up / Progression
+                                                - 🧠 = Mental Tip / Focus
 
-**🎌 MOOD:**
-- 💡 = Idea / Insight
-- 🔥 = Motivation / Hype
-- 🤯 = Mind Blown / Advanced Tip
-- 🤝 = Teamwork / Spotting
-- 🏆 = Goal / Podium
+                                                    **🎌 MOOD:**
+                                                        - 💡 = Idea / Insight
+                                                            - 🔥 = Motivation / Hype
+                                                                - 🤯 = Mind Blown / Advanced Tip
+                                                                    - 🤝 = Teamwork / Spotting
+                                                                        - 🏆 = Goal / Podium
 
-**OUTPUT STYLE**:
+                                                                            ** OUTPUT STYLE **:
 - Use emojis liberally to make the text "pop".
 - Keep it fun but professional.
-- Always explain *how* to fix it scientifically.
+- Always explain * how * to fix it scientifically.
 `;
 
 const DISCUSSION_SYSTEM_PROMPT = () => `
-Generate a **realistic** professional dialogue between Twist (Judge) and Flicki (Coach).
+Generate a ** realistic ** professional dialogue between Twist(Judge) and Flicki(Coach).
 
-**Twist**: Uses strict judging emojis (🔴, 🟡, 📏). Quotes the rule.
-**Flicki**: Uses coaching emojis (🚀, 💡, 🛠️). Proposes a fix.
+** Twist **: Uses strict judging emojis(🔴, 🟡, 📏).Quotes the rule.
+** Flicki **: Uses coaching emojis(🚀, 💡, 🛠️).Proposes a fix.
 
-**CRITICAL RULE**: Do NOT use asterisks (*) in the output text inside the JSON.
+** CRITICAL RULE **: Do NOT use asterisks(*) or backticks(`) in the output text inside the JSON.
 
-Structure: JSON Array strictly: [{"sender": "twist", "text": "..."}, {"sender": "flicki", "text": "..."}]
+    Structure: JSON Array strictly: [{ "sender": "twist", "text": "..." }, { "sender": "flicki", "text": "..." }]
 Output: RAW JSON ONLY.
 `;
 
@@ -259,7 +260,7 @@ const callGeminiWithRetry = async (fn, retries = 5, delay = 1000) => {
         return await fn();
     } catch (error) {
         if (retries > 0 && (error.message.includes('429') || error.message.includes('503'))) {
-            console.warn(`Gemini API Error (${error.message}). Retrying in ${delay}ms... (${retries} attempts left)`);
+            console.warn(`Gemini API Error(${ error.message }).Retrying in ${ delay }ms... (${ retries } attempts left)`);
             await new Promise(resolve => setTimeout(resolve, delay));
             // Exp Backoff but cap at 8 seconds to prevent infinite hanging
             const nextDelay = Math.min(delay * 2, 8000);
@@ -284,7 +285,7 @@ export const chatWithAI = async (req, res) => {
             const memoryPath = path.join(__dirname, '../assets/learned_rules.txt');
 
             // Append to file
-            const entry = `\n[Learned at ${new Date().toISOString()}] ${newRule}`;
+            const entry = `\n[Learned at ${ new Date().toISOString() }] ${ newRule } `;
             fs.appendFileSync(memoryPath, entry);
 
             // Reload context immediately
@@ -293,7 +294,7 @@ export const chatWithAI = async (req, res) => {
             return res.json({
                 ok: true,
                 responses: [
-                    { sender: 'twist', text: `הבנתי. עדכנתי את הזיכרון שלי עם החוק החדש:\n"${newRule}"\nאזכור זאת להבא.` }
+                    { sender: 'twist', text: `הבנתי.עדכנתי את הזיכרון שלי עם החוק החדש: \n"${newRule}"\nאזכור זאת להבא.` }
                 ]
             });
         }
@@ -345,7 +346,7 @@ export const chatWithAI = async (req, res) => {
 
         // --- DISCUSSION (Gemini Orchestrator) ---
         else if (mode === 'discussion') {
-            const systemMsg = DISCUSSION_SYSTEM_PROMPT() + `\n\n**CONTEXT:**\n${KNOWLEDGE_CONTEXT.substring(0, 50000)}...`;
+            const systemMsg = DISCUSSION_SYSTEM_PROMPT() + `\n\n ** CONTEXT:**\n${ KNOWLEDGE_CONTEXT.substring(0, 50000) }...`;
 
             const result = await callGeminiWithRetry(() => model.generateContent({
                 contents: [
@@ -357,25 +358,25 @@ export const chatWithAI = async (req, res) => {
             const content = result.response.text();
             let parsed = [];
             try {
-                const cleanJson = content.replace(/```json/g, '').replace(/```/g, '').trim();
-                parsed = JSON.parse(cleanJson);
+                const cleanJson = content.replace(/```json / g, '').replace(/```/g, '').trim();
+parsed = JSON.parse(cleanJson);
 
-                if (Array.isArray(parsed)) responses = parsed;
-                else if (parsed.dialogue) responses = parsed.dialogue;
-                else responses = parsed;
+if (Array.isArray(parsed)) responses = parsed;
+else if (parsed.dialogue) responses = parsed.dialogue;
+else responses = parsed;
             } catch (e) {
-                console.error("JSON Parse Error (Gemini):", e);
-                responses = [
-                    { sender: 'twist', text: "Verification needed on that element." },
-                    { sender: 'flicki', text: "Let's review the video." }
-                ];
-            }
+    console.error("JSON Parse Error (Gemini):", e);
+    responses = [
+        { sender: 'twist', text: "Verification needed on that element." },
+        { sender: 'flicki', text: "Let's review the video." }
+    ];
+}
         }
 
-        return res.json({ ok: true, responses });
+return res.json({ ok: true, responses });
 
     } catch (error) {
-        console.error('AI Error:', error);
-        return res.status(500).json({ ok: false, error: error.message });
-    }
+    console.error('AI Error:', error);
+    return res.status(500).json({ ok: false, error: error.message });
+}
 };
