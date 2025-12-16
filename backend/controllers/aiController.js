@@ -181,26 +181,43 @@ const classifyAndSaveRule = async (newRule) => {
         const data = JSON.parse(result.response.text());
 
         // Save logic
-        if (data.category && FLICKI_KNOWLEDGE[data.category]) {
-            if (data.subcategory && FLICKI_KNOWLEDGE[data.category][data.subcategory]) {
-                FLICKI_KNOWLEDGE[data.category][data.subcategory].push(data.refined_text);
-            } else if (Array.isArray(FLICKI_KNOWLEDGE[data.category])) {
-                FLICKI_KNOWLEDGE[data.category].push(data.refined_text);
-            } else {
-                // Fallback for missing subcategory
-                // If it's an object (like Fitness) but no subcategory match, put in first one or create 'General'
-                const keys = Object.keys(FLICKI_KNOWLEDGE[data.category]);
-                if (keys.length > 0) FLICKI_KNOWLEDGE[data.category][keys[0]].push(data.refined_text);
-            }
+        let savedCategory = data.category;
+        let savedSub = data.subcategory;
 
-            // Write to disk
-            fs.writeFileSync(path.join(__dirname, '../assets/flicki_knowledge.json'), JSON.stringify(FLICKI_KNOWLEDGE, null, 2));
-            return data;
+        // Validation: If returned category doesn't exist, default to "Other"
+        if (!savedCategory || !FLICKI_KNOWLEDGE[savedCategory]) {
+            savedCategory = "Other";
+            savedSub = null;
         }
-        return null;
+
+        // Insert into structure
+        if (savedSub && FLICKI_KNOWLEDGE[savedCategory][savedSub]) {
+            FLICKI_KNOWLEDGE[savedCategory][savedSub].push(data.refined_text);
+        } else if (Array.isArray(FLICKI_KNOWLEDGE[savedCategory])) {
+            FLICKI_KNOWLEDGE[savedCategory].push(data.refined_text);
+        } else {
+            // Fallback for object-based category with missing subcategory (put in 'Other' instead)
+            // Or try to find First Key? No, safer to put in Other to avoid mess
+            FLICKI_KNOWLEDGE["Other"].push(`${savedCategory} (Unsorted): ${data.refined_text}`);
+            savedCategory = "Other";
+        }
+
+        // Write to disk
+        fs.writeFileSync(path.join(__dirname, '../assets/flicki_knowledge.json'), JSON.stringify(FLICKI_KNOWLEDGE, null, 2));
+
+        return { category: savedCategory, subcategory: savedSub, refined_text: data.refined_text };
+
     } catch (e) {
         console.error("Classification Error:", e);
-        return null;
+        // Emergency Fallback: Save raw rule to 'Other'
+        try {
+            FLICKI_KNOWLEDGE["Other"].push(`[Manual Save due to Error]: ${newRule}`);
+            fs.writeFileSync(path.join(__dirname, '../assets/flicki_knowledge.json'), JSON.stringify(FLICKI_KNOWLEDGE, null, 2));
+            return { category: "Other", refined_text: newRule };
+        } catch (writeErr) {
+            console.error("Critical Write Error:", writeErr);
+            return null;
+        }
     }
 };
 
