@@ -318,19 +318,11 @@ export default function AIChatScreen() {
                     >
                         {item.text.split(/(`[^`]+`)/g).map((part, index) => {
                             if (index % 2 === 1) {
-                                // Code Pill (Technical Term)
-                                const content = part.slice(1, -1);
-                                return (
-                                    <Text key={index} style={{
-                                        fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
-                                        backgroundColor: isUser ? 'rgba(255,255,255,0.2)' : '#e2e8f0',
-                                        color: isUser ? '#fff' : '#0f172a',
-                                        fontSize: 14,
-                                        fontWeight: 'bold',
-                                    }}>
-                                        {" "}{content}{" "}
-                                    </Text>
-                                );
+                                <Text key={index} style={{
+                                    fontWeight: 'bold',
+                                }}>
+                                    {content}
+                                </Text>
                             }
                             return <Text key={index}>{part}</Text>;
                         })}
