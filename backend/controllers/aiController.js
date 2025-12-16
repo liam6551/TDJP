@@ -358,7 +358,7 @@ export const chatWithAI = async (req, res) => {
             const content = result.response.text();
             let parsed = [];
             try {
-                const cleanJson = content.replace(/```json / g, '').replace(/```/g, '').trim();
+                const cleanJson = content.replace(/```json/g, '').replace(/```/g, '').trim();
                 parsed = JSON.parse(cleanJson);
 
                 if (Array.isArray(parsed)) responses = parsed;
