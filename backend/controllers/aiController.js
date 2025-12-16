@@ -39,6 +39,7 @@ const FLICKI_STRUCTURE = {
 
 // --- KNOWLEDGE BASE ---
 let KNOWLEDGE_CONTEXT = "";
+let FLICKI_KNOWLEDGE = JSON.parse(JSON.stringify(FLICKI_STRUCTURE)); // Init with structure
 let LOADING_STATUS = "idle";
 let LOADING_DETAILS = {
     code: "pending",
@@ -51,14 +52,14 @@ const loadKnowledgeBase = async () => {
     LOADING_STATUS = "loading";
     let contextParts = [];
 
+    // Reset Knowledge to clean structure
+    FLICKI_KNOWLEDGE = JSON.parse(JSON.stringify(FLICKI_STRUCTURE));
+
     try {
         console.log("Loading Knowledge Base (TXT/DOCX + DB)...");
         const assetsPath = path.join(__dirname, '../assets');
 
-        // ... (loading 1-6 remains same, omitted for brevity in thought, but must be preserved or handled)
-        // actually I cannot omit them in replace_content unless I target specific lines.
-        // I will use multiple replace chunks if needed, or replace the whole function if easier.
-        // Let's assume lines 36-114 are static.
+        // ... (Existing loaders 1-6 remain unchanged)
 
         // 1. Loading FIG Code of Points (TXT)
         const codePath = path.join(assetsPath, 'TRACoP2025-2028.txt');
@@ -83,7 +84,7 @@ const loadKnowledgeBase = async () => {
                 const buffer = fs.readFileSync(summaryPath);
                 const result = await mammoth.convertToHtml({ buffer: buffer });
                 const html = result.value;
-                const text = html.replace(/<[^>]+>/g, '\n').replace(/\n\s*\n/g, '\n\n'); // simplified cleanup
+                const text = html.replace(/<[^>]+>/g, '\n').replace(/\n\s*\n/g, '\n\n');
                 contextParts.push(`\n--- JUDGING SUMMARY TABLE & NOTES ---\n${text}`);
                 LOADING_DETAILS.summary = "success (" + text.length + " chars)";
             } catch (e) { console.error(e); }
@@ -103,28 +104,55 @@ const loadKnowledgeBase = async () => {
         try {
             const result = await pool.query(`SELECT category, subcategory, rule_text FROM flicki_rules ORDER BY category, subcategory, created_at`);
 
-            // Grouping
-            const grouped = {};
+            // Populate FLICKI_KNOWLEDGE (Runtime Cache)
             result.rows.forEach(row => {
                 const cat = row.category;
                 const sub = row.subcategory;
-                if (!grouped[cat]) grouped[cat] = {};
+
+                // Ensure category exists (if new category added via DB manually)
+                if (!FLICKI_KNOWLEDGE[cat]) FLICKI_KNOWLEDGE[cat] = [];
 
                 if (sub) {
-                    if (!grouped[cat][sub]) grouped[cat][sub] = [];
-                    grouped[cat][sub].push(row.rule_text);
+                    // Start of complex object handling (like Fitness)
+                    if (!FLICKI_KNOWLEDGE[cat][sub]) {
+                        // If it was an array, convert to object? rare case. Assume schema holds.
+                        if (Array.isArray(FLICKI_KNOWLEDGE[cat])) {
+                            // It was array, but now needs subkeys. 
+                            // To avoid breaking schema, we might force sub into title?
+                            // adhering to FLICKI_STRUCTURE is safer.
+                        } else {
+                            FLICKI_KNOWLEDGE[cat][sub] = [];
+                        }
+                    }
+                    if (FLICKI_KNOWLEDGE[cat][sub] && Array.isArray(FLICKI_KNOWLEDGE[cat][sub])) {
+                        FLICKI_KNOWLEDGE[cat][sub].push(row.rule_text);
+                    }
                 } else {
-                    if (!grouped[cat]['__main']) grouped[cat]['__main'] = [];
-                    grouped[cat]['__main'].push(row.rule_text);
+                    // Top level item
+                    if (Array.isArray(FLICKI_KNOWLEDGE[cat])) {
+                        FLICKI_KNOWLEDGE[cat].push(row.rule_text);
+                    } else {
+                        // It's an object (like Fitness) but got a top-level rule?
+                        // Put in 'General' or ignore?
+                        // Let's create a 'General' key if needed, or just push if it supports mixed (it doesn't usually)
+                    }
                 }
             });
 
+            // Generate Context String from FLICKI_KNOWLEDGE
             let flickiText = "\n--- FLICKI'S SECRET COACHING NOTES (STRUCTURED - DB) ---\n";
-            for (const [cat, content] of Object.entries(grouped)) {
-                flickiText += `\n[${cat.toUpperCase()}]\n`;
-                for (const [sub, rules] of Object.entries(content)) {
-                    if (sub !== '__main') flickiText += `  -- ${sub.toUpperCase()} --\n`;
-                    rules.forEach(r => flickiText += `- ${r}\n`);
+            for (const [cat, items] of Object.entries(FLICKI_KNOWLEDGE)) {
+                if (Array.isArray(items) && items.length > 0) {
+                    flickiText += `\n[${cat.toUpperCase()}]\n`;
+                    items.forEach(r => flickiText += `- ${r}\n`);
+                } else if (typeof items === 'object' && !Array.isArray(items)) {
+                    flickiText += `\n[${cat.toUpperCase()}]\n`;
+                    for (const [sub, rules] of Object.entries(items)) {
+                        if (rules.length > 0) {
+                            flickiText += `  -- ${sub.toUpperCase()} --\n`;
+                            rules.forEach(r => flickiText += `- ${r}\n`);
+                        }
+                    }
                 }
             }
 
