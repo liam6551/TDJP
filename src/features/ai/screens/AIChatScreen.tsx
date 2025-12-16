@@ -289,7 +289,7 @@ export default function AIChatScreen() {
                     styles.bubble,
                     isUser
                         ? { backgroundColor: bubbleColor, borderBottomRightRadius: 4, marginRight: 10 }
-                        : { backgroundColor: '#fff', borderTopLeftRadius: 4, elevation: 2, marginLeft: 10, flexShrink: 1 }
+                        : { backgroundColor: '#fff', borderTopLeftRadius: 4, elevation: 2, marginLeft: 10, flexWrap: 'wrap' } // flexShrink removed
                 ]}>
                     <View style={{ paddingHorizontal: 8, paddingVertical: 6, minWidth: 60 }}>
                         {!isUser && mode === 'discussion' && (
