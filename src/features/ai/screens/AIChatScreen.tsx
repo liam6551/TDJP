@@ -354,7 +354,7 @@ export default function AIChatScreen() {
 
                     {/* CENTER: PERSONA TOGGLE */}
                     <View style={styles.centerHeader}>
-                        <PersonaToggle activePersona={mode as any} onToggle={setMode} />
+                        {/* <PersonaToggle activePersona={mode as any} onToggle={setMode} /> */}
                     </View>
 
                     {/* RIGHT SIDE (LTR End / RTL Start): MENU */}
