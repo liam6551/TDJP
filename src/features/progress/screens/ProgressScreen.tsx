@@ -1,13 +1,11 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import Screen from '@/shared/ui/Screen';
-import { useAppTheme } from '@/shared/theme/theme';
 import { View, Text, BackHandler, ScrollView, StyleSheet, ActivityIndicator, Dimensions } from 'react-native';
+import TopBar from '@/shared/ui/TopBar';
+import { useAppTheme } from '@/shared/theme/theme';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StatsService, UserStatItem } from '@/shared/services/stats';
 import { ELEMENTS } from '@/shared/data/elements';
-import { Svg, G, Circle } from 'react-native-svg';
-import he from '@/shared/i18n/he';
-import en from '@/shared/i18n/en';
+import { Svg, Circle } from 'react-native-svg';
 import { useLang } from '@/shared/state/lang';
 
 // === CONSTANTS ===
@@ -143,12 +141,24 @@ export default function ProgressScreen() {
   // === DATA FETCH ===
   useEffect(() => {
     let mounted = true;
-    StatsService.getUserStats().then(data => {
-      if (mounted) {
-        setStats(data);
-        setLoading(false);
+
+    const fetchData = async () => {
+      try {
+        // Create a timeout promise to prevent indefinite loading
+        const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000));
+        const data = await Promise.race([StatsService.getUserStats(), timeout]);
+
+        if (mounted) {
+          setStats(data as UserStatItem[]);
+          setLoading(false);
+        }
+      } catch (e) {
+        console.warn('Stats load error:', e);
+        if (mounted) setLoading(false);
       }
-    });
+    };
+
+    fetchData();
     return () => { mounted = false; };
   }, []);
 
@@ -197,26 +207,20 @@ export default function ProgressScreen() {
     };
   }, [stats, lang]);
 
+  const onBack = () => nav.navigate('Home');
+
   if (loading) {
     return (
-      <Screen title={t.title}>
+      <View style={{ flex: 1, backgroundColor: colors.bg }}>
+        <TopBar title={t.title} showBack onBack={onBack} />
         <View style={styles.center}>
           <ActivityIndicator size="large" color={colors.tint} />
         </View>
-      </Screen>
+      </View>
     );
   }
 
-  if (metrics.totalCount === 0) {
-    return (
-      <Screen title={t.title}>
-        <View style={styles.center}>
-          <Text style={{ color: colors.text, fontSize: 18, opacity: 0.7 }}>{t.noData}</Text>
-        </View>
-      </Screen>
-    );
-  }
-
+  // Define data for rendering
   const donutData = [
     { key: 'mastered', val: metrics.masteredCount, color: '#4ade80' }, // Green
     { key: 'medium', val: metrics.mediumCount, color: '#facc15' },   // Yellow
@@ -227,80 +231,88 @@ export default function ProgressScreen() {
   const weak = metrics.elementStats.filter(e => e.status === 'weak' || e.status === 'medium');
 
   return (
-    <Screen title={t.title}>
-      <ScrollView contentContainerStyle={styles.scroll}>
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+      <TopBar title={t.title} showBack onBack={onBack} />
 
-        {/* Top Cards */}
-        <View style={styles.row}>
-          <StatCard label={t.totalQs} value={metrics.totalCount} color={colors.tint} />
-          <StatCard label={t.successRate} value={`${metrics.successRate}%`} color={metrics.successRate > 80 ? '#4ade80' : metrics.successRate > 50 ? '#facc15' : '#f87171'} />
+      {metrics.totalCount === 0 ? (
+        <View style={styles.center}>
+          <Text style={{ color: colors.text, fontSize: 18, opacity: 0.7 }}>{t.noData}</Text>
         </View>
+      ) : (
+        <ScrollView contentContainerStyle={styles.scroll}>
 
-        {/* Chart Section */}
-        <View style={[styles.section, { backgroundColor: colors.card }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t.chartTitle}</Text>
-          <View style={styles.chartRow}>
-            <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-              <Donut data={donutData} />
-            </View>
-            <View style={styles.legend}>
-              <View style={styles.legendItem}><View style={[styles.dot, { backgroundColor: '#4ade80' }]} /><Text style={{ color: colors.text }}>{t.mastered} ({metrics.masteredCount})</Text></View>
-              <View style={styles.legendItem}><View style={[styles.dot, { backgroundColor: '#facc15' }]} /><Text style={{ color: colors.text }}>{t.medium} ({metrics.mediumCount})</Text></View>
-              <View style={styles.legendItem}><View style={[styles.dot, { backgroundColor: '#f87171' }]} /><Text style={{ color: colors.text }}>{t.weak} ({metrics.weakCount})</Text></View>
+          {/* Top Cards */}
+          <View style={styles.row}>
+            <StatCard label={t.totalQs} value={metrics.totalCount} color={colors.tint} />
+            <StatCard label={t.successRate} value={`${metrics.successRate}%`} color={metrics.successRate > 80 ? '#4ade80' : metrics.successRate > 50 ? '#facc15' : '#f87171'} />
+          </View>
+
+          {/* Chart Section */}
+          <View style={[styles.section, { backgroundColor: colors.card }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t.chartTitle}</Text>
+            <View style={styles.chartRow}>
+              <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+                <Donut data={donutData} />
+              </View>
+              <View style={styles.legend}>
+                <View style={styles.legendItem}><View style={[styles.dot, { backgroundColor: '#4ade80' }]} /><Text style={{ color: colors.text }}>{t.mastered} ({metrics.masteredCount})</Text></View>
+                <View style={styles.legendItem}><View style={[styles.dot, { backgroundColor: '#facc15' }]} /><Text style={{ color: colors.text }}>{t.medium} ({metrics.mediumCount})</Text></View>
+                <View style={styles.legendItem}><View style={[styles.dot, { backgroundColor: '#f87171' }]} /><Text style={{ color: colors.text }}>{t.weak} ({metrics.weakCount})</Text></View>
+              </View>
             </View>
           </View>
-        </View>
 
-        {/* Needs Work List */}
-        {weak.length > 0 && (
-          <View style={[styles.section, { backgroundColor: colors.card }]}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t.weakElements}</Text>
-            {weak.map(e => (
-              <View key={e.id} style={[styles.itemRow, { borderBottomColor: colors.border }]}>
-                <View style={{ width: 40, alignItems: 'center' }}>
-                  <Text style={{ fontSize: 20 }}>{e.symbol}</Text>
-                </View>
-                <View style={{ flex: 1, paddingHorizontal: 10 }}>
-                  <Text style={{ color: colors.text, fontWeight: 'bold' }}>{e.name}</Text>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
-                    <ProgressBar pct={e.pct} color={e.status === 'weak' ? '#f87171' : '#facc15'} />
-                    <Text style={{ color: colors.text, fontSize: 12, marginLeft: 8 }}>{Math.round(e.pct)}%</Text>
+          {/* Needs Work List */}
+          {weak.length > 0 && (
+            <View style={[styles.section, { backgroundColor: colors.card }]}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>{t.weakElements}</Text>
+              {weak.map(e => (
+                <View key={e.id} style={[styles.itemRow, { borderBottomColor: colors.border }]}>
+                  <View style={{ width: 40, alignItems: 'center' }}>
+                    <Text style={{ fontSize: 20 }}>{e.symbol}</Text>
+                  </View>
+                  <View style={{ flex: 1, paddingHorizontal: 10 }}>
+                    <Text style={{ color: colors.text, fontWeight: 'bold' }}>{e.name}</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                      <ProgressBar pct={e.pct} color={e.status === 'weak' ? '#f87171' : '#facc15'} />
+                      <Text style={{ color: colors.text, fontSize: 12, marginLeft: 8 }}>{Math.round(e.pct)}%</Text>
+                    </View>
+                  </View>
+                  <View>
+                    <Text style={{ color: colors.text, fontSize: 12 }}>{e.correct}/{e.total}</Text>
                   </View>
                 </View>
-                <View>
-                  <Text style={{ color: colors.text, fontSize: 12 }}>{e.correct}/{e.total}</Text>
-                </View>
-              </View>
-            ))}
-          </View>
-        )}
+              ))}
+            </View>
+          )}
 
-        {/* Strong List */}
-        {strong.length > 0 && (
-          <View style={[styles.section, { backgroundColor: colors.card }]}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t.strongElements}</Text>
-            {strong.map(e => (
-              <View key={e.id} style={[styles.itemRow, { borderBottomColor: colors.border }]}>
-                <View style={{ width: 40, alignItems: 'center' }}>
-                  <Text style={{ fontSize: 20 }}>{e.symbol}</Text>
-                </View>
-                <View style={{ flex: 1, paddingHorizontal: 10 }}>
-                  <Text style={{ color: colors.text, fontWeight: 'bold' }}>{e.name}</Text>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
-                    <ProgressBar pct={e.pct} color="#4ade80" />
-                    <Text style={{ color: colors.text, fontSize: 12, marginLeft: 8 }}>{Math.round(e.pct)}%</Text>
+          {/* Strong List */}
+          {strong.length > 0 && (
+            <View style={[styles.section, { backgroundColor: colors.card }]}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>{t.strongElements}</Text>
+              {strong.map(e => (
+                <View key={e.id} style={[styles.itemRow, { borderBottomColor: colors.border }]}>
+                  <View style={{ width: 40, alignItems: 'center' }}>
+                    <Text style={{ fontSize: 20 }}>{e.symbol}</Text>
+                  </View>
+                  <View style={{ flex: 1, paddingHorizontal: 10 }}>
+                    <Text style={{ color: colors.text, fontWeight: 'bold' }}>{e.name}</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                      <ProgressBar pct={e.pct} color="#4ade80" />
+                      <Text style={{ color: colors.text, fontSize: 12, marginLeft: 8 }}>{Math.round(e.pct)}%</Text>
+                    </View>
+                  </View>
+                  <View>
+                    <Text style={{ color: colors.text, fontSize: 12 }}>{e.correct}/{e.total}</Text>
                   </View>
                 </View>
-                <View>
-                  <Text style={{ color: colors.text, fontSize: 12 }}>{e.correct}/{e.total}</Text>
-                </View>
-              </View>
-            ))}
-          </View>
-        )}
+              ))}
+            </View>
+          )}
 
-      </ScrollView>
-    </Screen>
+        </ScrollView>
+      )}
+    </View>
   );
 }
 
