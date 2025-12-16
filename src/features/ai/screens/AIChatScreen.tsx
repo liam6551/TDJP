@@ -291,7 +291,7 @@ export default function AIChatScreen() {
                         ? { backgroundColor: bubbleColor, borderBottomRightRadius: 4, marginRight: 10 }
                         : { backgroundColor: '#fff', borderTopLeftRadius: 4, elevation: 2, marginLeft: 10, flexShrink: 1 }
                 ]}>
-                    <View style={{ paddingHorizontal: 5, paddingVertical: 2, minWidth: 40 }}>
+                    <View style={{ paddingHorizontal: 8, paddingVertical: 6, minWidth: 60 }}>
                         {!isUser && mode === 'discussion' && (
                             <Text style={{
                                 fontSize: 10,
@@ -309,14 +309,14 @@ export default function AIChatScreen() {
                         )}
 
                         <Text
+                            textBreakStrategy="simple" // Vital for Android Hebrew clipping
+                            selectable={true}
                             style={{
                                 color: isUser ? '#fff' : '#1e293b',
                                 textAlign: isRTL ? 'right' : 'left',
                                 writingDirection: isRTL ? 'rtl' : 'ltr',
                                 fontSize: 16,
-                                lineHeight: 24,
-                                paddingTop: 2,
-                                paddingBottom: 2,
+                                lineHeight: 28, // Generous line height
                             }}
                         >
                             {/* Just render the text mostly as is, but keeping the split to handle potential legacy backticks gracefully without styling */}
