@@ -305,7 +305,7 @@ export const chatWithAI = async (req, res) => {
         const model = genAI.getGenerativeModel({
             model: "gemini-flash-latest",
             generationConfig: {
-                maxOutputTokens: 2500, // Increased to prevent cutting off words
+                maxOutputTokens: 8192, // Increased significantly to ensuring NO cutoff
                 temperature: 0.7
             }
         });
