@@ -15,7 +15,7 @@
     -   `O` = Tuck (קירוס)
     -   `<` = Pike (קיפול)
     -   `/` = Layout (גוף ישר)
-    -   `Y` = Split/Straddle (פסיעה)
+    -   `Y` = Split (פסיעה)
 
 4.  **Direction**:
     -   **Backward (Default)**: No prefix. (e.g., `22O`)
