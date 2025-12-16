@@ -194,9 +194,13 @@ const classifyAndSaveRule = async (newRule) => {
         Target Schema: ${JSON.stringify(FLICKI_STRUCTURE, null, 2)}
         
         INSTRUCTIONS:
-        1. Match the rule to an existing top-level Category.
-        2. If the category is "Fitness", you MUST specify one of its subcategories.
-        3. Refine the text to be short, punchy, and professional (Hebrew).
+        1. **ANALYZE**: Understand the core tumbling concept or correction being taught.
+        2. **GENERALIZE**: Do NOT just copy the user's words. Convert the specific feedback into a **universal coaching principle** or rule.
+        3. **REFINE**: Write the output in **professional, short, and clear Hebrew**.
+           - If the user says "Don't do X!", write "Avoid X because..." or "Ensure Y instead."
+           - If the user is angry/informal, strip the emotion and keep the fact.
+        4. Match the rule to an existing top-level Category.
+        5. If category is "Fitness", specify Subcategory.
         
         Output strictly JSON: { "category": "TargetCategory", "subcategory": "TargetSubCategory (or null)", "refined_text": "..." }
         `;
