@@ -130,7 +130,7 @@ export default function ProgressScreen() {
   useFocusEffect(
     React.useCallback(() => {
       const onBackPress = () => {
-        nav.navigate('Home');
+        nav.navigate('Tabs', { screen: 'Home' });
         return true;
       };
       const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
@@ -168,33 +168,46 @@ export default function ProgressScreen() {
     const correctCount = stats.filter(s => s.is_correct).length;
     const successRate = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
 
-    // Group by Element
+    // Group by Element - Pre-fill with all elements to ensure they appear
     const byElement: Record<string, { total: number, correct: number }> = {};
-    stats.forEach(s => {
-      if (!byElement[s.element_id]) byElement[s.element_id] = { total: 0, correct: 0 };
-      byElement[s.element_id].total++;
-      if (s.is_correct) byElement[s.element_id].correct++;
+
+    // Initialize ALL elements from the database definition
+    ELEMENTS.forEach(e => {
+      byElement[e.id] = { total: 0, correct: 0 };
     });
 
+    // Merge actual user stats
+    stats.forEach(s => {
+      if (byElement[s.element_id]) {
+        byElement[s.element_id].total++;
+        if (s.is_correct) byElement[s.element_id].correct++;
+      }
+    });
+
+    // Create Stats Array
     const elementStats: ElementStat[] = Object.entries(byElement).map(([eid, val]) => {
       const elem = ELEMENTS.find(e => String(e.id) === String(eid));
-      const pct = (val.correct / val.total) * 100;
+      if (!elem) return null;
+
+      const pct = val.total > 0 ? (val.correct / val.total) * 100 : 0;
       let status: 'mastered' | 'medium' | 'weak' = 'weak';
-      if (pct >= 80 && val.total >= 3) status = 'mastered';
+
+      if (val.total === 0) status = 'weak';
+      else if (pct >= 80 && val.total >= 3) status = 'mastered';
       else if (pct >= 50 && val.total >= 3) status = 'medium';
 
       return {
         id: eid,
-        name: elem ? (lang === 'he' ? elem.name.he : elem.name.en) : `Unknown (${eid})`,
-        symbol: elem ? elem.symbol : '?',
+        name: lang === 'he' ? elem.name.he : elem.name.en,
+        symbol: elem.symbol,
         total: val.total,
         correct: val.correct,
         pct,
         status
       };
-    });
+    }).filter(Boolean) as ElementStat[];
 
-    // Sort: Weakest first (to encourage practice)
+    // Sort: Weakest first
     elementStats.sort((a, b) => a.pct - b.pct);
 
     return {
@@ -207,7 +220,7 @@ export default function ProgressScreen() {
     };
   }, [stats, lang]);
 
-  const onBack = () => nav.navigate('Home');
+  const onBack = () => nav.navigate('Tabs', { screen: 'Home' });
 
   if (loading) {
     return (
@@ -234,20 +247,16 @@ export default function ProgressScreen() {
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
       <TopBar title={t.title} showBack onBack={onBack} />
 
-      {metrics.totalCount === 0 ? (
-        <View style={styles.center}>
-          <Text style={{ color: colors.text, fontSize: 18, opacity: 0.7 }}>{t.noData}</Text>
+      <ScrollView contentContainerStyle={styles.scroll}>
+
+        {/* Top Cards */}
+        <View style={styles.row}>
+          <StatCard label={t.totalQs} value={metrics.totalCount} color={colors.tint} />
+          <StatCard label={t.successRate} value={`${metrics.successRate}%`} color={metrics.successRate > 80 ? '#4ade80' : metrics.successRate > 50 ? '#facc15' : '#f87171'} />
         </View>
-      ) : (
-        <ScrollView contentContainerStyle={styles.scroll}>
 
-          {/* Top Cards */}
-          <View style={styles.row}>
-            <StatCard label={t.totalQs} value={metrics.totalCount} color={colors.tint} />
-            <StatCard label={t.successRate} value={`${metrics.successRate}%`} color={metrics.successRate > 80 ? '#4ade80' : metrics.successRate > 50 ? '#facc15' : '#f87171'} />
-          </View>
-
-          {/* Chart Section */}
+        {/* Chart Section - Only show if there is actual data */}
+        {metrics.totalCount > 0 ? (
           <View style={[styles.section, { backgroundColor: colors.card }]}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>{t.chartTitle}</Text>
             <View style={styles.chartRow}>
@@ -261,57 +270,61 @@ export default function ProgressScreen() {
               </View>
             </View>
           </View>
+        ) : (
+          <View style={[styles.section, { backgroundColor: colors.card, alignItems: 'center', padding: 24 }]}>
+            <Text style={{ color: colors.text, opacity: 0.7, textAlign: 'center' }}>{t.noData}</Text>
+          </View>
+        )}
 
-          {/* Needs Work List */}
-          {weak.length > 0 && (
-            <View style={[styles.section, { backgroundColor: colors.card }]}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>{t.weakElements}</Text>
-              {weak.map(e => (
-                <View key={e.id} style={[styles.itemRow, { borderBottomColor: colors.border }]}>
-                  <View style={{ width: 40, alignItems: 'center' }}>
-                    <Text style={{ fontSize: 20 }}>{e.symbol}</Text>
-                  </View>
-                  <View style={{ flex: 1, paddingHorizontal: 10 }}>
-                    <Text style={{ color: colors.text, fontWeight: 'bold' }}>{e.name}</Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
-                      <ProgressBar pct={e.pct} color={e.status === 'weak' ? '#f87171' : '#facc15'} />
-                      <Text style={{ color: colors.text, fontSize: 12, marginLeft: 8 }}>{Math.round(e.pct)}%</Text>
-                    </View>
-                  </View>
-                  <View>
-                    <Text style={{ color: colors.text, fontSize: 12 }}>{e.correct}/{e.total}</Text>
+        {/* Needs Work List - Always shows at least unpracticed items */}
+        {weak.length > 0 && (
+          <View style={[styles.section, { backgroundColor: colors.card }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t.weakElements}</Text>
+            {weak.map(e => (
+              <View key={e.id} style={[styles.itemRow, { borderBottomColor: colors.border }]}>
+                <View style={{ width: 40, alignItems: 'center' }}>
+                  <Text style={{ fontSize: 20 }}>{e.symbol}</Text>
+                </View>
+                <View style={{ flex: 1, paddingHorizontal: 10 }}>
+                  <Text style={{ color: colors.text, fontWeight: 'bold' }}>{e.name}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                    <ProgressBar pct={e.pct} color={e.status === 'weak' ? '#f87171' : '#facc15'} />
+                    <Text style={{ color: colors.text, fontSize: 12, marginLeft: 8 }}>{Math.round(e.pct)}%</Text>
                   </View>
                 </View>
-              ))}
-            </View>
-          )}
+                <View>
+                  <Text style={{ color: colors.text, fontSize: 12 }}>{e.correct}/{e.total}</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
 
-          {/* Strong List */}
-          {strong.length > 0 && (
-            <View style={[styles.section, { backgroundColor: colors.card }]}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>{t.strongElements}</Text>
-              {strong.map(e => (
-                <View key={e.id} style={[styles.itemRow, { borderBottomColor: colors.border }]}>
-                  <View style={{ width: 40, alignItems: 'center' }}>
-                    <Text style={{ fontSize: 20 }}>{e.symbol}</Text>
-                  </View>
-                  <View style={{ flex: 1, paddingHorizontal: 10 }}>
-                    <Text style={{ color: colors.text, fontWeight: 'bold' }}>{e.name}</Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
-                      <ProgressBar pct={e.pct} color="#4ade80" />
-                      <Text style={{ color: colors.text, fontSize: 12, marginLeft: 8 }}>{Math.round(e.pct)}%</Text>
-                    </View>
-                  </View>
-                  <View>
-                    <Text style={{ color: colors.text, fontSize: 12 }}>{e.correct}/{e.total}</Text>
+        {/* Strong List */}
+        {strong.length > 0 && (
+          <View style={[styles.section, { backgroundColor: colors.card }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t.strongElements}</Text>
+            {strong.map(e => (
+              <View key={e.id} style={[styles.itemRow, { borderBottomColor: colors.border }]}>
+                <View style={{ width: 40, alignItems: 'center' }}>
+                  <Text style={{ fontSize: 20 }}>{e.symbol}</Text>
+                </View>
+                <View style={{ flex: 1, paddingHorizontal: 10 }}>
+                  <Text style={{ color: colors.text, fontWeight: 'bold' }}>{e.name}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                    <ProgressBar pct={e.pct} color="#4ade80" />
+                    <Text style={{ color: colors.text, fontSize: 12, marginLeft: 8 }}>{Math.round(e.pct)}%</Text>
                   </View>
                 </View>
-              ))}
-            </View>
-          )}
+                <View>
+                  <Text style={{ color: colors.text, fontSize: 12 }}>{e.correct}/{e.total}</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
 
-        </ScrollView>
-      )}
+      </ScrollView>
     </View>
   );
 }
