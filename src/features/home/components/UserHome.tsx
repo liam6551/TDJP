@@ -14,9 +14,7 @@ import TheoreticalMaterialModal from './TheoreticalMaterialModal';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import * as SecureStore from 'expo-secure-store';
 import { getStoredUri, setStoredUri, requestAndroidPermissions } from '@/shared/filesystem/storage';
-import { Platform, Image } from 'react-native';
-// @ts-ignore
-import twistAiLogo from '@/../assets/twist_ai_logo.png';
+import { Platform } from 'react-native';
 
 export default function UserHome() {
     const { colors } = useAppTheme();
@@ -294,8 +292,7 @@ export default function UserHome() {
                         onPress={() => setShowQuickQuiz(true)}
                     />
                     <QuickAction
-                        icon="chatbubbles"
-                        imageSource={twistAiLogo}
+                        icon="glasses"
                         label={t(lang, 'home.quickActions.ai' as any)}
                         color={['#a18cd1', '#fbc2eb'] as const}
                         onPress={() => navigation.navigate('AIChat')}
@@ -317,7 +314,7 @@ export default function UserHome() {
     );
 }
 
-function QuickAction({ icon, label, color, onPress, imageSource }: { icon: any, label: string, color: readonly [string, string, ...string[]], onPress?: () => void, imageSource?: any }) {
+function QuickAction({ icon, label, color, onPress }: { icon: any, label: string, color: readonly [string, string, ...string[]], onPress?: () => void }) {
     const { colors } = useAppTheme();
     const navigation = useNavigation<any>(); // Access navigation
 
@@ -343,11 +340,7 @@ function QuickAction({ icon, label, color, onPress, imageSource }: { icon: any, 
                 colors={color}
                 style={styles.iconCircle}
             >
-                {imageSource ? (
-                    <Image source={imageSource} style={{ width: 32, height: 32 }} resizeMode="contain" />
-                ) : (
-                    <Ionicons name={icon} size={24} color="white" />
-                )}
+                <Ionicons name={icon} size={24} color="white" />
             </LinearGradient>
             <Text style={[styles.actionLabel, { color: colors.text }]}>{label}</Text>
         </TouchableOpacity>
