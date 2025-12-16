@@ -14,7 +14,7 @@ const __dirname = path.dirname(__filename);
 // Initialize Gemini Client
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-const MAX_TOKENS = 800;
+
 
 // --- KNOWLEDGE BASE ---
 let KNOWLEDGE_CONTEXT = "";
@@ -302,7 +302,13 @@ export const chatWithAI = async (req, res) => {
         let responses = [];
         // Using 'gemini-flash-latest' (Auto-updates to latest stable Flash version)
         // 'gemini-1.5-flash' returned 404 for this API key/region.
-        const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+        const model = genAI.getGenerativeModel({
+            model: "gemini-flash-latest",
+            generationConfig: {
+                maxOutputTokens: 2500, // Increased to prevent cutting off words
+                temperature: 0.7
+            }
+        });
 
         // Helper to Convert Frontend History to Gemini History
         const formatHistory = (frontendHistory, systemPrompt) => {
