@@ -351,7 +351,8 @@ export const chatWithAI = async (req, res) => {
         if (!text) return res.status(400).json({ error: 'Missing text' });
 
         // --- LEARNING TRIGGER (SMART) ---
-        const isCorrection = text.trim().match(/^(תיקון:|Learn:|Correction:)\s*(.+)/i);
+        // Relaxed regex: Matches "תיקון", "Learn", "Correction" followed by optional colon/dash and space
+        const isCorrection = text.trim().match(/^(תיקון|Learn|Correction)[:\-\s]*\s+(.+)/i);
 
         if (isCorrection) {
             const newRuleRaw = isCorrection[2];
