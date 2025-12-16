@@ -13,6 +13,7 @@ import { useFonts, FrankRuhlLibre_700Bold } from '@expo-google-fonts/frank-ruhl-
 import { Svg, G, Circle, Path } from 'react-native-svg';
 import he from '@/shared/i18n/he';
 import en from '@/shared/i18n/en';
+import { StatsService } from '@/shared/services/stats';
 
 type Props = {
     visible: boolean;
@@ -259,6 +260,35 @@ function QuickQuizSummary({ results, total, onClose, colors, lang, fontsLoaded, 
     const backRotate = flip.interpolate({ inputRange: [0, 1], outputRange: ['180deg', '360deg'] });
     const frontOpacity = flip.interpolate({ inputRange: [0, 0.49, 0.5, 1], outputRange: [1, 1, 0, 0] });
     const backOpacity = flip.interpolate({ inputRange: [0, 0.5, 0.51, 1], outputRange: [0, 0, 1, 1] });
+
+    // === Save Stats Logic ===
+    React.useEffect(() => {
+        const saveStats = async () => {
+            if (!results || results.length === 0) return;
+
+            const statsPayload = results.map((r: any) => {
+                // qid format: "template:elementId" or "open:template:elementId"
+                const parts = r.qid.split(':');
+                const elementId = parts[parts.length - 1]; // ID is always last
+
+                // Find element for difficulty value
+                // QuickQuiz uses ELEMENTS direct import usually
+                const elem = (ELEMENTS as unknown as ElementItem[]).find(e => String(e.id) === String(elementId));
+                const diff = elem ? Number(elem.value) : 0;
+
+                return {
+                    elementId,
+                    isCorrect: !!r.correct,
+                    difficulty: isNaN(diff) ? 0 : diff
+                };
+            });
+
+            console.log('[QuickQuiz] Saving stats for', statsPayload.length, 'items');
+            await StatsService.saveResults(statsPayload);
+        };
+
+        saveStats();
+    }, [results]);
 
     return (
         <View style={styles.innerContainer}>

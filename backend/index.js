@@ -34,8 +34,9 @@ const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret';
 const signToken = (payload) => jwt.sign(payload, JWT_SECRET, { expiresIn: '30d' });
 
 /* ---------- Rate limit ---------- */
-app.use(rateLimit({ windowMs: 15 * 60 * 1000, limit: 100, standardHeaders: true, legacyHeaders: false }));
-const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 20, standardHeaders: true, legacyHeaders: false });
+// Relaxed for development
+app.use(rateLimit({ windowMs: 15 * 60 * 1000, limit: 5000, standardHeaders: true, legacyHeaders: false }));
+const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 1000, standardHeaders: true, legacyHeaders: false });
 
 /* ---------- Email & SMS (verification) ---------- */
 // 6 digits

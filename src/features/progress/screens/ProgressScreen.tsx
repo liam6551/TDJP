@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import { View, Text, BackHandler, ScrollView, StyleSheet, ActivityIndicator, Dimensions, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
+import { View, Text, BackHandler, ScrollView, StyleSheet, ActivityIndicator, Dimensions, TouchableOpacity, Animated, Easing } from 'react-native';
 import TopBar from '@/shared/ui/TopBar';
 import { useAppTheme } from '@/shared/theme/theme';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -9,55 +9,61 @@ import { useLang } from '@/shared/state/lang';
 import { Ionicons } from '@expo/vector-icons';
 
 // === TYPES ===
+type Tier = 'locked' | 'novice' | 'apprentice' | 'competent' | 'proficient' | 'master';
+type ScoreMode = 'all' | Tier;
+
 type ElementStat = {
   id: string;
   name: string;
   symbol: string;
-  total: number;
-  correct: number;
-  pct: number;
-  status: 'mastered' | 'medium' | 'weak' | 'unplayed';
+  score: number; // 0-100
+  tier: Tier;
+};
+
+// === COLORS & TIERS ===
+const TIERS: Record<Tier, { labelHe: string, labelEn: string, color: string, bg: string, range: [number, number] }> = {
+  locked: { labelHe: 'נעול', labelEn: 'Locked', color: '#9ca3af', bg: '#f3f4f6', range: [0, 0] },
+  novice: { labelHe: 'מתחיל', labelEn: 'Novice', color: '#ef4444', bg: '#fee2e2', range: [0, 20] }, // Red
+  apprentice: { labelHe: 'מתלמד', labelEn: 'Apprentice', color: '#f97316', bg: '#ffedd5', range: [21, 40] }, // Orange
+  competent: { labelHe: 'מוסמך', labelEn: 'Competent', color: '#eab308', bg: '#fef9c3', range: [41, 60] }, // Yellow
+  proficient: { labelHe: 'מיומן', labelEn: 'Proficient', color: '#84cc16', bg: '#ecfccb', range: [61, 80] }, // Neon Green (Lime)
+  master: { labelHe: 'מאסטר', labelEn: 'Master', color: '#15803d', bg: '#dcfce7', range: [81, 100] } // Strong Green
 };
 
 // === HELPER COMPONENTS ===
 
 function MasteryCard({ item, colors }: { item: ElementStat, colors: any }) {
-  // Mastery Colors
-  let bg = colors.card;
-  let border = colors.border;
-  let icon = 'lock-closed-outline'; // Default for unplayed
-  let opacity = 0.5;
+  const tierConfig = TIERS[item.tier];
 
-  if (item.status === 'mastered') { // Gold / Green
-    bg = '#dcfce7'; // Light green
-    border = '#22c55e';
-    icon = 'trophy';
-    opacity = 1;
-  } else if (item.status === 'medium') { // Silver / Yellow
-    bg = '#fef9c3'; // Light yellow
-    border = '#eab308';
-    icon = 'ribbon';
-    opacity = 1;
-  } else if (item.status === 'weak') { // Bronze / Red
-    bg = '#fee2e2'; // Light red
-    border = '#ef4444';
-    icon = 'construct'; // Work in progress
-    opacity = 1;
-  }
+  // Custom styling for Locked vs Active
+  const isLocked = item.tier === 'locked';
+  const borderColor = tierConfig.color;
+  const bgColor = tierConfig.bg;
 
   return (
-    <View style={[styles.masteryCard, { backgroundColor: bg, borderColor: border, opacity }]}>
+    <View style={[styles.masteryCard, { backgroundColor: bgColor, borderColor: borderColor, opacity: isLocked ? 0.6 : 1 }]}>
       <View style={styles.cardHeader}>
-        <Ionicons name={icon as any} size={16} color={border} />
-        {item.total > 0 && <Text style={{ fontSize: 10, color: border, fontWeight: 'bold' }}>{item.pct.toFixed(0)}%</Text>}
+        {isLocked ? (
+          <Ionicons name="lock-closed" size={16} color={borderColor} />
+        ) : (
+          <Text style={{ fontSize: 12, color: borderColor, fontWeight: '900' }}>{item.score}%</Text>
+        )}
+        <View style={[styles.tierBadge, { backgroundColor: borderColor }]}>
+          <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#fff' }} />
+        </View>
       </View>
+
       <Text style={[styles.symbol, { color: 'black' }]}>{item.symbol}</Text>
-      <Text style={[styles.name, { color: 'black' }]} numberOfLines={1}>{item.name}</Text>
+
+      {/* 2 Lines for Name */}
+      <Text style={[styles.name, { color: 'black' }]} numberOfLines={2}>{item.name}</Text>
 
       {/* Mini Progress Bar */}
-      <View style={styles.miniBarBg}>
-        <View style={[styles.miniBarFill, { width: `${item.pct}%`, backgroundColor: border }]} />
-      </View>
+      {!isLocked && (
+        <View style={styles.miniBarBg}>
+          <View style={[styles.miniBarFill, { width: `${item.score}%`, backgroundColor: borderColor }]} />
+        </View>
+      )}
     </View>
   );
 }
@@ -69,39 +75,38 @@ export default function ProgressScreen() {
 
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<UserStatItem[]>([]);
-  const [filter, setFilter] = useState<'all' | 'weak' | 'mastered'>('all');
+  const [filter, setFilter] = useState<Tier | 'all'>('all');
+
+  // Interactive Score Card
+  const [scoreMode, setScoreMode] = useState<ScoreMode>('all');
+  const flipAnim = useRef(new Animated.Value(0)).current;
 
   // === TEXTS ===
   const t = lang === 'he' ? {
     title: 'מעבדת השליטה',
-    totalQs: 'אימונים שבוצעו',
-    masteryScore: 'ציון שליטה כללי',
+    totalQs: 'מספר אימונים',
+    masteryScore: 'אחוזי שליטה',
     filterAll: 'הכל',
-    filterWeak: 'לחיזוק',
-    filterMastered: 'המומחיות שלי',
     emptyState: 'עדיין לא אספת מספיק נתונים...',
   } : {
     title: 'Mastery Lab',
     totalQs: 'Total Drills',
-    masteryScore: 'Mastery Score',
+    masteryScore: 'Mastery %',
     filterAll: 'All',
-    filterWeak: 'Needs Work',
-    filterMastered: 'Mastered',
     emptyState: 'Not enough data yet...',
   };
 
   useFocusEffect(
     React.useCallback(() => {
-      const onBackPress = () => {
-        nav.navigate('Tabs', { screen: 'Home' });
-        return true;
-      };
-      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
-      return () => subscription.remove();
+      // Reset to ALL on entry
+      setScoreMode('all');
+      const onBackPress = () => { nav.navigate('Tabs', { screen: 'Home' }); return true; };
+      const s = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      return () => s.remove();
     }, [nav])
   );
 
-  // Fetch data on focus
+  // Fetch data
   useFocusEffect(
     React.useCallback(() => {
       let mounted = true;
@@ -109,77 +114,131 @@ export default function ProgressScreen() {
 
       const fetchData = async () => {
         try {
-          console.log('[ProgressScreen] Fetching stats...');
-          // Add timeout to prevent infinite hanging
           const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Request timeout')), 5000));
           const data = await Promise.race([StatsService.getUserStats(), timeoutPromise]);
-
-          console.log('[ProgressScreen] Stats received:', (data as any)?.length);
           if (mounted) {
             setStats(data as UserStatItem[]);
             setLoading(false);
           }
         } catch (e) {
-          console.error('[ProgressScreen] Fetch error (timeout or net):', e);
+          console.error('[ProgressScreen] Fetch error:', e);
           if (mounted) setLoading(false);
         }
       };
-
       fetchData();
-
       return () => { mounted = false; };
     }, [])
   );
 
   const metrics = useMemo(() => {
-    const totalDrills = stats.length;
+    // 1. Group by Element ID
+    const historyByElement: Record<string, boolean[]> = {}; // true=correct, false=wrong
+    const sortedStats = [...stats].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 
-    const byElement: Record<string, { total: number, correct: number }> = {};
-    ELEMENTS.forEach(e => { byElement[e.id] = { total: 0, correct: 0 }; });
-    stats.forEach(s => {
-      if (byElement[s.element_id]) {
-        byElement[s.element_id].total++;
-        if (s.is_correct) byElement[s.element_id].correct++;
-      }
+    sortedStats.forEach(s => {
+      if (!historyByElement[s.element_id]) historyByElement[s.element_id] = [];
+      historyByElement[s.element_id].push(s.is_correct);
     });
 
-    const items: ElementStat[] = Object.entries(byElement).map(([eid, val]) => {
-      const elem = ELEMENTS.find(e => String(e.id) === String(eid));
-      if (!elem) return null;
-      const pct = val.total > 0 ? (val.correct / val.total) * 100 : 0;
-      let status: ElementStat['status'] = 'unplayed';
+    const items: ElementStat[] = ELEMENTS.map(elem => {
+      const history = historyByElement[elem.id] || [];
 
-      if (val.total > 0) {
-        if (pct >= 80 && val.total >= 3) status = 'mastered';
-        else if (pct >= 50) status = 'medium';
-        else status = 'weak';
+      // Calculate Score: 0 start. +5 correct, -5 wrong. Min 0, Max 100.
+      let score = 0;
+      history.forEach(isCorrect => {
+        if (isCorrect) score += 5;
+        else score -= 5;
+
+        if (score < 0) score = 0;
+        if (score > 100) score = 100;
+      });
+
+      // Determine Tier
+      let tier: Tier = 'locked';
+      if (history.length > 0) {
+        if (score <= 20) tier = 'novice';
+        else if (score <= 40) tier = 'apprentice';
+        else if (score <= 60) tier = 'competent';
+        else if (score <= 80) tier = 'proficient';
+        else tier = 'master';
+      } else {
+        // Explicit "Locked" for unplayed
+        tier = 'locked';
       }
 
       return {
-        id: eid,
+        id: elem.id,
         name: lang === 'he' ? elem.name.he : elem.name.en,
         symbol: elem.symbol,
-        total: val.total,
-        correct: val.correct,
-        pct,
-        status
+        score,
+        tier
       };
-    }).filter(Boolean) as ElementStat[];
+    });
 
-    // Calculate Global Mastery Score (Average of all elements)
-    const totalScore = items.reduce((acc, item) => acc + item.pct, 0);
-    const masteryScore = Math.round(totalScore / items.length);
+    // Score calculations
+    const totalScore = items.length > 0 ? Math.round(items.reduce((acc, i) => acc + i.score, 0) / items.length) : 0;
 
-    items.sort((a, b) => b.pct - a.pct); // Strongest first
+    // Counts per tier
+    const counts: Record<Tier, number> = { locked: 0, novice: 0, apprentice: 0, competent: 0, proficient: 0, master: 0 };
+    items.forEach(i => counts[i.tier]++);
 
-    return { totalDrills, masteryScore, items };
+    return { totalDrills: stats.length, masteryScore: totalScore, items, counts, totalItems: items.length };
   }, [stats, lang]);
 
   const filteredItems = useMemo(() => {
-    if (filter === 'mastered') return metrics.items.filter(i => i.status === 'mastered');
-    if (filter === 'weak') return metrics.items.filter(i => i.status === 'weak' || i.status === 'medium');
-    return metrics.items;
+    if (filter === 'all') return metrics.items;
+    return metrics.items.filter(i => i.tier === filter);
   }, [filter, metrics]);
+
+  // Animation Logic
+  const handleScorePress = () => {
+    // Defne Cycle: All -> Novice -> Apprentice -> Competent -> Proficient -> Master -> Locked -> All
+    const cycle: ScoreMode[] = ['all', 'novice', 'apprentice', 'competent', 'proficient', 'master', 'locked'];
+    const currIdx = cycle.indexOf(scoreMode);
+    const nextMode = cycle[(currIdx + 1) % cycle.length];
+
+    // Spin!
+    Animated.timing(flipAnim, {
+      toValue: 1,
+      duration: 600,
+      useNativeDriver: true,
+      easing: Easing.inOut(Easing.ease)
+    }).start(({ finished }) => {
+      if (finished) {
+        flipAnim.setValue(0); // Reset for next time
+      }
+    });
+
+    // Change data halfway (300ms)
+    setTimeout(() => {
+      setScoreMode(nextMode);
+    }, 300);
+  };
+
+  // Setup Rotation Interpolation
+  const spin = flipAnim.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: ['0deg', '90deg', '0deg']
+  });
+
+  // Determine Card Display Data
+  let cardTitle = t.masteryScore;
+  let cardValue = `${metrics.masteryScore}%`;
+  let cardColor = '#3b82f6'; // Default Blue for All
+
+  if (scoreMode !== 'all') {
+    const tier = TIERS[scoreMode];
+    cardTitle = lang === 'he' ? tier.labelHe : tier.labelEn;
+    cardColor = tier.color;
+    // Calculate Percentage of Collection
+    const count = metrics.counts[scoreMode];
+    const pctOfTotal = metrics.totalItems > 0 ? Math.round((count / metrics.totalItems) * 100) : 0;
+    cardValue = `${pctOfTotal}%`;
+  } else {
+    // Default Blue for "All" / Global Mastery
+    // User requested "Mastery % (All) in Blue"
+    cardColor = '#3b82f6';
+  }
 
   if (loading) {
     return (
@@ -198,30 +257,55 @@ export default function ProgressScreen() {
 
         {/* === HERO SECTION === */}
         <View style={[styles.hero, { backgroundColor: colors.card }]}>
+
+          {/* Drills (Static) */}
           <View style={styles.heroCol}>
-            <Text style={[styles.heroLabel, { color: colors.text }]}>{t.totalQs}</Text>
+            <Text style={[styles.heroLabel, { color: colors.text }]} numberOfLines={2}>{t.totalQs}</Text>
             <Text style={[styles.heroValue, { color: colors.tint }]}>{metrics.totalDrills}</Text>
           </View>
+
           <View style={[styles.divider, { backgroundColor: colors.border }]} />
+
+          {/* Interactive Score Card */}
           <View style={styles.heroCol}>
-            <Text style={[styles.heroLabel, { color: colors.text }]}>{t.masteryScore}</Text>
-            <Text style={[styles.heroValue, { color: metrics.masteryScore > 80 ? '#22c55e' : metrics.masteryScore > 50 ? '#eab308' : '#ef4444' }]}>
-              {metrics.masteryScore}%
-            </Text>
+            <TouchableOpacity onPress={handleScorePress} activeOpacity={0.8}>
+              <Animated.View style={{ alignItems: 'center', transform: [{ rotateX: spin }] }}>
+                <Text style={[styles.heroLabel, { color: colors.text }]} numberOfLines={2}>{cardTitle}</Text>
+                <Text style={[styles.heroValue, { color: cardColor }]}>
+                  {cardValue}
+                </Text>
+              </Animated.View>
+            </TouchableOpacity>
           </View>
         </View>
 
-        {/* === TABS === */}
-        <View style={styles.tabs}>
-          <TouchableOpacity onPress={() => setFilter('all')} style={[styles.tab, filter === 'all' && styles.activeTab, { borderColor: colors.border }]}>
-            <Text style={[styles.tabText, filter === 'all' && styles.activeTabText, { color: colors.text }]}>{t.filterAll}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => setFilter('weak')} style={[styles.tab, filter === 'weak' && styles.activeTab, { borderColor: colors.border }]}>
-            <Text style={[styles.tabText, filter === 'weak' && styles.activeTabText, { color: colors.text }]}>{t.filterWeak}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => setFilter('mastered')} style={[styles.tab, filter === 'mastered' && styles.activeTab, { borderColor: colors.border }]}>
-            <Text style={[styles.tabText, filter === 'mastered' && styles.activeTabText, { color: colors.text }]}>{t.filterMastered}</Text>
-          </TouchableOpacity>
+        {/* === TABS SCROLL === */}
+        <View style={{ marginBottom: 16 }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: 4, flexDirection: lang === 'he' ? 'row-reverse' : 'row' }}>
+            <TouchableOpacity onPress={() => setFilter('all')} style={[styles.tab, filter === 'all' && styles.activeTab, { borderColor: colors.border }]}>
+              <Text style={[styles.tabText, filter === 'all' && styles.activeTabText, { color: colors.text }]}>{t.filterAll}</Text>
+            </TouchableOpacity>
+
+            {(['locked', 'novice', 'apprentice', 'competent', 'proficient', 'master'] as Tier[]).map(key => {
+              const cfg = TIERS[key];
+              const isActive = filter === key;
+              return (
+                <TouchableOpacity key={key} onPress={() => setFilter(key)}
+                  style={[
+                    styles.tab,
+                    isActive && { backgroundColor: cfg.color, borderColor: cfg.color },
+                    !isActive && { borderColor: cfg.color, borderWidth: 1.5, backgroundColor: colors.card }
+                  ]}>
+                  <Text style={[
+                    styles.tabText,
+                    isActive ? { color: 'white' } : { color: cfg.color }
+                  ]}>
+                    {lang === 'he' ? cfg.labelHe : cfg.labelEn}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
         </View>
 
         {/* === MASTERY GRID === */}
@@ -241,25 +325,25 @@ export default function ProgressScreen() {
 }
 
 const { width } = Dimensions.get('window');
-const colWidth = (width - 48) / 3; // 3 columns
+const colWidth = (width - 48) / 3;
 
 const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   scroll: { padding: 16 },
   hero: { flexDirection: 'row', borderRadius: 16, padding: 20, marginBottom: 24, elevation: 2, alignItems: 'center' },
-  heroCol: { flex: 1, alignItems: 'center' },
+  heroCol: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   divider: { width: 1, height: '80%', marginHorizontal: 10 },
-  heroLabel: { fontSize: 14, opacity: 0.7, marginBottom: 4 },
-  heroValue: { fontSize: 32, fontWeight: '900' },
+  heroLabel: { fontSize: 14, opacity: 0.9, marginBottom: 4, textAlign: 'center', fontWeight: '600' },
+  heroValue: { fontSize: 28, fontWeight: '900' },
   tabs: { flexDirection: 'row', marginBottom: 16, gap: 10 },
-  tab: { paddingVertical: 8, paddingHorizontal: 16, borderRadius: 20, borderWidth: 1 },
+  tab: { paddingVertical: 6, paddingHorizontal: 14, borderRadius: 20, borderWidth: 1 }, // Compact tabs
   activeTab: { backgroundColor: '#3b82f6', borderColor: '#3b82f6' },
-  tabText: { fontWeight: '600' },
+  tabText: { fontWeight: '700', fontSize: 13 },
   activeTabText: { color: 'white' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   masteryCard: {
     width: colWidth,
-    aspectRatio: 0.85,
+    height: colWidth * 1.25, // Fixed aspect for lining up
     borderRadius: 12,
     padding: 8,
     borderWidth: 2,
@@ -267,8 +351,9 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   cardHeader: { width: '100%', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  symbol: { fontSize: 24, fontWeight: 'bold' },
-  name: { fontSize: 10, textAlign: 'center', opacity: 0.8 },
-  miniBarBg: { width: '100%', height: 4, backgroundColor: 'rgba(0,0,0,0.1)', borderRadius: 2, overflow: 'hidden' },
+  tierBadge: { width: 12, height: 12, borderRadius: 6, alignItems: 'center', justifyContent: 'center' },
+  symbol: { fontSize: 26, fontWeight: 'bold', marginTop: 4 },
+  name: { fontSize: 11, textAlign: 'center', opacity: 0.9, lineHeight: 14, fontWeight: '600' },
+  miniBarBg: { width: '100%', height: 4, backgroundColor: 'rgba(0,0,0,0.1)', borderRadius: 2, overflow: 'hidden', marginTop: 6 },
   miniBarFill: { height: '100%' }
 });
