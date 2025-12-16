@@ -1,38 +1,59 @@
-const apiKey = "AIzaSyDNCXHTfJ4zEbq0I0F_escg3f_MNeypka0";
-// Try v1beta as it's the most common endpoint
-const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
+const apiKey = process.env.GEMINI_API_KEY || "AIzaSyDNCXHTfJ4zEbq0I0F_escg3f_MNeypka0"; // Fallback for local test if env missing
 
-async function listModels() {
-    console.log("Fetching list of models from Google API...");
+const candidates = [
+    "gemini-1.5-flash-001",
+    "gemini-1.5-flash-002",
+    "gemini-1.5-flash-8b",
+    "gemini-2.0-flash-exp",
+    "gemini-exp-1206",
+    "gemini-2.0-flash-lite-preview-02-05", // From previous list
+    "gemini-1.5-pro",
+    "gemini-1.5-pro-001",
+    "gemini-1.5-pro-002"
+];
+
+async function testCandidate(modelName) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+    const payload = {
+        contents: [{ parts: [{ text: "Hello" }] }]
+    };
+
+    console.log(`\nTesting: ${modelName}...`);
     try {
-        const response = await fetch(url);
-        const data = await response.json();
-
-        if (data.error) {
-            console.error("❌ API ERROR:", JSON.stringify(data.error, null, 2));
-            return;
-        }
-
-        if (!data.models) {
-            console.log("❌ NO MODELS FOUND. Full response:", JSON.stringify(data, null, 2));
-            return;
-        }
-
-        console.log("\n✅ AVAILABLE MODELS (That support generateContent):");
-        let found = false;
-        data.models.forEach(m => {
-            // We only care about models that can generate text
-            if (m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent")) {
-                console.log(`Model: ${m.name}`); // e.g. models/gemini-pro
-                found = true;
-            }
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
         });
 
-        if (!found) console.log("No models found that support generateContent.");
+        const data = await response.json();
+
+        if (!response.ok) {
+            console.log(`❌ FAILED (${response.status}): ${JSON.stringify(data.error?.message || data)}`);
+            return false;
+        }
+
+        console.log(`✅ SUCCESS! Response:`, data.candidates?.[0]?.content?.parts?.[0]?.text?.trim().substring(0, 20) + "...");
+        return true;
 
     } catch (error) {
-        console.error("❌ NETWORK ERROR:", error);
+        console.log(`❌ NETWORK ERROR: ${error.message}`);
+        return false;
     }
 }
 
-listModels();
+async function findWorkingModel() {
+    console.log("🔍 PROBING GEMINI MODELS...");
+
+    for (const model of candidates) {
+        const works = await testCandidate(model);
+        if (works) {
+            console.log(`\n🎉 FOUND WORKING MODEL: ${model}`);
+            console.log("Recommend updating aiController.js to use this model.");
+            return;
+        }
+    }
+    console.log("\n💀 ALL MODELS FAILED.");
+}
+
+findWorkingModel();

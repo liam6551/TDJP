@@ -159,9 +159,9 @@ export const chatWithAI = async (req, res) => {
         if (!text) return res.status(400).json({ error: 'Missing text' });
 
         let responses = [];
-        // Use 'gemini-flash-latest' - verified as the ONLY working model for this key currently.
-        // It has a small quota (20/day) but at least it works.
-        const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+        // Using 'gemini-2.0-flash' with the new paid API Key.
+        // This should provide high performance without rate limits.
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
         // --- TWIST (Gemini + RAG) ---
         if (mode === 'twist') {
