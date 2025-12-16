@@ -7,6 +7,7 @@ import { ELEMENTS, keyboardElementsFor } from '@/shared/data/elements';
 import { useLang } from '@/shared/state/lang';
 import TopBar from '@/shared/ui/TopBar';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { StatsService } from '@/shared/services/stats';
 
 const { width } = Dimensions.get('window');
 
@@ -42,6 +43,14 @@ function CardItem({
   const mark = (ok: boolean) => {
     if (ok) onSuccess(); else onFail();
     setHighlight(ok ? 'green' : 'red');
+
+    // Save stats in background
+    StatsService.saveResults([{
+      elementId: item.id,
+      isCorrect: ok,
+      difficulty: 1 // Flashcards are considered basic drill (1)
+    }]).catch(e => console.warn('Failed to save flashcard stat', e));
+
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => setHighlight('none'), 2000);
     flip(false);
@@ -153,7 +162,7 @@ export default function FlashcardsScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
       <TopBar
-        titleKey="tabs.flash" 
+        titleKey="tabs.flash"
         showElementToggle
         elementMode={elementMode}
         onToggleElementMode={() => setElementMode(prev => (prev === 'text' ? 'symbol' : 'text'))}
