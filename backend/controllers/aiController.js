@@ -76,6 +76,17 @@ const loadKnowledgeBase = async () => {
             LOADING_DETAILS.summary = "missing";
         }
 
+        // 4. Loading Learned Rules (Memory)
+        const memoryPath = path.join(assetsPath, 'learned_rules.txt');
+        if (fs.existsSync(memoryPath)) {
+            const memoryText = fs.readFileSync(memoryPath, 'utf-8');
+            if (memoryText.trim().length > 0) {
+                // Prepend to ensure high priority
+                contextParts.unshift(`\n${memoryText}\n`);
+                console.log("Loaded Learned Rules (Memory)");
+            }
+        }
+
         KNOWLEDGE_CONTEXT = contextParts.join("\n\n");
         LOADING_STATUS = (KNOWLEDGE_CONTEXT.length > 0) ? "done" : "empty";
 
@@ -157,6 +168,29 @@ export const chatWithAI = async (req, res) => {
         const { text, mode, lang } = req.body;
 
         if (!text) return res.status(400).json({ error: 'Missing text' });
+
+        // --- LEARNING TRIGGER ---
+        // Check if user is teaching a new rule
+        const isCorrection = text.trim().match(/^(תיקון:|Learn:|Correction:)\s*(.+)/i);
+
+        if (isCorrection) {
+            const newRule = isCorrection[2]; // The actual rule text
+            const memoryPath = path.join(__dirname, '../assets/learned_rules.txt');
+
+            // Append to file
+            const entry = `\n[Learned at ${new Date().toISOString()}] ${newRule}`;
+            fs.appendFileSync(memoryPath, entry);
+
+            // Reload context immediately
+            await loadKnowledgeBase();
+
+            return res.json({
+                ok: true,
+                responses: [
+                    { sender: 'twist', text: `הבנתי. עדכנתי את הזיכרון שלי עם החוק החדש:\n"${newRule}"\nאזכור זאת להבא.` }
+                ]
+            });
+        }
 
         let responses = [];
         // Using 'gemini-2.0-flash' with the new paid API Key.
