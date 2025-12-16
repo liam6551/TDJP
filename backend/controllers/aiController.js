@@ -247,7 +247,7 @@ export const debugRag = async (req, res) => {
     res.json({
         status: LOADING_STATUS,
         details: LOADING_DETAILS,
-        flickiKnowledgeKeys: Object.keys(FLICKI_KNOWLEDGE),
+        flickiKnowledge: FLICKI_KNOWLEDGE, // Show full content
         contextLength: KNOWLEDGE_CONTEXT.length,
         sample: KNOWLEDGE_CONTEXT ? KNOWLEDGE_CONTEXT.substring(0, 500) + "..." : "EMPTY"
     });
