@@ -62,11 +62,21 @@ const loadKnowledgeBase = async () => {
         if (fs.existsSync(summaryPath)) {
             try {
                 const buffer = fs.readFileSync(summaryPath);
-                const result = await mammoth.extractRawText({ buffer: buffer });
-                const text = result.value;
+                // Use convertToHtml -> Text for better content preservation than extractRawText
+                const result = await mammoth.convertToHtml({ buffer: buffer });
+                const html = result.value;
+                const text = html
+                    .replace(/<img[^>]*>/g, '') // Remove images
+                    .replace(/<\/p>/g, '\n')
+                    .replace(/<br\s*\/?>/g, '\n')
+                    .replace(/<\/td>/g, ' | ')
+                    .replace(/<\/tr>/g, '\n')
+                    .replace(/<[^>]+>/g, '') // Strip remaining tags
+                    .replace(/\n\s*\n/g, '\n\n'); // Normalize spacing
+
                 contextParts.push(`\n--- JUDGING SUMMARY TABLE & NOTES ---\n${text}`);
                 LOADING_DETAILS.summary = "success (" + text.length + " chars)";
-                console.log("Loaded Judging Summary (DOCX)");
+                console.log("Loaded Judging Summary (DOCX) via HTML conversion");
             } catch (err) {
                 console.error("Error parsing DOCX:", err);
                 LOADING_DETAILS.summary = "error: " + err.message;
