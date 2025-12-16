@@ -232,7 +232,7 @@ export default function ProgressScreen() {
 
         {/* Top Cards */}
         <View style={styles.row}>
-          <StatCard label={t.totalQs} value={metrics.totalCount} color={colors.primary} />
+          <StatCard label={t.totalQs} value={metrics.totalCount} color={colors.tint} />
           <StatCard label={t.successRate} value={`${metrics.successRate}%`} color={metrics.successRate > 80 ? '#4ade80' : metrics.successRate > 50 ? '#facc15' : '#f87171'} />
         </View>
 
