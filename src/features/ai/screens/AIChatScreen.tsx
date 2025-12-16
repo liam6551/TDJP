@@ -291,7 +291,7 @@ export default function AIChatScreen() {
                         ? { backgroundColor: bubbleColor, borderBottomRightRadius: 4, marginRight: 10 }
                         : { backgroundColor: '#fff', borderTopLeftRadius: 4, elevation: 2, marginLeft: 10, flexShrink: 1 }
                 ]}>
-                    <View style={{ padding: 4, minWidth: 20 }}>
+                    <View style={{ paddingHorizontal: 5, paddingVertical: 2, minWidth: 40 }}>
                         {!isUser && mode === 'discussion' && (
                             <Text style={{
                                 fontSize: 10,
@@ -314,7 +314,9 @@ export default function AIChatScreen() {
                                 textAlign: isRTL ? 'right' : 'left',
                                 writingDirection: isRTL ? 'rtl' : 'ltr',
                                 fontSize: 16,
-                                lineHeight: 26, // Increased again
+                                lineHeight: 24,
+                                paddingTop: 2,
+                                paddingBottom: 2,
                             }}
                         >
                             {/* Just render the text mostly as is, but keeping the split to handle potential legacy backticks gracefully without styling */}
