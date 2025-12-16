@@ -23,7 +23,7 @@ export const AIService = {
      * @param lang Current app language
      * @returns Promise<AIResponse[]>
      */
-    async sendMessage(text: string, mode: AIMode, lang: 'he' | 'en'): Promise<AIResponse[]> {
+    async sendMessage(text: string, mode: AIMode, lang: 'he' | 'en', history: any[] = []): Promise<AIResponse[]> {
         try {
             const token = await SecureStore.getItemAsync('tdjp_token');
             if (!token) {
@@ -37,7 +37,7 @@ export const AIService = {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({ text, mode, lang })
+                body: JSON.stringify({ text, mode, lang, history })
             });
 
             const data = await response.json();

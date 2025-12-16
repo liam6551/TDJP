@@ -176,7 +176,7 @@ Output: RAW JSON ONLY.
 
 export const chatWithAI = async (req, res) => {
     try {
-        const { text, mode, lang } = req.body;
+        const { text, mode, lang, history = [] } = req.body;
 
         if (!text) return res.status(400).json({ error: 'Missing text' });
 
@@ -208,13 +208,31 @@ export const chatWithAI = async (req, res) => {
         // This should provide high performance without rate limits.
         const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
+        // Helper to Convert Frontend History to Gemini History
+        const formatHistory = (frontendHistory, systemPrompt) => {
+            const historyParts = [
+                { role: 'user', parts: [{ text: systemPrompt }] },
+                { role: 'model', parts: [{ text: "Understood." }] }
+            ];
+
+            // Map last 6 messages for context (prevent token overflow)
+            const recent = frontendHistory.slice(-6);
+
+            recent.forEach(msg => {
+                const role = msg.sender === 'user' ? 'user' : 'model';
+                // Filter out empty or system metadata messages if any
+                if (msg.text) {
+                    historyParts.push({ role, parts: [{ text: msg.text }] });
+                }
+            });
+
+            return historyParts;
+        };
+
         // --- TWIST (Gemini + RAG) ---
         if (mode === 'twist') {
             const chat = model.startChat({
-                history: [
-                    { role: 'user', parts: [{ text: TWIST_SYSTEM_PROMPT() }] },
-                    { role: 'model', parts: [{ text: "Understood. I am ready to judge based on the text." }] }
-                ]
+                history: formatHistory(history, TWIST_SYSTEM_PROMPT())
             });
             const result = await chat.sendMessage(text);
             responses.push({ sender: 'twist', text: result.response.text() });
@@ -223,10 +241,7 @@ export const chatWithAI = async (req, res) => {
         // --- FLICKI (Gemini) ---
         else if (mode === 'flicki') {
             const chat = model.startChat({
-                history: [
-                    { role: 'user', parts: [{ text: FLICKI_SYSTEM_PROMPT }] },
-                    { role: 'model', parts: [{ text: "Got it. Ready to coach." }] }
-                ]
+                history: formatHistory(history, FLICKI_SYSTEM_PROMPT)
             });
             const result = await chat.sendMessage(text);
             responses.push({ sender: 'flicki', text: result.response.text() });

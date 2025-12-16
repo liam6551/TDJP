@@ -203,7 +203,8 @@ export default function AIChatScreen() {
 
         try {
             // Get Array of Responses (1 or 2)
-            const aiResponses = await AIService.sendMessage(userMsg.text, mode, lang);
+            // Pass history (excluding current temp user msg which is raw input text)
+            const aiResponses = await AIService.sendMessage(userMsg.text, mode, lang, messages);
 
             let finalSessionMessages = [...updatedMessages];
 
@@ -306,15 +307,18 @@ export default function AIChatScreen() {
                         <Image source={{ uri: item.imageUri }} style={styles.msgImage} />
                     )}
 
-                    <Text style={{
-                        color: isUser ? '#fff' : '#1e293b',
-                        textAlign: isRTL ? 'right' : 'left',
-                        writingDirection: isRTL ? 'rtl' : 'ltr',
-                        fontSize: 16,
-                        lineHeight: 22,
-                        paddingHorizontal: 6, // Increased padding to prevent clipping (common Android RTL bug)
-                        marginHorizontal: -2 // Negative margin to offset padding visually if needed, or just keep it.
-                    }}>
+                    <Text
+                        textBreakStrategy="simple" // Android fix for clipping
+                        style={{
+                            color: isUser ? '#fff' : '#1e293b',
+                            textAlign: isRTL ? 'right' : 'left',
+                            writingDirection: isRTL ? 'rtl' : 'ltr',
+                            fontSize: 16,
+                            lineHeight: 24, // Increased line height
+                            paddingHorizontal: 8, // Generous padding
+                            paddingVertical: 2
+                        }}
+                    >
                         {item.text.split(/(`[^`]+`)/g).map((part, index) => {
                             if (index % 2 === 1) {
                                 // Code Pill (Technical Term)

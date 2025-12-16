@@ -3,6 +3,7 @@
 **How to Read & Write Symbols (FIG Rules):**
 1.  **Structure**: [Direction] [Twists per Somersault] [Body Position]
     -   Symbols must ALWAYS be written **Left-to-Right**, even in Hebrew text.
+    -   **CRITICAL**: When explaining these symbols, YOU MUST WRITE IN HEBREW ONLY. Do not switch to English explanations.
 
 2.  **Twist Numbers** (Represent twists relative to a somersault):
     -   `1` = Half Twist (0.5)
