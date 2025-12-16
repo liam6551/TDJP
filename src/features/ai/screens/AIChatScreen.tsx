@@ -309,10 +309,31 @@ export default function AIChatScreen() {
                     <Text style={{
                         color: isUser ? '#fff' : '#1e293b',
                         textAlign: isRTL ? 'right' : 'left',
+                        writingDirection: isRTL ? 'rtl' : 'ltr',
                         fontSize: 16,
-                        lineHeight: 22
+                        lineHeight: 22,
+                        paddingHorizontal: 2
                     }}>
-                        {item.text}{'\n'}
+                        {item.text.split(/(`[^`]+`)/g).map((part, index) => {
+                            if (index % 2 === 1) {
+                                // Code Pill (Technical Term)
+                                const content = part.slice(1, -1); // remove backticks
+                                return (
+                                    <Text key={index} style={{
+                                        fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+                                        backgroundColor: isUser ? 'rgba(255,255,255,0.2)' : '#e2e8f0',
+                                        color: isUser ? '#fff' : '#0f172a',
+                                        fontSize: 14,
+                                        fontWeight: 'bold',
+                                    }}>
+                                        {" "}{content}{" "}
+                                    </Text>
+                                );
+                            }
+                            // Normal Text
+                            return <Text key={index}>{part}</Text>;
+                        })}
+                        {" "}
                     </Text>
                 </View>
             </View>
@@ -520,7 +541,7 @@ const styles = StyleSheet.create({
     msgRow: {
         flexDirection: 'row',
         alignItems: 'flex-end',
-        maxWidth: '75%', // Reduced further to prevent cutoff
+        maxWidth: '90%', // Widened to fill phone screen better as requested
     },
     msgRowUser: {
         alignSelf: 'flex-end', // Right side
@@ -541,8 +562,7 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
         paddingHorizontal: 20, // Increased padding
         borderRadius: 20,
-        minWidth: 60,
-        flexShrink: 1,
+        minWidth: 40,
     },
     msgImage: {
         width: 200,

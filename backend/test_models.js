@@ -1,15 +1,9 @@
 const apiKey = process.env.GEMINI_API_KEY || "AIzaSyDNCXHTfJ4zEbq0I0F_escg3f_MNeypka0"; // Fallback for local test if env missing
 
 const candidates = [
-    "gemini-1.5-flash-001",
-    "gemini-1.5-flash-002",
-    "gemini-1.5-flash-8b",
-    "gemini-2.0-flash-exp",
-    "gemini-exp-1206",
-    "gemini-2.0-flash-lite-preview-02-05", // From previous list
-    "gemini-1.5-pro",
-    "gemini-1.5-pro-001",
-    "gemini-1.5-pro-002"
+    "gemini-1.5-flash",
+    "gemini-flash-latest",
+    "gemini-2.0-flash"
 ];
 
 async function testCandidate(modelName) {
