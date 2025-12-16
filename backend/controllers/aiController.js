@@ -176,7 +176,7 @@ const loadKnowledgeBase = async () => {
 
 // ...
 
-// Helper: Smart Classify & Save (DB Version)
+// Helper: Smart Classify & Save (DB Version) - LOGIC V3 (Multi-Rule)
 const classifyAndSaveRule = async (newRule) => {
     try {
         const model = genAI.getGenerativeModel({
@@ -187,42 +187,50 @@ const classifyAndSaveRule = async (newRule) => {
         // Use the constant structure for the prompt
         const prompt = `
         You are an expert gymnastics data organizer.
-        Task: Analyze this new coaching rule/tip and categorize it into the most appropriate category.
+        Task: Analyze this coaching input (which may contain multiple points) and break it down into distinct, generalized coaching rules.
         
-        New Rule: "${newRule}"
+        Input Text: "${newRule}"
         
         Target Schema: ${JSON.stringify(FLICKI_STRUCTURE, null, 2)}
         
         INSTRUCTIONS:
-        1. **ANALYZE**: Understand the core tumbling concept or correction being taught.
-        2. **GENERALIZE**: Do NOT just copy the user's words. Convert the specific feedback into a **universal coaching principle** or rule.
-        3. **REFINE**: Write the output in **professional, short, and clear Hebrew**.
-           - If the user says "Don't do X!", write "Avoid X because..." or "Ensure Y instead."
-           - If the user is angry/informal, strip the emotion and keep the fact.
-        4. Match the rule to an existing top-level Category.
-        5. If category is "Fitness", specify Subcategory.
+        1. **DECONSTRUCT**: If the text contains multiple tips/rules, split them up.
+        2. **GENERALIZE**: Convert each point into a universal coaching principle (e.g. "Bent legs" -> "Maintain extension").
+        3. **REFINE**: Write each rule in **professional, short, and clear Hebrew**.
+        4. **CATEGORIZE**: Assign each rule to the most fitting Category/Subcategory from the schema.
         
-        Output strictly JSON: { "category": "TargetCategory", "subcategory": "TargetSubCategory (or null)", "refined_text": "..." }
+        Output strictly a JSON ARRAY of objects: 
+        [
+          { "category": "...", "subcategory": "..." (or null), "refined_text": "..." },
+          ...
+        ]
         `;
 
         const result = await model.generateContent(prompt);
-        const data = JSON.parse(result.response.text());
+        const data = JSON.parse(result.response.text()); // Expecting Array
 
-        let savedCategory = data.category || "Other";
-        let savedSub = data.subcategory || null;
+        // Normalize to array if single object returned by mistake
+        const rulesToSave = Array.isArray(data) ? data : [data];
+        const savedResults = [];
 
-        // DB Insert
-        try {
-            await pool.query(
-                `INSERT INTO flicki_rules (category, subcategory, rule_text) VALUES ($1, $2, $3)`,
-                [savedCategory, savedSub, data.refined_text]
-            );
-            return { category: savedCategory, subcategory: savedSub, refined_text: data.refined_text };
-        } catch (dbErr) {
-            console.error("DB Insert Error:", dbErr);
-            // Emergency fallback? Just log.
-            return null;
+        for (const rule of rulesToSave) {
+            let savedCategory = rule.category || "Other";
+            let savedSub = rule.subcategory || null;
+
+            // DB Insert
+            try {
+                await pool.query(
+                    `INSERT INTO flicki_rules (category, subcategory, rule_text) VALUES ($1, $2, $3)`,
+                    [savedCategory, savedSub, rule.refined_text]
+                );
+                savedResults.push({ category: savedCategory, subcategory: savedSub, refined_text: rule.refined_text });
+            } catch (dbErr) {
+                console.error("DB Insert Error for rule:", rule, dbErr);
+                // Continue to next rule
+            }
         }
+
+        return savedResults;
 
     } catch (e) {
         console.error("Classification Error:", e);
@@ -232,10 +240,10 @@ const classifyAndSaveRule = async (newRule) => {
                 `INSERT INTO flicki_rules (category, subcategory, rule_text) VALUES ($1, $2, $3)`,
                 ['Other', null, `(Error Save): ${newRule}`]
             );
-            return { category: 'Other', refined_text: newRule };
+            return [{ category: 'Other', refined_text: newRule }];
         } catch (dbErr) {
             console.error("Critical DB Error during fallback:", dbErr);
-            return null;
+            return [];
         }
     }
 };
@@ -396,14 +404,19 @@ export const chatWithAI = async (req, res) => {
             const newRuleRaw = isCorrection[2];
             console.log("Processing Smart Learning for:", newRuleRaw);
 
-            const savedData = await classifyAndSaveRule(newRuleRaw);
+            const savedDataArray = await classifyAndSaveRule(newRuleRaw);
 
-            // Reload context immediately to include new rule
+            // Reload knowledge
             loadKnowledgeBase();
 
-            const responseText = savedData
-                ? `תודה! למדתי משהו חדש.\nקטלגתי את זה תחת **${savedData.category}** ${savedData.subcategory ? `(${savedData.subcategory})` : ''}.\n"${savedData.refined_text}"`
-                : "תודה, שמרתי את המידע.";
+            let responseText = "תודה, שמרתי את המידע.";
+
+            if (savedDataArray && savedDataArray.length > 0) {
+                responseText = `תודה! למדתי ${savedDataArray.length} דברים חדשים:\n`;
+                savedDataArray.forEach(item => {
+                    responseText += `\n✅ **${item.category}** ${item.subcategory ? `(${item.subcategory})` : ''}: "${item.refined_text}"`;
+                });
+            }
 
             return res.json({
                 ok: true,
