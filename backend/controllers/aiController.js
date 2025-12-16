@@ -113,6 +113,33 @@ const loadKnowledgeBase = async () => {
             console.log("Loaded Symbol Logic");
         }
 
+        // 7. Loading Flicki Knowledge (JSON)
+        const flickiPath = path.join(assetsPath, 'flicki_knowledge.json');
+        if (fs.existsSync(flickiPath)) {
+            try {
+                const raw = fs.readFileSync(flickiPath, 'utf-8');
+                FLICKI_KNOWLEDGE = JSON.parse(raw);
+                let flickiText = "\n--- FLICKI'S SECRET COACHING NOTES (STRUCTURED) ---\n";
+
+                for (const [category, items] of Object.entries(FLICKI_KNOWLEDGE)) {
+                    if (Array.isArray(items) && items.length > 0) {
+                        flickiText += `\n[${category.toUpperCase()}]\n- ${items.join('\n- ')}\n`;
+                    } else if (typeof items === 'object' && !Array.isArray(items)) {
+                        // Handle nested (e.g. Fitness)
+                        for (const [subCat, subItems] of Object.entries(items)) {
+                            if (subItems.length > 0) {
+                                flickiText += `\n[${category.toUpperCase()} - ${subCat.toUpperCase()}]\n- ${subItems.join('\n- ')}\n`;
+                            }
+                        }
+                    }
+                }
+                contextParts.push(flickiText);
+                console.log("Loaded Flicki Knowledge (JSON)");
+            } catch (e) {
+                console.error("Error loading flicki knowledge", e);
+            }
+        }
+
         KNOWLEDGE_CONTEXT = contextParts.join("\n\n");
         LOADING_STATUS = (KNOWLEDGE_CONTEXT.length > 0) ? "done" : "empty";
 
@@ -120,6 +147,60 @@ const loadKnowledgeBase = async () => {
         console.error("Failed to load knowledge base:", error);
         LOADING_STATUS = "error";
         LOADING_DETAILS.globalError = error.message;
+    }
+};
+
+// Global for holding structured data
+let FLICKI_KNOWLEDGE = {};
+
+// Helper: Smart Classify & Save
+const classifyAndSaveRule = async (newRule) => {
+    try {
+        const model = genAI.getGenerativeModel({
+            model: "gemini-flash-latest",
+            generationConfig: { responseMimeType: "application/json" }
+        });
+
+        const prompt = `
+        You are an expert gymnastics data organizer.
+        Task: Analyze this new coaching rule/tip and categorize it into the most appropriate category.
+        
+        New Rule: "${newRule}"
+        
+        Current Knowledge Structure: ${JSON.stringify(FLICKI_KNOWLEDGE, null, 2)}
+        
+        INSTRUCTIONS:
+        1. Match the rule to an existing top-level Category (e.g., "Sequences", "Tumbling Principles").
+        2. If the category is "Fitness", you MUST specify one of its subcategories (Hypertrophy, Explosive Power, etc.).
+        3. Refine the text to be short, punchy, and professional (Hebrew).
+        
+        Output strictly JSON: { "category": "TargetCategory", "subcategory": "TargetSubCategory (if applicable)", "refined_text": "..." }
+        `;
+
+        const result = await model.generateContent(prompt);
+        const data = JSON.parse(result.response.text());
+
+        // Save logic
+        if (data.category && FLICKI_KNOWLEDGE[data.category]) {
+            if (data.subcategory && FLICKI_KNOWLEDGE[data.category][data.subcategory]) {
+                FLICKI_KNOWLEDGE[data.category][data.subcategory].push(data.refined_text);
+            } else if (Array.isArray(FLICKI_KNOWLEDGE[data.category])) {
+                FLICKI_KNOWLEDGE[data.category].push(data.refined_text);
+            } else {
+                // Fallback for missing subcategory
+                // If it's an object (like Fitness) but no subcategory match, put in first one or create 'General'
+                const keys = Object.keys(FLICKI_KNOWLEDGE[data.category]);
+                if (keys.length > 0) FLICKI_KNOWLEDGE[data.category][keys[0]].push(data.refined_text);
+            }
+
+            // Write to disk
+            fs.writeFileSync(path.join(__dirname, '../assets/flicki_knowledge.json'), JSON.stringify(FLICKI_KNOWLEDGE, null, 2));
+            return data;
+        }
+        return null;
+    } catch (e) {
+        console.error("Classification Error:", e);
+        return null;
     }
 };
 
@@ -132,7 +213,7 @@ export const debugRag = async (req, res) => {
     res.json({
         status: LOADING_STATUS,
         details: LOADING_DETAILS,
-        assetsPath: path.join(__dirname, '../assets'),
+        flickiKnowledgeKeys: Object.keys(FLICKI_KNOWLEDGE),
         contextLength: KNOWLEDGE_CONTEXT.length,
         sample: KNOWLEDGE_CONTEXT ? KNOWLEDGE_CONTEXT.substring(0, 500) + "..." : "EMPTY"
     });
@@ -199,7 +280,7 @@ You MUST use these specific emojis for every concept. Use them frequently to cat
 ${KNOWLEDGE_CONTEXT}
 `;
 
-const FLICKI_SYSTEM_PROMPT = `
+const FLICKI_SYSTEM_PROMPT = () => `
 You are ** Flicki **, an AI Coach that ** learns and evolves **.
 ** Philosophy **: "There is always a better way."
     ** Behavior **:
@@ -240,6 +321,9 @@ Use these to show your coaching energy!
 - Use emojis liberally to make the text "pop".
 - Keep it fun but professional.
 - Always explain * how * to fix it scientifically.
+
+** KNOWLEDGE BASE(SOURCE MATERIAL - ENGLISH) **:
+${KNOWLEDGE_CONTEXT}
 `;
 
 const DISCUSSION_SYSTEM_PROMPT = () => `
@@ -276,28 +360,30 @@ export const chatWithAI = async (req, res) => {
 
         if (!text) return res.status(400).json({ error: 'Missing text' });
 
-        // --- LEARNING TRIGGER ---
-        // Check if user is teaching a new rule
+        // --- LEARNING TRIGGER (SMART) ---
         const isCorrection = text.trim().match(/^(תיקון:|Learn:|Correction:)\s*(.+)/i);
 
         if (isCorrection) {
-            const newRule = isCorrection[2]; // The actual rule text
-            const memoryPath = path.join(__dirname, '../assets/learned_rules.txt');
+            const newRuleRaw = isCorrection[2];
+            console.log("Processing Smart Learning for:", newRuleRaw);
 
-            // Append to file
-            const entry = `\n[Learned at ${new Date().toISOString()}] ${newRule} `;
-            fs.appendFileSync(memoryPath, entry);
+            const savedData = await classifyAndSaveRule(newRuleRaw);
 
-            // Reload context immediately
-            await loadKnowledgeBase();
+            // Reload context immediately to include new rule
+            loadKnowledgeBase();
+
+            const responseText = savedData
+                ? `תודה! למדתי משהו חדש.\nקטלגתי את זה תחת **${savedData.category}** ${savedData.subcategory ? `(${savedData.subcategory})` : ''}.\n"${savedData.refined_text}"`
+                : "תודה, שמרתי את המידע.";
 
             return res.json({
                 ok: true,
                 responses: [
-                    { sender: 'twist', text: `הבנתי.עדכנתי את הזיכרון שלי עם החוק החדש: \n"${newRule}"\nאזכור זאת להבא.` }
+                    { sender: 'flicki', text: responseText }
                 ]
             });
         }
+
 
         let responses = [];
         // Using 'gemini-flash-latest' (Auto-updates to latest stable Flash version)
@@ -344,7 +430,7 @@ export const chatWithAI = async (req, res) => {
         // --- FLICKI (Gemini) ---
         else if (mode === 'flicki') {
             const chat = model.startChat({
-                history: formatHistory(history, FLICKI_SYSTEM_PROMPT)
+                history: formatHistory(history, FLICKI_SYSTEM_PROMPT())
             });
             const result = await callGeminiWithRetry(() => chat.sendMessage(text));
             responses.push({ sender: 'flicki', text: result.response.text() });
