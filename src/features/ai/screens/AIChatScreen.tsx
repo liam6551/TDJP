@@ -311,10 +311,9 @@ export default function AIChatScreen() {
                         style={{
                             color: isUser ? '#fff' : '#1e293b',
                             textAlign: isRTL ? 'right' : 'left',
+                            writingDirection: isRTL ? 'rtl' : 'ltr',
                             fontSize: 16,
-                            lineHeight: 24,
-                            includeFontPadding: false, // Android specific fix for vertical alignment/clipping
-                            textAlignVertical: 'center'
+                            lineHeight: 22,
                         }}
                     >
                         {item.text.split(/(`[^`]+`)/g).map((part, index) => {
@@ -543,14 +542,15 @@ const styles = StyleSheet.create({
     msgRow: {
         flexDirection: 'row',
         alignItems: 'flex-end',
-        maxWidth: '90%', // Widened to fill phone screen better as requested
+        width: '100%', // Full width container
+        paddingHorizontal: 8,
+        marginBottom: 8, // Spacing between messages
     },
     msgRowUser: {
-        alignSelf: 'flex-end', // Right side
-        // flexDirection: 'row-reverse', // REMOVED: Caused layout clipping bugs on Android RTL
+        justifyContent: 'flex-end', // Use justifyContent for main axis (row)
     },
     msgRowAi: {
-        alignSelf: 'flex-start', // Left side
+        justifyContent: 'flex-start',
     },
     avatar: {
         width: 32,
@@ -562,9 +562,9 @@ const styles = StyleSheet.create({
     // ...
     bubble: {
         paddingVertical: 12,
-        paddingHorizontal: 20, // Increased padding
+        paddingHorizontal: 16,
         borderRadius: 20,
-        minWidth: 40,
+        maxWidth: '85%', // Constrain bubble width, NOT the row
     },
     msgImage: {
         width: 200,
