@@ -1,7 +1,9 @@
 import { getToken } from '@/shared/state/auth';
-import { manifest } from '@/shared/config';
+import Constants from 'expo-constants';
 
-const BACKEND_URL = `http://${manifest.debuggerHost?.split(':').shift() || 'localhost'}:3000`;
+const debuggerHost = Constants.expoConfig?.hostUri ?? Constants.manifest2?.extra?.expoClient?.hostUri ?? Constants.manifest?.debuggerHost;
+const localhost = debuggerHost?.split(':').shift() || 'localhost';
+const BACKEND_URL = `http://${localhost}:3000`;
 
 export type StatResult = {
     elementId: string;
