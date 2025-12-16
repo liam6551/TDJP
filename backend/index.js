@@ -27,14 +27,7 @@ const JUDGE_LEVELS = ['מתחיל', 'מתקדם', 'בינלאומי'];
 const BREVET_LEVELS = ['1', '2', '3', '4'];
 
 /* ---------- DB ---------- */
-const { Pool } = pkg;
-const connectionString = process.env.DATABASE_URL;
-if (!connectionString) {
-  console.error('❌ DATABASE_URL is missing');
-  process.exit(1);
-}
-const pool = new Pool({ connectionString, ssl: { rejectUnauthorized: false } });
-try { console.log('DB host:', new URL(connectionString).hostname); } catch { }
+import pool from './db.js';
 
 /* ---------- JWT ---------- */
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret';
@@ -331,6 +324,18 @@ async function ensureSchema() {
       created_at timestamptz NOT NULL DEFAULT now()
     );
   `);
+
+  // --- FLICKI KNOWLEDGE DB ---
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS flicki_rules (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      category text NOT NULL,
+      subcategory text,
+      rule_text text NOT NULL,
+      created_at timestamptz NOT NULL DEFAULT now()
+    );
+  `);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_flicki_rules_category ON flicki_rules(category);`);
 
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);`);
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_password_resets_token ON password_resets(token);`);

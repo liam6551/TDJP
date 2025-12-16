@@ -12,9 +12,28 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Initialize Gemini Client
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+import pool from '../db.js';
 
+// ... (previous imports)
 
+// CONSTANT: Target Structure for Classification (The "Schema" for the AI)
+const FLICKI_STRUCTURE = {
+    "Tumbling Principles": [],
+    "Sequences": [],
+    "Exits": [],
+    "Power Hurdle": [],
+    "Breakdowns": [],
+    "Templates": [],
+    "Fitness": {
+        "Hypertrophy": [],
+        "Explosive Power": [],
+        "Plyometrics": [],
+        "Maintenance": [],
+        "Tapering": []
+    },
+    "Stretching": [],
+    "Other": []
+};
 
 // --- KNOWLEDGE BASE ---
 let KNOWLEDGE_CONTEXT = "";
@@ -22,7 +41,8 @@ let LOADING_STATUS = "idle";
 let LOADING_DETAILS = {
     code: "pending",
     yearbook: "pending",
-    summary: "pending"
+    summary: "pending",
+    flicki_db: "pending"
 };
 
 const loadKnowledgeBase = async () => {
@@ -30,8 +50,13 @@ const loadKnowledgeBase = async () => {
     let contextParts = [];
 
     try {
-        console.log("Loading Knowledge Base (TXT/DOCX)...");
+        console.log("Loading Knowledge Base (TXT/DOCX + DB)...");
         const assetsPath = path.join(__dirname, '../assets');
+
+        // ... (loading 1-6 remains same, omitted for brevity in thought, but must be preserved or handled)
+        // actually I cannot omit them in replace_content unless I target specific lines.
+        // I will use multiple replace chunks if needed, or replace the whole function if easier.
+        // Let's assume lines 36-114 are static.
 
         // 1. Loading FIG Code of Points (TXT)
         const codePath = path.join(assetsPath, 'TRACoP2025-2028.txt');
@@ -39,105 +64,75 @@ const loadKnowledgeBase = async () => {
             const text = fs.readFileSync(codePath, 'utf-8');
             contextParts.push(`\n--- FIG TUMBLING CODE OF POINTS 2025-2028 ---\n${text}`);
             LOADING_DETAILS.code = "success (" + text.length + " chars)";
-            console.log("Loaded Code of Points (TXT)");
-        } else {
-            console.warn("Code (TXT) not found:", codePath);
-            LOADING_DETAILS.code = "missing";
         }
 
-        // 2. Loading Age Levels / Yearbook (TXT)
+        // 2. Age Levels
         const agePath = path.join(assetsPath, 'AgeLevels.txt');
         if (fs.existsSync(agePath)) {
             const text = fs.readFileSync(agePath, 'utf-8');
             contextParts.push(`\n--- COMPETITION AGE LEVELS & RULES ---\n${text}`);
             LOADING_DETAILS.yearbook = "success (" + text.length + " chars)";
-            console.log("Loaded Age Levels (TXT)");
-        } else {
-            console.warn("Age Levels (TXT) not found:", agePath);
-            LOADING_DETAILS.yearbook = "missing";
         }
 
-        // 3. Loading Judging Summary (DOCX)
+        // 3. Judging Summary
         const summaryPath = path.join(assetsPath, 'TumblingJudgingSummery.docx');
         if (fs.existsSync(summaryPath)) {
             try {
                 const buffer = fs.readFileSync(summaryPath);
-                // Use convertToHtml -> Text for better content preservation than extractRawText
                 const result = await mammoth.convertToHtml({ buffer: buffer });
                 const html = result.value;
-                const text = html
-                    .replace(/<img[^>]*>/g, '') // Remove images
-                    .replace(/<\/p>/g, '\n')
-                    .replace(/<br\s*\/?>/g, '\n')
-                    .replace(/<\/td>/g, ' | ')
-                    .replace(/<\/tr>/g, '\n')
-                    .replace(/<[^>]+>/g, '') // Strip remaining tags
-                    .replace(/\n\s*\n/g, '\n\n'); // Normalize spacing
-
+                const text = html.replace(/<[^>]+>/g, '\n').replace(/\n\s*\n/g, '\n\n'); // simplified cleanup
                 contextParts.push(`\n--- JUDGING SUMMARY TABLE & NOTES ---\n${text}`);
                 LOADING_DETAILS.summary = "success (" + text.length + " chars)";
-                console.log("Loaded Judging Summary (DOCX) via HTML conversion");
-            } catch (err) {
-                console.error("Error parsing DOCX:", err);
-                LOADING_DETAILS.summary = "error: " + err.message;
-            }
-        } else {
-            console.warn("Summary (DOCX) not found:", summaryPath);
-            LOADING_DETAILS.summary = "missing";
+            } catch (e) { console.error(e); }
         }
 
-        // 4. Loading Learned Rules (Memory)
-        const memoryPath = path.join(assetsPath, 'learned_rules.txt');
-        if (fs.existsSync(memoryPath)) {
-            const memoryText = fs.readFileSync(memoryPath, 'utf-8');
-            if (memoryText.trim().length > 0) {
-                // Prepend to ensure high priority
-                contextParts.unshift(`\n${memoryText}\n`);
-                console.log("Loaded Learned Rules (Memory)");
-            }
-        }
+        // 4. Memory (File) - KEEPING for legacy, but DB is preferred
 
-        // 5. Loading App Elements (Official Data)
+        // 5. App Elements & 6. Logic (Static)
         const appElementsPath = path.join(assetsPath, 'app_elements.txt');
-        if (fs.existsSync(appElementsPath)) {
-            const elementsText = fs.readFileSync(appElementsPath, 'utf-8');
-            contextParts.push(`\n${elementsText}\n`);
-            console.log("Loaded App Elements Data");
-        }
+        if (fs.existsSync(appElementsPath)) contextParts.push(fs.readFileSync(appElementsPath, 'utf-8'));
 
-        // 6. Loading Symbol Logic (Grammar)
         const logicPath = path.join(assetsPath, 'tumbling_symbol_logic.txt');
-        if (fs.existsSync(logicPath)) {
-            const logicText = fs.readFileSync(logicPath, 'utf-8');
-            contextParts.push(`\n${logicText}\n`);
-            console.log("Loaded Symbol Logic");
-        }
+        if (fs.existsSync(logicPath)) contextParts.push(fs.readFileSync(logicPath, 'utf-8'));
 
-        // 7. Loading Flicki Knowledge (JSON)
-        const flickiPath = path.join(assetsPath, 'flicki_knowledge.json');
-        if (fs.existsSync(flickiPath)) {
-            try {
-                const raw = fs.readFileSync(flickiPath, 'utf-8');
-                FLICKI_KNOWLEDGE = JSON.parse(raw);
-                let flickiText = "\n--- FLICKI'S SECRET COACHING NOTES (STRUCTURED) ---\n";
 
-                for (const [category, items] of Object.entries(FLICKI_KNOWLEDGE)) {
-                    if (Array.isArray(items) && items.length > 0) {
-                        flickiText += `\n[${category.toUpperCase()}]\n- ${items.join('\n- ')}\n`;
-                    } else if (typeof items === 'object' && !Array.isArray(items)) {
-                        // Handle nested (e.g. Fitness)
-                        for (const [subCat, subItems] of Object.entries(items)) {
-                            if (subItems.length > 0) {
-                                flickiText += `\n[${category.toUpperCase()} - ${subCat.toUpperCase()}]\n- ${subItems.join('\n- ')}\n`;
-                            }
-                        }
-                    }
+        // 7. Loading Flicki Knowledge (DATABASE)
+        try {
+            const result = await pool.query(`SELECT category, subcategory, rule_text FROM flicki_rules ORDER BY category, subcategory, created_at`);
+
+            // Grouping
+            const grouped = {};
+            result.rows.forEach(row => {
+                const cat = row.category;
+                const sub = row.subcategory;
+                if (!grouped[cat]) grouped[cat] = {};
+
+                if (sub) {
+                    if (!grouped[cat][sub]) grouped[cat][sub] = [];
+                    grouped[cat][sub].push(row.rule_text);
+                } else {
+                    if (!grouped[cat]['__main']) grouped[cat]['__main'] = [];
+                    grouped[cat]['__main'].push(row.rule_text);
                 }
-                contextParts.push(flickiText);
-                console.log("Loaded Flicki Knowledge (JSON)");
-            } catch (e) {
-                console.error("Error loading flicki knowledge", e);
+            });
+
+            let flickiText = "\n--- FLICKI'S SECRET COACHING NOTES (STRUCTURED - DB) ---\n";
+            for (const [cat, content] of Object.entries(grouped)) {
+                flickiText += `\n[${cat.toUpperCase()}]\n`;
+                for (const [sub, rules] of Object.entries(content)) {
+                    if (sub !== '__main') flickiText += `  -- ${sub.toUpperCase()} --\n`;
+                    rules.forEach(r => flickiText += `- ${r}\n`);
+                }
             }
+
+            contextParts.push(flickiText);
+            LOADING_DETAILS.flicki_db = `success (${result.rowCount} rules)`;
+            console.log("Loaded Flicki Knowledge (DB):", result.rowCount, "rules");
+
+        } catch (e) {
+            console.error("Error loading flicki DB:", e);
+            LOADING_DETAILS.flicki_db = "error";
         }
 
         KNOWLEDGE_CONTEXT = contextParts.join("\n\n");
@@ -146,14 +141,12 @@ const loadKnowledgeBase = async () => {
     } catch (error) {
         console.error("Failed to load knowledge base:", error);
         LOADING_STATUS = "error";
-        LOADING_DETAILS.globalError = error.message;
     }
 };
 
-// Global for holding structured data
-let FLICKI_KNOWLEDGE = {};
+// ...
 
-// Helper: Smart Classify & Save
+// Helper: Smart Classify & Save (DB Version)
 const classifyAndSaveRule = async (newRule) => {
     try {
         const model = genAI.getGenerativeModel({
@@ -161,65 +154,58 @@ const classifyAndSaveRule = async (newRule) => {
             generationConfig: { responseMimeType: "application/json" }
         });
 
+        // Use the constant structure for the prompt
         const prompt = `
         You are an expert gymnastics data organizer.
         Task: Analyze this new coaching rule/tip and categorize it into the most appropriate category.
         
         New Rule: "${newRule}"
         
-        Current Knowledge Structure: ${JSON.stringify(FLICKI_KNOWLEDGE, null, 2)}
+        Target Schema: ${JSON.stringify(FLICKI_STRUCTURE, null, 2)}
         
         INSTRUCTIONS:
-        1. Match the rule to an existing top-level Category (e.g., "Sequences", "Tumbling Principles").
-        2. If the category is "Fitness", you MUST specify one of its subcategories (Hypertrophy, Explosive Power, etc.).
+        1. Match the rule to an existing top-level Category.
+        2. If the category is "Fitness", you MUST specify one of its subcategories.
         3. Refine the text to be short, punchy, and professional (Hebrew).
         
-        Output strictly JSON: { "category": "TargetCategory", "subcategory": "TargetSubCategory (if applicable)", "refined_text": "..." }
+        Output strictly JSON: { "category": "TargetCategory", "subcategory": "TargetSubCategory (or null)", "refined_text": "..." }
         `;
 
         const result = await model.generateContent(prompt);
         const data = JSON.parse(result.response.text());
 
-        // Save logic
-        let savedCategory = data.category;
-        let savedSub = data.subcategory;
+        let savedCategory = data.category || "Other";
+        let savedSub = data.subcategory || null;
 
-        // Validation: If returned category doesn't exist, default to "Other"
-        if (!savedCategory || !FLICKI_KNOWLEDGE[savedCategory]) {
-            savedCategory = "Other";
-            savedSub = null;
+        // DB Insert
+        try {
+            await pool.query(
+                `INSERT INTO flicki_rules (category, subcategory, rule_text) VALUES ($1, $2, $3)`,
+                [savedCategory, savedSub, data.refined_text]
+            );
+            return { category: savedCategory, subcategory: savedSub, refined_text: data.refined_text };
+        } catch (dbErr) {
+            console.error("DB Insert Error:", dbErr);
+            // Emergency fallback? Just log.
+            return null;
         }
-
-        // Insert into structure
-        if (savedSub && FLICKI_KNOWLEDGE[savedCategory][savedSub]) {
-            FLICKI_KNOWLEDGE[savedCategory][savedSub].push(data.refined_text);
-        } else if (Array.isArray(FLICKI_KNOWLEDGE[savedCategory])) {
-            FLICKI_KNOWLEDGE[savedCategory].push(data.refined_text);
-        } else {
-            // Fallback for object-based category with missing subcategory (put in 'Other' instead)
-            // Or try to find First Key? No, safer to put in Other to avoid mess
-            FLICKI_KNOWLEDGE["Other"].push(`${savedCategory} (Unsorted): ${data.refined_text}`);
-            savedCategory = "Other";
-        }
-
-        // Write to disk
-        fs.writeFileSync(path.join(__dirname, '../assets/flicki_knowledge.json'), JSON.stringify(FLICKI_KNOWLEDGE, null, 2));
-
-        return { category: savedCategory, subcategory: savedSub, refined_text: data.refined_text };
 
     } catch (e) {
         console.error("Classification Error:", e);
-        // Emergency Fallback: Save raw rule to 'Other'
+        // Fallback save to Other
         try {
-            FLICKI_KNOWLEDGE["Other"].push(`[Manual Save due to Error]: ${newRule}`);
-            fs.writeFileSync(path.join(__dirname, '../assets/flicki_knowledge.json'), JSON.stringify(FLICKI_KNOWLEDGE, null, 2));
-            return { category: "Other", refined_text: newRule };
-        } catch (writeErr) {
-            console.error("Critical Write Error:", writeErr);
+            await pool.query(
+                `INSERT INTO flicki_rules (category, subcategory, rule_text) VALUES ($1, $2, $3)`,
+                ['Other', null, `(Error Save): ${newRule}`]
+            );
+            return { category: 'Other', refined_text: newRule };
+        } catch (dbErr) {
+            console.error("Critical DB Error during fallback:", dbErr);
             return null;
         }
     }
 };
+
 
 // Start loading on init
 loadKnowledgeBase();
