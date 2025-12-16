@@ -248,7 +248,7 @@ Generate a ** realistic ** professional dialogue between Twist(Judge) and Flicki
 ** Twist **: Uses strict judging emojis(🔴, 🟡, 📏).Quotes the rule.
 ** Flicki **: Uses coaching emojis(🚀, 💡, 🛠️).Proposes a fix.
 
-** CRITICAL RULE **: Do NOT use asterisks(*) or backticks(`) in the output text inside the JSON.
+** CRITICAL RULE **: Do NOT use asterisks(*) or backticks(\`) in the output text inside the JSON.
 
     Structure: JSON Array strictly: [{ "sender": "twist", "text": "..." }, { "sender": "flicki", "text": "..." }]
 Output: RAW JSON ONLY.
@@ -260,7 +260,7 @@ const callGeminiWithRetry = async (fn, retries = 5, delay = 1000) => {
         return await fn();
     } catch (error) {
         if (retries > 0 && (error.message.includes('429') || error.message.includes('503'))) {
-            console.warn(`Gemini API Error(${ error.message }).Retrying in ${ delay }ms... (${ retries } attempts left)`);
+            console.warn(`Gemini API Error(${error.message}).Retrying in ${delay}ms... (${retries} attempts left)`);
             await new Promise(resolve => setTimeout(resolve, delay));
             // Exp Backoff but cap at 8 seconds to prevent infinite hanging
             const nextDelay = Math.min(delay * 2, 8000);
@@ -285,7 +285,7 @@ export const chatWithAI = async (req, res) => {
             const memoryPath = path.join(__dirname, '../assets/learned_rules.txt');
 
             // Append to file
-            const entry = `\n[Learned at ${ new Date().toISOString() }] ${ newRule } `;
+            const entry = `\n[Learned at ${new Date().toISOString()}] ${newRule} `;
             fs.appendFileSync(memoryPath, entry);
 
             // Reload context immediately
@@ -346,7 +346,7 @@ export const chatWithAI = async (req, res) => {
 
         // --- DISCUSSION (Gemini Orchestrator) ---
         else if (mode === 'discussion') {
-            const systemMsg = DISCUSSION_SYSTEM_PROMPT() + `\n\n ** CONTEXT:**\n${ KNOWLEDGE_CONTEXT.substring(0, 50000) }...`;
+            const systemMsg = DISCUSSION_SYSTEM_PROMPT() + `\n\n ** CONTEXT:**\n${KNOWLEDGE_CONTEXT.substring(0, 50000)}...`;
 
             const result = await callGeminiWithRetry(() => model.generateContent({
                 contents: [
@@ -359,24 +359,24 @@ export const chatWithAI = async (req, res) => {
             let parsed = [];
             try {
                 const cleanJson = content.replace(/```json / g, '').replace(/```/g, '').trim();
-parsed = JSON.parse(cleanJson);
+                parsed = JSON.parse(cleanJson);
 
-if (Array.isArray(parsed)) responses = parsed;
-else if (parsed.dialogue) responses = parsed.dialogue;
-else responses = parsed;
+                if (Array.isArray(parsed)) responses = parsed;
+                else if (parsed.dialogue) responses = parsed.dialogue;
+                else responses = parsed;
             } catch (e) {
-    console.error("JSON Parse Error (Gemini):", e);
-    responses = [
-        { sender: 'twist', text: "Verification needed on that element." },
-        { sender: 'flicki', text: "Let's review the video." }
-    ];
-}
+                console.error("JSON Parse Error (Gemini):", e);
+                responses = [
+                    { sender: 'twist', text: "Verification needed on that element." },
+                    { sender: 'flicki', text: "Let's review the video." }
+                ];
+            }
         }
 
-return res.json({ ok: true, responses });
+        return res.json({ ok: true, responses });
 
     } catch (error) {
-    console.error('AI Error:', error);
-    return res.status(500).json({ ok: false, error: error.message });
-}
+        console.error('AI Error:', error);
+        return res.status(500).json({ ok: false, error: error.message });
+    }
 };
