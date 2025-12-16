@@ -1,0 +1,32 @@
+--- TUMBLING SYMBOL LOGIC (CRITICAL) ---
+
+**How to Read & Write Symbols (FIG Rules):**
+1.  **Structure**: [Direction] [Twists per Somersault] [Body Position]
+    -   Symbols must ALWAYS be written **Left-to-Right**, even in Hebrew text.
+
+2.  **Twist Numbers** (Represent twists relative to a somersault):
+    -   `1` = Half Twist (0.5)
+    -   `2` = Full Twist (1.0)
+    -   `3` = 1.5 Twists
+    -   `4` = Double Twist (2.0)
+    -   `-` (Hyphen) = No Twist in that somersault.
+
+3.  **Body Positions** (Suffix):
+    -   `O` = Tuck (קירוס)
+    -   `<` = Pike (קיפול)
+    -   `/` = Layout (גוף ישר)
+    -   `Y` = Split/Straddle (פסיעה)
+
+4.  **Direction**:
+    -   **Backward (Default)**: No prefix. (e.g., `22O`)
+    -   **Forward**: Prefix with Dot (`.`). (e.g., `.2` is Front Full).
+
+5.  **Examples (Reading & Deconstruct)**:
+    -   `22O`: "Full-Full Tuck". (1st Flip: Full Twist, 2nd Flip: Full Twist, Shape: Tuck).
+    -   `2--<`: "Full-In Triple Pike". (1st: Full, 2nd: None, 3rd: None. Shape: Pike).
+    -   `24/`: "Miller Layout" (Full In, Double Out).
+    -   `23O`: "Full In 1.5 Out Tuck".
+
+6.  **Clarification Rule**:
+    -   If a user asks about a generic name (e.g., "Full Full") without specifying the position, **ASK THEM**.
+    -   *"Do you mean Full Full Tuck (22O) or Full Full Layout (22/)?"*
