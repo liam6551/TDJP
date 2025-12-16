@@ -311,7 +311,7 @@ export default function AIChatScreen() {
                         style={{
                             color: isUser ? '#fff' : '#1e293b',
                             textAlign: isRTL ? 'right' : 'left',
-                            writingDirection: isRTL ? 'rtl' : 'ltr',
+                            writingDirection: isRTL ? 'rtl' : 'ltr', // Restore this for correct flow
                             fontSize: 16,
                             lineHeight: 22,
                         }}
@@ -319,7 +319,7 @@ export default function AIChatScreen() {
                         {item.text.split(/(`[^`]+`)/g).map((part, index) => {
                             if (index % 2 === 1) {
                                 // Code Pill (Technical Term)
-                                const content = part.slice(1, -1); // remove backticks
+                                const content = part.slice(1, -1);
                                 return (
                                     <Text key={index} style={{
                                         fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
@@ -332,9 +332,10 @@ export default function AIChatScreen() {
                                     </Text>
                                 );
                             }
-                            // Normal Text
                             return <Text key={index}>{part}</Text>;
                         })}
+                        {/* Trailing spaces to prevent last-word clipping on Android */}
+                        {"   "}
                     </Text>
                 </View>
             </View >
