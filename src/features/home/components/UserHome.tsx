@@ -14,7 +14,9 @@ import TheoreticalMaterialModal from './TheoreticalMaterialModal';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import * as SecureStore from 'expo-secure-store';
 import { getStoredUri, setStoredUri, requestAndroidPermissions } from '@/shared/filesystem/storage';
-import { Platform } from 'react-native';
+import { Platform, Image } from 'react-native';
+// @ts-ignore
+import twistAiLogo from '@/../assets/twist_ai_logo.png';
 
 export default function UserHome() {
     const { colors } = useAppTheme();
@@ -293,6 +295,7 @@ export default function UserHome() {
                     />
                     <QuickAction
                         icon="chatbubbles"
+                        imageSource={twistAiLogo}
                         label={t(lang, 'home.quickActions.ai' as any)}
                         color={['#a18cd1', '#fbc2eb'] as const}
                         onPress={() => navigation.navigate('AIChat')}
@@ -314,7 +317,7 @@ export default function UserHome() {
     );
 }
 
-function QuickAction({ icon, label, color, onPress }: { icon: any, label: string, color: readonly [string, string, ...string[]], onPress?: () => void }) {
+function QuickAction({ icon, label, color, onPress, imageSource }: { icon: any, label: string, color: readonly [string, string, ...string[]], onPress?: () => void, imageSource?: any }) {
     const { colors } = useAppTheme();
     const navigation = useNavigation<any>(); // Access navigation
 
@@ -340,7 +343,11 @@ function QuickAction({ icon, label, color, onPress }: { icon: any, label: string
                 colors={color}
                 style={styles.iconCircle}
             >
-                <Ionicons name={icon} size={24} color="white" />
+                {imageSource ? (
+                    <Image source={imageSource} style={{ width: 32, height: 32, tintColor: 'white' }} resizeMode="contain" />
+                ) : (
+                    <Ionicons name={icon} size={24} color="white" />
+                )}
             </LinearGradient>
             <Text style={[styles.actionLabel, { color: colors.text }]}>{label}</Text>
         </TouchableOpacity>
