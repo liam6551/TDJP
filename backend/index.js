@@ -337,6 +337,20 @@ async function ensureSchema() {
   `);
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_flicki_rules_category ON flicki_rules(category);`);
 
+  // --- STATS DB ---
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS quiz_results (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      element_id text NOT NULL,
+      is_correct boolean NOT NULL,
+      difficulty numeric,
+      created_at timestamptz NOT NULL DEFAULT now()
+    );
+  `);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_quiz_results_user ON quiz_results(user_id);`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_quiz_results_element ON quiz_results(element_id);`);
+
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);`);
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_password_resets_token ON password_resets(token);`);
   await pool.query(`
@@ -390,7 +404,9 @@ app.get('/', (_req, res) => {
       '/auth/register', '/auth/login',
       '/auth/request-password-reset', '/auth/reset-password',
       '/me (GET/PUT)',
-      '/admin/users'
+      '/admin/users',
+      '/ai/chat', '/ai/debug',
+      '/api/stats/results', '/api/stats/user'
     ],
   });
 });
@@ -406,6 +422,54 @@ app.get('/_debug/db', async (_req, res) => {
 /* ---------- AI Chat ---------- */
 app.post('/ai/chat', requireAuth, chatWithAI);
 app.get('/ai/debug', debugRag);
+
+/* ---------- Stats ---------- */
+app.post('/api/stats/results', requireAuth, async (req, res) => {
+  try {
+    const { results } = req.body; // Expect array of { elementId, isCorrect, difficulty }
+    if (!Array.isArray(results) || !results.length) return res.json({ ok: true }); // Nothing to save
+
+    // Batch insert
+    const userId = req.user.uid;
+    const values = [];
+    let query = `INSERT INTO quiz_results (user_id, element_id, is_correct, difficulty) VALUES `;
+
+    results.forEach((r, idx) => {
+      const p1 = idx * 4 + 1;
+      const p2 = idx * 4 + 2;
+      const p3 = idx * 4 + 3;
+      const p4 = idx * 4 + 4;
+      query += `($${p1}, $${p2}, $${p3}, $${p4})${idx === results.length - 1 ? '' : ','}`;
+      values.push(userId, r.elementId, !!r.isCorrect, r.difficulty || 0); // Default difficulty 0 if missing
+    });
+
+    await pool.query(query, values);
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('Save stats error:', e);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.get('/api/stats/user', requireAuth, async (req, res) => {
+  try {
+    const userId = req.user.uid;
+    // Return all results for now, client can process. Or simplify on server.
+    // Let's group by element_id for efficiency if list is huge, but raw list offers flexibility.
+    // For now, raw list is fine for < 10000 records.
+    const q = await pool.query(`
+      SELECT element_id, is_correct, difficulty, created_at
+      FROM quiz_results
+      WHERE user_id = $1
+      ORDER BY created_at DESC
+    `, [userId]);
+
+    res.json({ results: q.rows });
+  } catch (e) {
+    console.error('Get stats error:', e);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 
 /* ---------- Registration validation ---------- */
 function validateRegistration({

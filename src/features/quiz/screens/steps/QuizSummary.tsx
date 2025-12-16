@@ -9,6 +9,7 @@ import { ELEMENTS } from '@/shared/data/elements';
 import type { ElementItem } from '../../types';
 import { Svg, G, Circle } from 'react-native-svg';
 import { useFonts, FrankRuhlLibre_700Bold } from '@expo-google-fonts/frank-ruhl-libre';
+import { StatsService } from '@/shared/services/stats';
 
 type Result = { qid: string; selectedId: string | null; correct: boolean; selectedText?: string };
 
@@ -18,13 +19,13 @@ type RouteParams = {
   qids?: string[];
 };
 
-function getDict(lang: 'he'|'en') {
+function getDict(lang: 'he' | 'en') {
   return lang === 'he' ? he.quiz.summary : en.quiz.summary;
 }
-function getActions(lang: 'he'|'en') {
+function getActions(lang: 'he' | 'en') {
   return lang === 'he' ? he.quiz.actions : en.quiz.actions;
 }
-function getCommon(lang: 'he'|'en') {
+function getCommon(lang: 'he' | 'en') {
   return lang === 'he' ? he.quiz : en.quiz;
 }
 
@@ -83,22 +84,22 @@ export default function QuizSummary() {
       const elem = (ELEMENTS as unknown as ElementItem[]).find(e => String(e.id) === String(itemId));
 
       const topLine =
-        template === 'nameToValue'   ? t.nameToValue :
-        template === 'symbolToValue' ? t.symbolToValue :
-        template === 'valueToName'   ? t.valueToName :
-                                       t.valueToSymbol;
+        template === 'nameToValue' ? t.nameToValue :
+          template === 'symbolToValue' ? t.symbolToValue :
+            template === 'valueToName' ? t.valueToName :
+              t.valueToSymbol;
 
       const secondLine =
-        template === 'nameToValue'   ? (elem ? (lang === 'he' ? elem.name.he : elem.name.en) : '') :
-        template === 'symbolToValue' ? (elem ? elem.symbol : '') :
+        template === 'nameToValue' ? (elem ? (lang === 'he' ? elem.name.he : elem.name.en) : '') :
+          template === 'symbolToValue' ? (elem ? elem.symbol : '') :
         /* valueToName / valueToSymbol */ (elem ? toVal(elem.value) : '');
 
       const correctLabel =
         template === 'nameToValue' || template === 'symbolToValue'
           ? (elem ? toVal(elem.value) : '')
           : template === 'valueToName'
-          ? (elem ? (lang === 'he' ? elem.name.he : elem.name.en) : '')
-          : (elem ? elem.symbol : '');
+            ? (elem ? (lang === 'he' ? elem.name.he : elem.name.en) : '')
+            : (elem ? elem.symbol : '');
 
       const unanswered = r.selectedId == null;
 
@@ -129,9 +130,9 @@ export default function QuizSummary() {
   };
 
   const frontRotate = flip.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '180deg'] });
-  const backRotate  = flip.interpolate({ inputRange: [0, 1], outputRange: ['180deg', '360deg'] });
+  const backRotate = flip.interpolate({ inputRange: [0, 1], outputRange: ['180deg', '360deg'] });
   const frontOpacity = flip.interpolate({ inputRange: [0, 0.49, 0.5, 1], outputRange: [1, 1, 0, 0] });
-  const backOpacity  = flip.interpolate({ inputRange: [0, 0.5, 0.51, 1], outputRange: [0, 0, 1, 1] });
+  const backOpacity = flip.interpolate({ inputRange: [0, 0.5, 0.51, 1], outputRange: [0, 0, 1, 1] });
 
   const handlePracticeAgain = () => {
     const seedQids = results.map(r => r.qid);
@@ -141,6 +142,36 @@ export default function QuizSummary() {
   const handleClose = () => {
     nav.navigate('QuizWizard');
   };
+
+  // === Save Stats Logic ===
+  React.useEffect(() => {
+    const saveStats = async () => {
+      if (results.length === 0) return;
+
+      const statsPayload = results.map(r => {
+        // Extract elementId from qid (format: "template:id" or "open:template:id")
+        const parts = r.qid.split(':');
+        const elementId = parts[parts.length - 1]; // ID is always last
+
+        // Difficulty estimate (placeholder logic, ideally from config/element)
+        // For now we send 0 or maybe look up the element difficulty?
+        // Let's rely on finding the element to get value if possible, else 0.
+        const elem = (ELEMENTS as unknown as ElementItem[]).find(e => String(e.id) === String(elementId));
+        const diff = elem ? Number(elem.value) : 0;
+
+        return {
+          elementId,
+          isCorrect: r.correct,
+          difficulty: isNaN(diff) ? 0 : diff
+        };
+      });
+
+      await StatsService.saveResults(statsPayload);
+    };
+
+    saveStats();
+  }, [results]);
+  // ========================
 
   return (
     <View style={[styles.screen, { backgroundColor: colors.bg }]}>
