@@ -12,6 +12,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Initialize Gemini Client
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
 import pool from '../db.js';
 
 // ... (previous imports)
