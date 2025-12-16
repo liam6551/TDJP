@@ -339,7 +339,8 @@ export default function AIChatScreen() {
                             return <Text key={index}>{part}</Text>;
                         })}
                         {/* Transparent dot hack to force layout engine to reserve space at the end of line */}
-                        <Text style={{ color: 'transparent' }}>.</Text>
+                        {/* <Text style={{ color: 'transparent' }}>.</Text> */}
+                        {"\u00A0\u00A0"}
                     </Text>
                 </View>
             </View >
@@ -551,7 +552,7 @@ const styles = StyleSheet.create({
     },
     msgRowUser: {
         alignSelf: 'flex-end', // Right side
-        flexDirection: 'row-reverse',
+        // flexDirection: 'row-reverse', // REMOVED: Caused layout clipping bugs on Android RTL
     },
     msgRowAi: {
         alignSelf: 'flex-start', // Left side
