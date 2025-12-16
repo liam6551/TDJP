@@ -10,7 +10,8 @@ import SettingsSheet from './SettingsSheet';
 type ModeToggle = 'text' | 'symbol';
 
 type Props = {
-  titleKey: string;
+  titleKey?: string;
+  title?: string;
   showBack?: boolean;
   onBack?: () => void;
   showElementToggle?: boolean;
@@ -28,6 +29,7 @@ const letterStyle = (color: string) => ({
 
 export default function TopBar({
   titleKey,
+  title,
   showBack,
   onBack,
   showElementToggle,
@@ -118,17 +120,17 @@ export default function TopBar({
     <>
       <SafeAreaView edges={['top']} style={{ backgroundColor: colors.bg }}>
         <View style={[styles.wrap, { backgroundColor: colors.bg, borderBottomColor: colors.border }]}>
-          
+
           <View style={styles.sideLeft}>
             {LeftContent}
           </View>
-          
+
           <View style={styles.center}>
             <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
-              {titleKey ? t(lang, titleKey) : ''}
+              {title || (titleKey ? t(lang, titleKey) : '')}
             </Text>
           </View>
-          
+
           <View style={styles.sideRight}>
             {RightContent}
           </View>
@@ -155,8 +157,8 @@ const styles = StyleSheet.create({
     top: 10,
     height: BTN,
     justifyContent: 'center',
-    flexDirection: 'row', 
-    alignItems: 'center', 
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   sideRight: {
     position: 'absolute',
@@ -172,10 +174,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     maxWidth: '60%',
   },
-  title: { 
-    fontSize: 26, 
-    fontWeight: '900', 
-    textAlign: 'center' 
+  title: {
+    fontSize: 26,
+    fontWeight: '900',
+    textAlign: 'center'
   },
   btn: {
     width: BTN,
