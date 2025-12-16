@@ -25,15 +25,15 @@ const he = {
     },
 
     theoretical: {
-      title: 'חומר עיוני',
+      title: 'חומר מקצועי',
       code: 'חוקה בינלאומית 2025-2028',
       ageGroups: 'שנתונים 2025-2026',
       technical: 'תוכנית מקצועית 2025-2026',
       open: 'פתח',
       download: 'הורד',
-      downloadSuccessTitle: 'החוקה ירדה בהצלחה !',
-      openFile: 'פתח קובץ',
-      shareFile: 'שתף קובץ',
+      downloadSuccessTitle: 'ההורדה הושלמה !',
+      openFile: 'פתח',
+      shareFile: 'שתף',
       judgingSummary: 'סיכום שיפוט',
     },
     statusDialog: {

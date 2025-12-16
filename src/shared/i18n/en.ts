@@ -25,11 +25,16 @@ const en = {
     },
 
     theoretical: {
-      title: 'Study Material',
+      title: 'Professional Material',
       code: 'Intl. Code of Points 2025-2028',
       ageGroups: 'Age Groups 2025-2026',
       technical: 'Technical Program 2025-2026',
       open: 'Open',
+      downloadSuccessTitle: 'Download Complete',
+      successCode: 'The Code of Points downloaded successfully!',
+      successAgeGroups: 'The Age Groups file downloaded successfully!',
+      successProgram: 'The Professional Program downloaded successfully!',
+      successSummary: 'The Summary downloaded successfully!',
     },
     statusDialog: {
       approved: {

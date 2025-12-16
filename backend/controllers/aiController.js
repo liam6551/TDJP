@@ -45,7 +45,8 @@ let LOADING_DETAILS = {
     code: "pending",
     yearbook: "pending",
     summary: "pending",
-    flicki_db: "pending"
+    flicki_db: "pending",
+    program: "pending"
 };
 
 const loadKnowledgeBase = async () => {
@@ -98,6 +99,14 @@ const loadKnowledgeBase = async () => {
 
         const logicPath = path.join(assetsPath, 'tumbling_symbol_logic.txt');
         if (fs.existsSync(logicPath)) contextParts.push(fs.readFileSync(logicPath, 'utf-8'));
+
+        // 6.5 Professional Program 2025-2026
+        const progPath = path.join(assetsPath, 'Professional program 2025-2026.txt');
+        if (fs.existsSync(progPath)) {
+            const text = fs.readFileSync(progPath, 'utf-8');
+            contextParts.push(`\n--- ISRAELI PROFESSIONAL PROGRAM 2025-2026 ---\n${text}`);
+            LOADING_DETAILS.program = "success (" + text.length + " chars)";
+        }
 
 
         // 7. Loading Flicki Knowledge (DATABASE)

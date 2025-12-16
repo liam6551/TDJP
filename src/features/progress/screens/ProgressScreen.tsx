@@ -76,20 +76,57 @@ export default function ProgressScreen() {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<UserStatItem[]>([]);
   const [filter, setFilter] = useState<Tier | 'all'>('all');
+  const [rotatingLevel, setRotatingLevel] = useState<Tier>('novice');
+
+  const handleRotatingPress = () => {
+    // If currently not on this level, just switch to it (without rotating)? 
+    // OR always rotate? 
+    // User logic: "And on click it will change according to order... and loop". 
+    // Interpretation: User wants it to ACT as a filter button but ALSO rotate.
+    // Let's say: If I click it and I am NOT on it, does it just select current? or select next?
+    // "Pressing it will change by order". This implies every press changes the level.
+    // But then how do I "Select" it without changing?
+    // User: "Third one... default always starts with its color.. on click it changes".
+    // So likely: It IS the filter. Clicking it updates the filter to the NEW level.
+
+    // Always rotate to the next level and select it
+    const levels: Tier[] = ['novice', 'apprentice', 'competent', 'proficient', 'master'];
+    const currIdx = levels.indexOf(rotatingLevel);
+    const nextLevel = levels[(currIdx + 1) % levels.length];
+
+    setRotatingLevel(nextLevel);
+    setFilter(nextLevel);
+  };
 
   // Interactive Score Card
   const [scoreMode, setScoreMode] = useState<ScoreMode>('all');
   const flipAnim = useRef(new Animated.Value(0)).current;
+  const scrollViewRef = useRef<ScrollView>(null);
+
+  // Auto-scroll tabs to right in Hebrew (because of row-reverse, "All" is at the end of scrollable area??)
+  // Wait. In row-reverse: [Master] .. [All].
+  // Rendered: Right side is All. Left side is Master.
+  // ScrollView starts at x=0 (Left).
+  // So we need to scroll to x=max (Right) to see "All".
+  useEffect(() => {
+    if (lang === 'he') {
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: false });
+      }, 50);
+    } else {
+      scrollViewRef.current?.scrollTo({ x: 0, animated: false });
+    }
+  }, [lang, loading]);
 
   // === TEXTS ===
   const t = lang === 'he' ? {
-    title: 'מעבדת השליטה',
+    title: 'סטטיסטיקה',
     totalQs: 'מספר אימונים',
-    masteryScore: 'אחוזי שליטה',
+    masteryScore: 'הכל',
     filterAll: 'הכל',
     emptyState: 'עדיין לא אספת מספיק נתונים...',
   } : {
-    title: 'Mastery Lab',
+    title: 'Statistics',
     totalQs: 'Total Drills',
     masteryScore: 'Mastery %',
     filterAll: 'All',
@@ -279,33 +316,53 @@ export default function ProgressScreen() {
           </View>
         </View>
 
-        {/* === TABS SCROLL === */}
-        <View style={{ marginBottom: 16 }}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: 4, flexDirection: lang === 'he' ? 'row-reverse' : 'row' }}>
-            <TouchableOpacity onPress={() => setFilter('all')} style={[styles.tab, filter === 'all' && styles.activeTab, { borderColor: colors.border }]}>
-              <Text style={[styles.tabText, filter === 'all' && styles.activeTabText, { color: colors.text }]}>{t.filterAll}</Text>
-            </TouchableOpacity>
+        {/* === FILTER BUTTONS === */}
+        <View style={[styles.filterContainer, { flexDirection: lang === 'he' ? 'row-reverse' : 'row' }]}>
 
-            {(['locked', 'novice', 'apprentice', 'competent', 'proficient', 'master'] as Tier[]).map(key => {
-              const cfg = TIERS[key];
-              const isActive = filter === key;
-              return (
-                <TouchableOpacity key={key} onPress={() => setFilter(key)}
-                  style={[
-                    styles.tab,
-                    isActive && { backgroundColor: cfg.color, borderColor: cfg.color },
-                    !isActive && { borderColor: cfg.color, borderWidth: 1.5, backgroundColor: colors.card }
-                  ]}>
-                  <Text style={[
-                    styles.tabText,
-                    isActive ? { color: 'white' } : { color: cfg.color }
-                  ]}>
-                    {lang === 'he' ? cfg.labelHe : cfg.labelEn}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
+          {/* 1. All */}
+          <TouchableOpacity
+            onPress={() => setFilter('all')}
+            style={[styles.tab, filter === 'all' && styles.activeTab, { borderColor: colors.border }]}
+          >
+            <Text style={[styles.tabText, filter === 'all' && styles.activeTabText, { color: colors.text }]}>{t.filterAll}</Text>
+          </TouchableOpacity>
+
+          {/* 2. Locked */}
+          <TouchableOpacity
+            onPress={() => setFilter('locked')}
+            style={[
+              styles.tab,
+              filter === 'locked' && { backgroundColor: TIERS.locked.bg, borderColor: TIERS.locked.color },
+              filter !== 'locked' && { borderColor: colors.border, opacity: 0.5 }
+            ]}
+          >
+            <Text style={[
+              styles.tabText,
+              filter === 'locked' ? { color: TIERS.locked.color } : { color: colors.text }
+            ]}>
+              {lang === 'he' ? TIERS.locked.labelHe : TIERS.locked.labelEn}
+            </Text>
+          </TouchableOpacity>
+
+          {/* 3. Rotating Level */}
+          <TouchableOpacity
+            onPress={handleRotatingPress}
+            style={[
+              styles.tab,
+              filter === rotatingLevel && { backgroundColor: TIERS[rotatingLevel].bg, borderColor: TIERS[rotatingLevel].color },
+              filter !== rotatingLevel && { borderColor: TIERS[rotatingLevel].color, borderWidth: 1.5, backgroundColor: colors.card }
+            ]}
+          >
+            <Text style={[
+              styles.tabText,
+              // Always show the color of the current rotating level, even if not active (unless active, then maybe bolder or same?)
+              // User said: "default always starting with its color"
+              { color: TIERS[rotatingLevel].color }
+            ]}>
+              {lang === 'he' ? TIERS[rotatingLevel].labelHe : TIERS[rotatingLevel].labelEn}
+            </Text>
+          </TouchableOpacity>
+
         </View>
 
         {/* === MASTERY GRID === */}
@@ -335,8 +392,8 @@ const styles = StyleSheet.create({
   divider: { width: 1, height: '80%', marginHorizontal: 10 },
   heroLabel: { fontSize: 14, opacity: 0.9, marginBottom: 4, textAlign: 'center', fontWeight: '600' },
   heroValue: { fontSize: 28, fontWeight: '900' },
-  tabs: { flexDirection: 'row', marginBottom: 16, gap: 10 },
-  tab: { paddingVertical: 6, paddingHorizontal: 14, borderRadius: 20, borderWidth: 1 }, // Compact tabs
+  filterContainer: { flexDirection: 'row', justifyContent: 'center', marginBottom: 24, gap: 12 },
+  tab: { paddingVertical: 8, paddingHorizontal: 20, borderRadius: 24, borderWidth: 1, minWidth: 80, alignItems: 'center' }, // Bigger touch area
   activeTab: { backgroundColor: '#3b82f6', borderColor: '#3b82f6' },
   tabText: { fontWeight: '700', fontSize: 13 },
   activeTabText: { color: 'white' },

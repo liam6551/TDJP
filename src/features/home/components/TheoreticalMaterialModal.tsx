@@ -39,6 +39,7 @@ export default function TheoreticalMaterialModal({ visible, onClose }: Props) {
         code: require('../../../../assets/TumblingCodeOfPoints_2025-2028.pdf'),
         ageGroups: require('../../../../assets/שנתונים 2025-2026.pdf'),
         judgingSummary: require('../../../../assets/סיכום שיפוט.pdf'),
+        program: require('../../../../assets/תכנית מקצועית 2025-2026.pdf'),
     };
 
     const items = [
@@ -60,7 +61,8 @@ export default function TheoreticalMaterialModal({ visible, onClose }: Props) {
             id: 'technical',
             icon: 'clipboard-outline',
             titleKey: 'home.theoretical.technical',
-            url: 'https://www.google.com'
+            assetKey: 'program',
+            fileName: 'ProfessionalProgram_2025-2026.pdf'
         },
         {
             id: 'judgingSummary',
