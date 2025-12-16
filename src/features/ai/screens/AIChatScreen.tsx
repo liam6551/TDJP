@@ -308,15 +308,13 @@ export default function AIChatScreen() {
                     )}
 
                     <Text
-                        textBreakStrategy="simple"
                         style={{
                             color: isUser ? '#fff' : '#1e293b',
                             textAlign: isRTL ? 'right' : 'left',
-                            writingDirection: isRTL ? 'rtl' : 'ltr',
                             fontSize: 16,
                             lineHeight: 24,
-                            paddingHorizontal: 12, // More padding
-                            paddingVertical: 2
+                            includeFontPadding: false, // Android specific fix for vertical alignment/clipping
+                            textAlignVertical: 'center'
                         }}
                     >
                         {item.text.split(/(`[^`]+`)/g).map((part, index) => {
@@ -338,9 +336,6 @@ export default function AIChatScreen() {
                             // Normal Text
                             return <Text key={index}>{part}</Text>;
                         })}
-                        {/* Transparent dot hack to force layout engine to reserve space at the end of line */}
-                        {/* <Text style={{ color: 'transparent' }}>.</Text> */}
-                        {"\u00A0\u00A0"}
                     </Text>
                 </View>
             </View >
