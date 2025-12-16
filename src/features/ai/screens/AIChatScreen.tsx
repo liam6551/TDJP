@@ -307,201 +307,206 @@ export default function AIChatScreen() {
                         <Image source={{ uri: item.imageUri }} style={styles.msgImage} />
                     )}
 
-                    writingDirection: isRTL ? 'rtl' : 'ltr',
-                    fontSize: 16,
-                    lineHeight: 24,
-                    paddingHorizontal: 12, // More padding
-                    paddingVertical: 2
+                    <Text
+                        textBreakStrategy="simple"
+                        style={{
+                            color: isUser ? '#fff' : '#1e293b',
+                            textAlign: isRTL ? 'right' : 'left',
+                            writingDirection: isRTL ? 'rtl' : 'ltr',
+                            fontSize: 16,
+                            lineHeight: 24,
+                            paddingHorizontal: 12, // More padding
+                            paddingVertical: 2
                         }}
                     >
-                    {item.text.split(/(`[^`]+`)/g).map((part, index) => {
-                        if (index % 2 === 1) {
-                            // Code Pill (Technical Term)
-                            const content = part.slice(1, -1); // remove backticks
-                            return (
-                                <Text key={index} style={{
-                                    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
-                                    backgroundColor: isUser ? 'rgba(255,255,255,0.2)' : '#e2e8f0',
-                                    color: isUser ? '#fff' : '#0f172a',
-                                    fontSize: 14,
-                                    fontWeight: 'bold',
-                                }}>
-                                    {" "}{content}{" "}
-                                </Text>
-                            );
-                        }
-                        // Normal Text
-                        return <Text key={index}>{part}</Text>;
-                    })}
-                    {/* Transparent dot hack to force layout engine to reserve space at the end of line */}
-                    <Text style={{ color: 'transparent' }}>.</Text>
-                </Text>
-            </View>
+                        {item.text.split(/(`[^`]+`)/g).map((part, index) => {
+                            if (index % 2 === 1) {
+                                // Code Pill (Technical Term)
+                                const content = part.slice(1, -1); // remove backticks
+                                return (
+                                    <Text key={index} style={{
+                                        fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+                                        backgroundColor: isUser ? 'rgba(255,255,255,0.2)' : '#e2e8f0',
+                                        color: isUser ? '#fff' : '#0f172a',
+                                        fontSize: 14,
+                                        fontWeight: 'bold',
+                                    }}>
+                                        {" "}{content}{" "}
+                                    </Text>
+                                );
+                            }
+                            // Normal Text
+                            return <Text key={index}>{part}</Text>;
+                        })}
+                        {/* Transparent dot hack to force layout engine to reserve space at the end of line */}
+                        <Text style={{ color: 'transparent' }}>.</Text>
+                    </Text>
+                </View>
             </View >
         );
-};
+    };
 
-return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
-        <LinearGradient colors={gradientColors as any} style={StyleSheet.absoluteFill} />
+    return (
+        <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
+            <LinearGradient colors={gradientColors as any} style={StyleSheet.absoluteFill} />
 
-        <KeyboardAvoidingView
-            style={{ flex: 1 }}
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        >
-            {/* HEADER REDESIGNED with SWAPPED ORDER for RTL logic */}
-            <View style={[
-                styles.header,
-                { flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center' }
-            ]}>
+            <KeyboardAvoidingView
+                style={{ flex: 1 }}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            >
+                {/* HEADER REDESIGNED with SWAPPED ORDER for RTL logic */}
+                <View style={[
+                    styles.header,
+                    { flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center' }
+                ]}>
 
-                {/* LEFT SIDE (LTR Start / RTL End): BACK BUTTON */}
-                {/* In RTL (row-reverse), this renders LAST (Right side). User wants Back on Right side in Hebrew. Correct. */}
-                <TouchableOpacity
-                    onPress={() => navigation.goBack()}
-                    style={[styles.iconBtn]}
-                >
-                    <Ionicons name="arrow-back" size={24} color={themeColor} style={{ transform: [{ scaleX: isRTL ? -1 : 1 }] }} />
-                </TouchableOpacity>
-
-                {/* CENTER: PERSONA TOGGLE */}
-                <View style={styles.centerHeader}>
-                    <PersonaToggle activePersona={mode as any} onToggle={setMode} />
-                </View>
-
-                {/* RIGHT SIDE (LTR End / RTL Start): MENU */}
-                {/* In RTL (row-reverse), this renders FIRST (Left side). User wants Menu on Left side in Hebrew. Correct. */}
-                <View style={{ zIndex: 10 }}>
+                    {/* LEFT SIDE (LTR Start / RTL End): BACK BUTTON */}
+                    {/* In RTL (row-reverse), this renders LAST (Right side). User wants Back on Right side in Hebrew. Correct. */}
                     <TouchableOpacity
-                        onPress={toggleMenu}
-                        style={[styles.iconBtn, { backgroundColor: '#fff' }]}
+                        onPress={() => navigation.goBack()}
+                        style={[styles.iconBtn]}
                     >
-                        <Ionicons name={menuOpen ? "close" : "menu"} size={24} color={themeColor} />
+                        <Ionicons name="arrow-back" size={24} color={themeColor} style={{ transform: [{ scaleX: isRTL ? -1 : 1 }] }} />
                     </TouchableOpacity>
 
-                    {/* DROPDOWN MENU */}
-                    {menuOpen && (
-                        <View style={[
-                            styles.dropdownMenu,
-                            { alignSelf: 'center' }
-                        ]}>
-                            {/* NEW CHAT BTN */}
-                            <TouchableOpacity
-                                onPress={startNewChat}
-                                style={[styles.menuOptionBtn, { backgroundColor: themeColor, marginBottom: 8 }]}
-                            >
-                                <Ionicons name="add" size={24} color="#fff" />
-                            </TouchableOpacity>
-
-                            {/* HISTORY BTN */}
-                            <TouchableOpacity
-                                onPress={() => {
-                                    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-                                    setMenuOpen(false);
-                                    setHistoryVisible(true);
-                                }}
-                                style={[styles.menuOptionBtn, { backgroundColor: '#fff' }]}
-                            >
-                                <Ionicons name="time-outline" size={24} color={themeColor} />
-                            </TouchableOpacity>
-                        </View>
-                    )}
-                </View>
-            </View>
-
-            {/* Chat Area */}
-            <FlatList
-                ref={flatListRef}
-                data={messages}
-                keyExtractor={item => item.id}
-                renderItem={renderMessage}
-                contentContainerStyle={{ padding: 16, paddingBottom: 20, gap: 16 }}
-                onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
-                showsVerticalScrollIndicator={false}
-                ListFooterComponent={isTyping ? <Text style={{ textAlign: 'center', color: '#94a3b8', fontStyle: 'italic', marginTop: 10 }}>Typing...</Text> : null}
-            />
-
-            {/* Input Area */}
-            <View style={[styles.inputContainer]}>
-                {selectedImage && (
-                    <View style={styles.previewContainer}>
-                        <Image source={{ uri: selectedImage }} style={styles.previewImage} />
-                        <TouchableOpacity onPress={() => setSelectedImage(null)} style={styles.removePreviewBtn}>
-                            <Ionicons name="close-circle" size={24} color="#ef4444" />
-                        </TouchableOpacity>
+                    {/* CENTER: PERSONA TOGGLE */}
+                    <View style={styles.centerHeader}>
+                        <PersonaToggle activePersona={mode as any} onToggle={setMode} />
                     </View>
-                )}
 
-                <View style={styles.inputWrapper}>
-                    {/* Show Image Upload ONLY for Flicki */}
-                    {mode === 'flicki' && (
-                        <TouchableOpacity onPress={pickImage} style={styles.attachBtn}>
-                            <Ionicons name="images-outline" size={24} color={themeColor} />
+                    {/* RIGHT SIDE (LTR End / RTL Start): MENU */}
+                    {/* In RTL (row-reverse), this renders FIRST (Left side). User wants Menu on Left side in Hebrew. Correct. */}
+                    <View style={{ zIndex: 10 }}>
+                        <TouchableOpacity
+                            onPress={toggleMenu}
+                            style={[styles.iconBtn, { backgroundColor: '#fff' }]}
+                        >
+                            <Ionicons name={menuOpen ? "close" : "menu"} size={24} color={themeColor} />
                         </TouchableOpacity>
-                    )}
 
-                    <TextInput
-                        style={[styles.input, { textAlign: isRTL ? 'right' : 'left' }]}
-                        placeholder={t(lang, 'aiChat.inputPlaceholder' as any)}
-                        placeholderTextColor="#94a3b8"
-                        value={inputText}
-                        onChangeText={setInputText}
-                        multiline
-                    />
-                    <TouchableOpacity
-                        onPress={handleSend}
-                        style={[styles.sendBtn, { backgroundColor: themeColor }]}
-                    >
-                        <Ionicons name="send" size={20} color="#fff" />
-                    </TouchableOpacity>
+                        {/* DROPDOWN MENU */}
+                        {menuOpen && (
+                            <View style={[
+                                styles.dropdownMenu,
+                                { alignSelf: 'center' }
+                            ]}>
+                                {/* NEW CHAT BTN */}
+                                <TouchableOpacity
+                                    onPress={startNewChat}
+                                    style={[styles.menuOptionBtn, { backgroundColor: themeColor, marginBottom: 8 }]}
+                                >
+                                    <Ionicons name="add" size={24} color="#fff" />
+                                </TouchableOpacity>
+
+                                {/* HISTORY BTN */}
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                                        setMenuOpen(false);
+                                        setHistoryVisible(true);
+                                    }}
+                                    style={[styles.menuOptionBtn, { backgroundColor: '#fff' }]}
+                                >
+                                    <Ionicons name="time-outline" size={24} color={themeColor} />
+                                </TouchableOpacity>
+                            </View>
+                        )}
+                    </View>
                 </View>
-            </View>
 
-            {/* HISTORY MODAL */}
-            <Modal visible={historyVisible} animationType="slide" transparent>
-                <View style={styles.modalOverlay}>
-                    <View style={[styles.modalContent, { backgroundColor: '#fff', direction: isRTL ? 'rtl' : 'ltr' }]}>
-                        <View style={styles.modalHeader}>
-                            <Text style={styles.modalTitle}>{t(lang, 'aiChat.history' as any) || 'History'}</Text>
-                            <TouchableOpacity onPress={() => setHistoryVisible(false)}>
-                                <Ionicons name="close" size={24} color="#000" />
+                {/* Chat Area */}
+                <FlatList
+                    ref={flatListRef}
+                    data={messages}
+                    keyExtractor={item => item.id}
+                    renderItem={renderMessage}
+                    contentContainerStyle={{ padding: 16, paddingBottom: 20, gap: 16 }}
+                    onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+                    showsVerticalScrollIndicator={false}
+                    ListFooterComponent={isTyping ? <Text style={{ textAlign: 'center', color: '#94a3b8', fontStyle: 'italic', marginTop: 10 }}>Typing...</Text> : null}
+                />
+
+                {/* Input Area */}
+                <View style={[styles.inputContainer]}>
+                    {selectedImage && (
+                        <View style={styles.previewContainer}>
+                            <Image source={{ uri: selectedImage }} style={styles.previewImage} />
+                            <TouchableOpacity onPress={() => setSelectedImage(null)} style={styles.removePreviewBtn}>
+                                <Ionicons name="close-circle" size={24} color="#ef4444" />
                             </TouchableOpacity>
                         </View>
+                    )}
 
-                        <FlatList
-                            data={sessions}
-                            keyExtractor={item => item.id}
-                            contentContainerStyle={{ padding: 16 }}
-                            ListEmptyComponent={<Text style={{ textAlign: 'center', color: '#94a3b8', marginTop: 50 }}>No history yet</Text>}
-                            renderItem={({ item }) => (
-                                <View style={styles.historyItem}>
-                                    <View style={{ marginRight: isRTL ? 0 : 10, marginLeft: isRTL ? 10 : 0 }}>
-                                        <Ionicons
-                                            name={item.mode === 'flicki' ? 'flash' : (item.mode === 'discussion' ? 'people' : 'glasses')}
-                                            size={20}
-                                            color="#64748b"
-                                        />
-                                    </View>
-                                    <TouchableOpacity
-                                        style={{ flex: 1 }}
-                                        onPress={() => loadSessionFromHistory(item)}
-                                    >
-                                        <Text style={styles.historyTitle} numberOfLines={1}>{item.title}</Text>
-                                        <Text style={styles.historyPreview} numberOfLines={1}>{item.preview}</Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity onPress={() => deleteSession(item.id)} style={{ padding: 8 }}>
-                                        <Ionicons name="trash-outline" size={20} color="#ef4444" />
-                                    </TouchableOpacity>
-                                </View>
-                            )}
+                    <View style={styles.inputWrapper}>
+                        {/* Show Image Upload ONLY for Flicki */}
+                        {mode === 'flicki' && (
+                            <TouchableOpacity onPress={pickImage} style={styles.attachBtn}>
+                                <Ionicons name="images-outline" size={24} color={themeColor} />
+                            </TouchableOpacity>
+                        )}
+
+                        <TextInput
+                            style={[styles.input, { textAlign: isRTL ? 'right' : 'left' }]}
+                            placeholder={t(lang, 'aiChat.inputPlaceholder' as any)}
+                            placeholderTextColor="#94a3b8"
+                            value={inputText}
+                            onChangeText={setInputText}
+                            multiline
                         />
+                        <TouchableOpacity
+                            onPress={handleSend}
+                            style={[styles.sendBtn, { backgroundColor: themeColor }]}
+                        >
+                            <Ionicons name="send" size={20} color="#fff" />
+                        </TouchableOpacity>
                     </View>
                 </View>
-            </Modal>
 
-        </KeyboardAvoidingView>
-    </SafeAreaView>
-);
+                {/* HISTORY MODAL */}
+                <Modal visible={historyVisible} animationType="slide" transparent>
+                    <View style={styles.modalOverlay}>
+                        <View style={[styles.modalContent, { backgroundColor: '#fff', direction: isRTL ? 'rtl' : 'ltr' }]}>
+                            <View style={styles.modalHeader}>
+                                <Text style={styles.modalTitle}>{t(lang, 'aiChat.history' as any) || 'History'}</Text>
+                                <TouchableOpacity onPress={() => setHistoryVisible(false)}>
+                                    <Ionicons name="close" size={24} color="#000" />
+                                </TouchableOpacity>
+                            </View>
+
+                            <FlatList
+                                data={sessions}
+                                keyExtractor={item => item.id}
+                                contentContainerStyle={{ padding: 16 }}
+                                ListEmptyComponent={<Text style={{ textAlign: 'center', color: '#94a3b8', marginTop: 50 }}>No history yet</Text>}
+                                renderItem={({ item }) => (
+                                    <View style={styles.historyItem}>
+                                        <View style={{ marginRight: isRTL ? 0 : 10, marginLeft: isRTL ? 10 : 0 }}>
+                                            <Ionicons
+                                                name={item.mode === 'flicki' ? 'flash' : (item.mode === 'discussion' ? 'people' : 'glasses')}
+                                                size={20}
+                                                color="#64748b"
+                                            />
+                                        </View>
+                                        <TouchableOpacity
+                                            style={{ flex: 1 }}
+                                            onPress={() => loadSessionFromHistory(item)}
+                                        >
+                                            <Text style={styles.historyTitle} numberOfLines={1}>{item.title}</Text>
+                                            <Text style={styles.historyPreview} numberOfLines={1}>{item.preview}</Text>
+                                        </TouchableOpacity>
+                                        <TouchableOpacity onPress={() => deleteSession(item.id)} style={{ padding: 8 }}>
+                                            <Ionicons name="trash-outline" size={20} color="#ef4444" />
+                                        </TouchableOpacity>
+                                    </View>
+                                )}
+                            />
+                        </View>
+                    </View>
+                </Modal>
+
+            </KeyboardAvoidingView>
+        </SafeAreaView>
+    );
 }
 
 const styles = StyleSheet.create({
