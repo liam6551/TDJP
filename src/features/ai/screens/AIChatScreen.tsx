@@ -312,7 +312,8 @@ export default function AIChatScreen() {
                         writingDirection: isRTL ? 'rtl' : 'ltr',
                         fontSize: 16,
                         lineHeight: 22,
-                        paddingHorizontal: 2
+                        paddingHorizontal: 6, // Increased padding to prevent clipping (common Android RTL bug)
+                        marginHorizontal: -2 // Negative margin to offset padding visually if needed, or just keep it.
                     }}>
                         {item.text.split(/(`[^`]+`)/g).map((part, index) => {
                             if (index % 2 === 1) {
@@ -333,7 +334,7 @@ export default function AIChatScreen() {
                             // Normal Text
                             return <Text key={index}>{part}</Text>;
                         })}
-                        {" "}
+                        {"\u00A0"}
                     </Text>
                 </View>
             </View>
