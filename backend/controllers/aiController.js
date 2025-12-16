@@ -207,8 +207,9 @@ const classifyAndSaveRule = async (newRule) => {
 };
 
 
-// Start loading on init
-loadKnowledgeBase();
+// Export the loader so index.js can call it after DB is ready
+export { loadKnowledgeBase };
+
 
 
 // Debug endpoint

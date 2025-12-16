@@ -8,7 +8,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
-import { chatWithAI, debugRag } from './controllers/aiController.js';
+import { chatWithAI, debugRag, loadKnowledgeBase } from './controllers/aiController.js';
 
 const app = express();
 
@@ -1257,6 +1257,10 @@ app.use((err, req, res, _next) => {
 /* ---------- Start ---------- */
 const port = process.env.PORT || 10000;
 (async () => {
-  try { await ensureSchema(); app.listen(port, () => console.log('API on :' + port)); }
+  try {
+    await ensureSchema();
+    await loadKnowledgeBase(); // Initialize AI knowledge after DB table exists
+    app.listen(port, () => console.log('API on :' + port));
+  }
   catch (e) { console.error('Startup error:', e); process.exit(1); }
 })();
