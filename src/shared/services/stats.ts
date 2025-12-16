@@ -21,8 +21,12 @@ export type UserStatItem = {
 export const StatsService = {
     async saveResults(results: StatResult[]): Promise<boolean> {
         try {
+            console.log('[StatsService] Saving results:', results);
             const token = await getToken();
-            if (!token) return false;
+            if (!token) {
+                console.warn('[StatsService] No token found!');
+                return false;
+            }
 
             const res = await fetch(`${BACKEND_URL}/api/stats/results`, {
                 method: 'POST',
@@ -34,9 +38,10 @@ export const StatsService = {
             });
 
             const data = await res.json();
+            console.log('[StatsService] Save response:', data);
             return data.ok;
         } catch (e) {
-            console.error('StatsService saveResults error:', e);
+            console.error('[StatsService] saveResults error:', e);
             return false;
         }
     },

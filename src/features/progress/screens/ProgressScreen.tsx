@@ -101,23 +101,35 @@ export default function ProgressScreen() {
     }, [nav])
   );
 
-  useEffect(() => {
-    let mounted = true;
-    const fetchData = async () => {
-      try {
-        const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000));
-        const data = await Promise.race([StatsService.getUserStats(), timeout]);
-        if (mounted) {
-          setStats(data as UserStatItem[]);
-          setLoading(false);
+  // Fetch data on focus
+  useFocusEffect(
+    React.useCallback(() => {
+      let mounted = true;
+      setLoading(true);
+
+      const fetchData = async () => {
+        try {
+          console.log('[ProgressScreen] Fetching stats...');
+          // Add timeout to prevent infinite hanging
+          const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Request timeout')), 5000));
+          const data = await Promise.race([StatsService.getUserStats(), timeoutPromise]);
+
+          console.log('[ProgressScreen] Stats received:', (data as any)?.length);
+          if (mounted) {
+            setStats(data as UserStatItem[]);
+            setLoading(false);
+          }
+        } catch (e) {
+          console.error('[ProgressScreen] Fetch error (timeout or net):', e);
+          if (mounted) setLoading(false);
         }
-      } catch (e) {
-        if (mounted) setLoading(false);
-      }
-    };
-    fetchData();
-    return () => { mounted = false; };
-  }, []);
+      };
+
+      fetchData();
+
+      return () => { mounted = false; };
+    }, [])
+  );
 
   const metrics = useMemo(() => {
     const totalDrills = stats.length;
