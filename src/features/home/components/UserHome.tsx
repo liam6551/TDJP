@@ -326,8 +326,12 @@ function QuickAction({ icon, label, color, onPress }: { icon: any, label: string
 
         // Default navigation behavior if no onPress provided
         if (icon === 'calculator') navigation.navigate('Calculator');
-        if (icon === 'stats-chart') navigation.navigate('Progress'); // Assuming stats usually goes to progress
-        // Rules? 
+
+        // Progress is in RootStack (parent of Tabs), so we might need to bubble up or just call navigate.
+        // Usually navigate works, but if it fails, try getParent() or ensure the route name matches 'Progress'.
+        if (icon === 'stats-chart') {
+            navigation.navigate('Progress');
+        }
     };
 
     return (

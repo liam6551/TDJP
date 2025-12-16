@@ -1,15 +1,12 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { View, Text, BackHandler, ScrollView, StyleSheet, ActivityIndicator, Dimensions } from 'react-native';
+import { View, Text, BackHandler, ScrollView, StyleSheet, ActivityIndicator, Dimensions, TouchableOpacity } from 'react-native';
 import TopBar from '@/shared/ui/TopBar';
 import { useAppTheme } from '@/shared/theme/theme';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StatsService, UserStatItem } from '@/shared/services/stats';
 import { ELEMENTS } from '@/shared/data/elements';
-import { Svg, Circle } from 'react-native-svg';
 import { useLang } from '@/shared/state/lang';
-
-// === CONSTANTS ===
-const SCREEN_WIDTH = Dimensions.get('window').width;
+import { Ionicons } from '@expo/vector-icons';
 
 // === TYPES ===
 type ElementStat = {
@@ -18,77 +15,49 @@ type ElementStat = {
   symbol: string;
   total: number;
   correct: number;
-  pct: number; // 0-100
-  status: 'mastered' | 'medium' | 'weak';
+  pct: number;
+  status: 'mastered' | 'medium' | 'weak' | 'unplayed';
 };
 
 // === HELPER COMPONENTS ===
 
-function StatCard({ label, value, color }: { label: string, value: string | number, color: string }) {
-  const { colors } = useAppTheme();
-  return (
-    <View style={[styles.statCard, { backgroundColor: colors.card, borderColor: color }]}>
-      <Text style={[styles.statValue, { color }]}>{value}</Text>
-      <Text style={[styles.statLabel, { color: colors.text }]}>{label}</Text>
-    </View>
-  );
-}
+function MasteryCard({ item, colors }: { item: ElementStat, colors: any }) {
+  // Mastery Colors
+  let bg = colors.card;
+  let border = colors.border;
+  let icon = 'lock-closed-outline'; // Default for unplayed
+  let opacity = 0.5;
 
-function Donut({ data, size = 160, thickness = 20 }: { data: { key: string, val: number, color: string }[], size?: number, thickness?: number }) {
-  const radius = (size - thickness) / 2;
-  const cx = size / 2;
-  const cy = size / 2;
-  const circumference = 2 * Math.PI * radius;
-  const total = data.reduce((acc, d) => acc + d.val, 0);
-
-  let startAngle = -90;
-
-  if (total === 0) {
-    return (
-      <Svg width={size} height={size}>
-        <Circle cx={cx} cy={cy} r={radius} stroke="#ccc" strokeWidth={thickness} fill="none" opacity={0.3} />
-      </Svg>
-    );
+  if (item.status === 'mastered') { // Gold / Green
+    bg = '#dcfce7'; // Light green
+    border = '#22c55e';
+    icon = 'trophy';
+    opacity = 1;
+  } else if (item.status === 'medium') { // Silver / Yellow
+    bg = '#fef9c3'; // Light yellow
+    border = '#eab308';
+    icon = 'ribbon';
+    opacity = 1;
+  } else if (item.status === 'weak') { // Bronze / Red
+    bg = '#fee2e2'; // Light red
+    border = '#ef4444';
+    icon = 'construct'; // Work in progress
+    opacity = 1;
   }
 
   return (
-    <Svg width={size} height={size}>
-      {data.map((d, i) => {
-        const strokeDashoffset = circumference - (d.val / total) * circumference;
-        const angle = (d.val / total) * 360;
-        const currentStart = startAngle;
-        startAngle += angle;
-
-        return (
-          <Circle
-            key={d.key}
-            cx={cx}
-            cy={cy}
-            r={radius}
-            stroke={d.color}
-            strokeWidth={thickness}
-            strokeDasharray={`${(d.val / total) * circumference} ${circumference}`}
-            strokeDashoffset={0}
-            rotation={currentStart}
-            originX={cx}
-            originY={cy}
-            fill="none"
-            strokeLinecap="round"
-          />
-        );
-      })}
-      {/* Inner Text */}
-      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center' }}>
-        <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#888' }}>{total}</Text>
+    <View style={[styles.masteryCard, { backgroundColor: bg, borderColor: border, opacity }]}>
+      <View style={styles.cardHeader}>
+        <Ionicons name={icon as any} size={16} color={border} />
+        {item.total > 0 && <Text style={{ fontSize: 10, color: border, fontWeight: 'bold' }}>{item.pct.toFixed(0)}%</Text>}
       </View>
-    </Svg>
-  );
-}
+      <Text style={[styles.symbol, { color: 'black' }]}>{item.symbol}</Text>
+      <Text style={[styles.name, { color: 'black' }]} numberOfLines={1}>{item.name}</Text>
 
-function ProgressBar({ pct, color }: { pct: number, color: string }) {
-  return (
-    <View style={{ height: 8, backgroundColor: '#eee', borderRadius: 4, overflow: 'hidden', flex: 1 }}>
-      <View style={{ width: `${pct}%`, backgroundColor: color, height: '100%' }} />
+      {/* Mini Progress Bar */}
+      <View style={styles.miniBarBg}>
+        <View style={[styles.miniBarFill, { width: `${item.pct}%`, backgroundColor: border }]} />
+      </View>
     </View>
   );
 }
@@ -100,33 +69,27 @@ export default function ProgressScreen() {
 
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<UserStatItem[]>([]);
+  const [filter, setFilter] = useState<'all' | 'weak' | 'mastered'>('all');
 
   // === TEXTS ===
   const t = lang === 'he' ? {
-    title: 'הסטטיסטיקה שלי',
-    totalQs: 'סה״כ שאלות',
-    successRate: 'אחוזי הצלחה',
-    mastered: 'שליטה מלאה',
-    medium: 'בינוני',
-    weak: 'טעון שיפור',
-    noData: 'אין עדיין נתונים. צא לפתור מבחנים!',
-    chartTitle: 'התפלגות תשובות',
-    strongElements: 'אלמנטים חזקים 💪',
-    weakElements: 'אלמנטים לחיזוק 🛠️',
+    title: 'מעבדת השליטה',
+    totalQs: 'אימונים שבוצעו',
+    masteryScore: 'ציון שליטה כללי',
+    filterAll: 'הכל',
+    filterWeak: 'לחיזוק',
+    filterMastered: 'המומחיות שלי',
+    emptyState: 'עדיין לא אספת מספיק נתונים...',
   } : {
-    title: 'My Statistics',
-    totalQs: 'Total Questions',
-    successRate: 'Success Rate',
-    mastered: 'Mastered',
-    medium: 'Average',
-    weak: 'Needs Work',
-    noData: 'No data yet. Go take a quiz!',
-    chartTitle: 'Performance Breakdown',
-    strongElements: 'Strong Elements 💪',
-    weakElements: 'Elements to Practice 🛠️',
+    title: 'Mastery Lab',
+    totalQs: 'Total Drills',
+    masteryScore: 'Mastery Score',
+    filterAll: 'All',
+    filterWeak: 'Needs Work',
+    filterMastered: 'Mastered',
+    emptyState: 'Not enough data yet...',
   };
 
-  // === NAVIGATION BACK ===
   useFocusEffect(
     React.useCallback(() => {
       const onBackPress = () => {
@@ -138,45 +101,29 @@ export default function ProgressScreen() {
     }, [nav])
   );
 
-  // === DATA FETCH ===
   useEffect(() => {
     let mounted = true;
-
     const fetchData = async () => {
       try {
-        // Create a timeout promise to prevent indefinite loading
         const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000));
         const data = await Promise.race([StatsService.getUserStats(), timeout]);
-
         if (mounted) {
           setStats(data as UserStatItem[]);
           setLoading(false);
         }
       } catch (e) {
-        console.warn('Stats load error:', e);
         if (mounted) setLoading(false);
       }
     };
-
     fetchData();
     return () => { mounted = false; };
   }, []);
 
-  // === METRIC CALCULATION ===
   const metrics = useMemo(() => {
-    const totalCount = stats.length;
-    const correctCount = stats.filter(s => s.is_correct).length;
-    const successRate = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
+    const totalDrills = stats.length;
 
-    // Group by Element - Pre-fill with all elements to ensure they appear
     const byElement: Record<string, { total: number, correct: number }> = {};
-
-    // Initialize ALL elements from the database definition
-    ELEMENTS.forEach(e => {
-      byElement[e.id] = { total: 0, correct: 0 };
-    });
-
-    // Merge actual user stats
+    ELEMENTS.forEach(e => { byElement[e.id] = { total: 0, correct: 0 }; });
     stats.forEach(s => {
       if (byElement[s.element_id]) {
         byElement[s.element_id].total++;
@@ -184,17 +131,17 @@ export default function ProgressScreen() {
       }
     });
 
-    // Create Stats Array
-    const elementStats: ElementStat[] = Object.entries(byElement).map(([eid, val]) => {
+    const items: ElementStat[] = Object.entries(byElement).map(([eid, val]) => {
       const elem = ELEMENTS.find(e => String(e.id) === String(eid));
       if (!elem) return null;
-
       const pct = val.total > 0 ? (val.correct / val.total) * 100 : 0;
-      let status: 'mastered' | 'medium' | 'weak' = 'weak';
+      let status: ElementStat['status'] = 'unplayed';
 
-      if (val.total === 0) status = 'weak';
-      else if (pct >= 80 && val.total >= 3) status = 'mastered';
-      else if (pct >= 50 && val.total >= 3) status = 'medium';
+      if (val.total > 0) {
+        if (pct >= 80 && val.total >= 3) status = 'mastered';
+        else if (pct >= 50) status = 'medium';
+        else status = 'weak';
+      }
 
       return {
         id: eid,
@@ -207,121 +154,73 @@ export default function ProgressScreen() {
       };
     }).filter(Boolean) as ElementStat[];
 
-    // Sort: Weakest first
-    elementStats.sort((a, b) => a.pct - b.pct);
+    // Calculate Global Mastery Score (Average of all elements)
+    const totalScore = items.reduce((acc, item) => acc + item.pct, 0);
+    const masteryScore = Math.round(totalScore / items.length);
 
-    return {
-      totalCount,
-      successRate,
-      elementStats,
-      masteredCount: elementStats.filter(e => e.status === 'mastered').length,
-      mediumCount: elementStats.filter(e => e.status === 'medium').length,
-      weakCount: elementStats.filter(e => e.status === 'weak').length,
-    };
+    items.sort((a, b) => b.pct - a.pct); // Strongest first
+
+    return { totalDrills, masteryScore, items };
   }, [stats, lang]);
 
-  const onBack = () => nav.navigate('Tabs', { screen: 'Home' });
+  const filteredItems = useMemo(() => {
+    if (filter === 'mastered') return metrics.items.filter(i => i.status === 'mastered');
+    if (filter === 'weak') return metrics.items.filter(i => i.status === 'weak' || i.status === 'medium');
+    return metrics.items;
+  }, [filter, metrics]);
 
   if (loading) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.bg }}>
-        <TopBar title={t.title} showBack onBack={onBack} />
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={colors.tint} />
-        </View>
+        <TopBar title={t.title} showBack onBack={() => nav.navigate('Tabs', { screen: 'Home' })} />
+        <View style={styles.center}><ActivityIndicator size="large" color={colors.tint} /></View>
       </View>
     );
   }
 
-  // Define data for rendering
-  const donutData = [
-    { key: 'mastered', val: metrics.masteredCount, color: '#4ade80' }, // Green
-    { key: 'medium', val: metrics.mediumCount, color: '#facc15' },   // Yellow
-    { key: 'weak', val: metrics.weakCount, color: '#f87171' },       // Red
-  ].filter(d => d.val > 0);
-
-  const strong = metrics.elementStats.filter(e => e.status === 'mastered');
-  const weak = metrics.elementStats.filter(e => e.status === 'weak' || e.status === 'medium');
-
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
-      <TopBar title={t.title} showBack onBack={onBack} />
+      <TopBar title={t.title} showBack onBack={() => nav.navigate('Tabs', { screen: 'Home' })} />
 
       <ScrollView contentContainerStyle={styles.scroll}>
 
-        {/* Top Cards */}
-        <View style={styles.row}>
-          <StatCard label={t.totalQs} value={metrics.totalCount} color={colors.tint} />
-          <StatCard label={t.successRate} value={`${metrics.successRate}%`} color={metrics.successRate > 80 ? '#4ade80' : metrics.successRate > 50 ? '#facc15' : '#f87171'} />
+        {/* === HERO SECTION === */}
+        <View style={[styles.hero, { backgroundColor: colors.card }]}>
+          <View style={styles.heroCol}>
+            <Text style={[styles.heroLabel, { color: colors.text }]}>{t.totalQs}</Text>
+            <Text style={[styles.heroValue, { color: colors.tint }]}>{metrics.totalDrills}</Text>
+          </View>
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+          <View style={styles.heroCol}>
+            <Text style={[styles.heroLabel, { color: colors.text }]}>{t.masteryScore}</Text>
+            <Text style={[styles.heroValue, { color: metrics.masteryScore > 80 ? '#22c55e' : metrics.masteryScore > 50 ? '#eab308' : '#ef4444' }]}>
+              {metrics.masteryScore}%
+            </Text>
+          </View>
         </View>
 
-        {/* Chart Section - Only show if there is actual data */}
-        {metrics.totalCount > 0 ? (
-          <View style={[styles.section, { backgroundColor: colors.card }]}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t.chartTitle}</Text>
-            <View style={styles.chartRow}>
-              <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-                <Donut data={donutData} />
-              </View>
-              <View style={styles.legend}>
-                <View style={styles.legendItem}><View style={[styles.dot, { backgroundColor: '#4ade80' }]} /><Text style={{ color: colors.text }}>{t.mastered} ({metrics.masteredCount})</Text></View>
-                <View style={styles.legendItem}><View style={[styles.dot, { backgroundColor: '#facc15' }]} /><Text style={{ color: colors.text }}>{t.medium} ({metrics.mediumCount})</Text></View>
-                <View style={styles.legendItem}><View style={[styles.dot, { backgroundColor: '#f87171' }]} /><Text style={{ color: colors.text }}>{t.weak} ({metrics.weakCount})</Text></View>
-              </View>
-            </View>
-          </View>
-        ) : (
-          <View style={[styles.section, { backgroundColor: colors.card, alignItems: 'center', padding: 24 }]}>
-            <Text style={{ color: colors.text, opacity: 0.7, textAlign: 'center' }}>{t.noData}</Text>
-          </View>
-        )}
+        {/* === TABS === */}
+        <View style={styles.tabs}>
+          <TouchableOpacity onPress={() => setFilter('all')} style={[styles.tab, filter === 'all' && styles.activeTab, { borderColor: colors.border }]}>
+            <Text style={[styles.tabText, filter === 'all' && styles.activeTabText, { color: colors.text }]}>{t.filterAll}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setFilter('weak')} style={[styles.tab, filter === 'weak' && styles.activeTab, { borderColor: colors.border }]}>
+            <Text style={[styles.tabText, filter === 'weak' && styles.activeTabText, { color: colors.text }]}>{t.filterWeak}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setFilter('mastered')} style={[styles.tab, filter === 'mastered' && styles.activeTab, { borderColor: colors.border }]}>
+            <Text style={[styles.tabText, filter === 'mastered' && styles.activeTabText, { color: colors.text }]}>{t.filterMastered}</Text>
+          </TouchableOpacity>
+        </View>
 
-        {/* Needs Work List - Always shows at least unpracticed items */}
-        {weak.length > 0 && (
-          <View style={[styles.section, { backgroundColor: colors.card }]}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t.weakElements}</Text>
-            {weak.map(e => (
-              <View key={e.id} style={[styles.itemRow, { borderBottomColor: colors.border }]}>
-                <View style={{ width: 40, alignItems: 'center' }}>
-                  <Text style={{ fontSize: 20 }}>{e.symbol}</Text>
-                </View>
-                <View style={{ flex: 1, paddingHorizontal: 10 }}>
-                  <Text style={{ color: colors.text, fontWeight: 'bold' }}>{e.name}</Text>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
-                    <ProgressBar pct={e.pct} color={e.status === 'weak' ? '#f87171' : '#facc15'} />
-                    <Text style={{ color: colors.text, fontSize: 12, marginLeft: 8 }}>{Math.round(e.pct)}%</Text>
-                  </View>
-                </View>
-                <View>
-                  <Text style={{ color: colors.text, fontSize: 12 }}>{e.correct}/{e.total}</Text>
-                </View>
-              </View>
-            ))}
-          </View>
-        )}
+        {/* === MASTERY GRID === */}
+        <View style={styles.grid}>
+          {filteredItems.map(item => (
+            <MasteryCard key={item.id} item={item} colors={colors} />
+          ))}
+        </View>
 
-        {/* Strong List */}
-        {strong.length > 0 && (
-          <View style={[styles.section, { backgroundColor: colors.card }]}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t.strongElements}</Text>
-            {strong.map(e => (
-              <View key={e.id} style={[styles.itemRow, { borderBottomColor: colors.border }]}>
-                <View style={{ width: 40, alignItems: 'center' }}>
-                  <Text style={{ fontSize: 20 }}>{e.symbol}</Text>
-                </View>
-                <View style={{ flex: 1, paddingHorizontal: 10 }}>
-                  <Text style={{ color: colors.text, fontWeight: 'bold' }}>{e.name}</Text>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
-                    <ProgressBar pct={e.pct} color="#4ade80" />
-                    <Text style={{ color: colors.text, fontSize: 12, marginLeft: 8 }}>{Math.round(e.pct)}%</Text>
-                  </View>
-                </View>
-                <View>
-                  <Text style={{ color: colors.text, fontSize: 12 }}>{e.correct}/{e.total}</Text>
-                </View>
-              </View>
-            ))}
-          </View>
+        {filteredItems.length === 0 && (
+          <Text style={{ textAlign: 'center', marginTop: 40, color: colors.text, opacity: 0.6 }}>{t.emptyState}</Text>
         )}
 
       </ScrollView>
@@ -329,18 +228,35 @@ export default function ProgressScreen() {
   );
 }
 
+const { width } = Dimensions.get('window');
+const colWidth = (width - 48) / 3; // 3 columns
+
 const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  scroll: { padding: 16, gap: 16 },
-  row: { flexDirection: 'row', gap: 16 },
-  statCard: { flex: 1, padding: 16, borderRadius: 16, borderLeftWidth: 4, alignItems: 'center', elevation: 2 },
-  statValue: { fontSize: 28, fontWeight: '900' },
-  statLabel: { fontSize: 14, opacity: 0.7, marginTop: 4 },
-  section: { borderRadius: 16, padding: 16, elevation: 1 },
-  sectionTitle: { fontSize: 18, fontWeight: '800', marginBottom: 16, textAlign: 'left' },
-  chartRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around' },
-  legend: { gap: 8 },
-  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  dot: { width: 12, height: 12, borderRadius: 6 },
-  itemRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1 },
+  scroll: { padding: 16 },
+  hero: { flexDirection: 'row', borderRadius: 16, padding: 20, marginBottom: 24, elevation: 2, alignItems: 'center' },
+  heroCol: { flex: 1, alignItems: 'center' },
+  divider: { width: 1, height: '80%', marginHorizontal: 10 },
+  heroLabel: { fontSize: 14, opacity: 0.7, marginBottom: 4 },
+  heroValue: { fontSize: 32, fontWeight: '900' },
+  tabs: { flexDirection: 'row', marginBottom: 16, gap: 10 },
+  tab: { paddingVertical: 8, paddingHorizontal: 16, borderRadius: 20, borderWidth: 1 },
+  activeTab: { backgroundColor: '#3b82f6', borderColor: '#3b82f6' },
+  tabText: { fontWeight: '600' },
+  activeTabText: { color: 'white' },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  masteryCard: {
+    width: colWidth,
+    aspectRatio: 0.85,
+    borderRadius: 12,
+    padding: 8,
+    borderWidth: 2,
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  },
+  cardHeader: { width: '100%', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  symbol: { fontSize: 24, fontWeight: 'bold' },
+  name: { fontSize: 10, textAlign: 'center', opacity: 0.8 },
+  miniBarBg: { width: '100%', height: 4, backgroundColor: 'rgba(0,0,0,0.1)', borderRadius: 2, overflow: 'hidden' },
+  miniBarFill: { height: '100%' }
 });
