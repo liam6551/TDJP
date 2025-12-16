@@ -276,9 +276,9 @@ export const chatWithAI = async (req, res) => {
         }
 
         let responses = [];
-        // Using 'gemini-1.5-flash' for better stability and reliability.
-        // This model has higher rate limits and is production-ready.
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        // Using 'gemini-flash-latest' (Auto-updates to latest stable Flash version)
+        // 'gemini-1.5-flash' returned 404 for this API key/region.
+        const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
         // Helper to Convert Frontend History to Gemini History
         const formatHistory = (frontendHistory, systemPrompt) => {
