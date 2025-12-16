@@ -48,7 +48,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 let memoryToken: string | null = null;
 
 async function saveToken(t: string) { if (t) await SecureStore.setItemAsync('tdjp_token', t); }
-async function getToken() {
+export async function getToken() {
   if (memoryToken) return memoryToken;
   return SecureStore.getItemAsync('tdjp_token');
 }

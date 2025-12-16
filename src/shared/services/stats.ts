@@ -1,4 +1,4 @@
-import { getSecureToken } from '@/shared/auth/auth';
+import { getToken } from '@/shared/state/auth';
 import { manifest } from '@/shared/config';
 
 const BACKEND_URL = `http://${manifest.debuggerHost?.split(':').shift() || 'localhost'}:3000`;
@@ -19,7 +19,7 @@ export type UserStatItem = {
 export const StatsService = {
     async saveResults(results: StatResult[]): Promise<boolean> {
         try {
-            const token = await getSecureToken();
+            const token = await getToken();
             if (!token) return false;
 
             const res = await fetch(`${BACKEND_URL}/api/stats/results`, {
@@ -41,7 +41,7 @@ export const StatsService = {
 
     async getUserStats(): Promise<UserStatItem[]> {
         try {
-            const token = await getSecureToken();
+            const token = await getToken();
             if (!token) return [];
 
             const res = await fetch(`${BACKEND_URL}/api/stats/user`, {
