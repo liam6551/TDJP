@@ -230,15 +230,17 @@ Structure: JSON Array strictly: [{"sender": "twist", "text": "..."}, {"sender": 
 Output: RAW JSON ONLY.
 `;
 
-// --- RETRY LOGIC HELPER ---
-const callGeminiWithRetry = async (fn, retries = 3, delay = 1000) => {
+// --- RETRY LOGIC HELPER (AGGRESSIVE) ---
+const callGeminiWithRetry = async (fn, retries = 5, delay = 1000) => {
     try {
         return await fn();
     } catch (error) {
         if (retries > 0 && (error.message.includes('429') || error.message.includes('503'))) {
             console.warn(`Gemini API Error (${error.message}). Retrying in ${delay}ms... (${retries} attempts left)`);
             await new Promise(resolve => setTimeout(resolve, delay));
-            return callGeminiWithRetry(fn, retries - 1, delay * 2);
+            // Exp Backoff but cap at 8 seconds to prevent infinite hanging
+            const nextDelay = Math.min(delay * 2, 8000);
+            return callGeminiWithRetry(fn, retries - 1, nextDelay);
         }
         throw error;
     }
@@ -274,9 +276,9 @@ export const chatWithAI = async (req, res) => {
         }
 
         let responses = [];
-        // Using 'gemini-2.0-flash' with the new paid API Key.
-        // This should provide high performance without rate limits.
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        // Using 'gemini-1.5-flash' for better stability and reliability.
+        // This model has higher rate limits and is production-ready.
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         // Helper to Convert Frontend History to Gemini History
         const formatHistory = (frontendHistory, systemPrompt) => {
