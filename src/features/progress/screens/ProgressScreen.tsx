@@ -375,7 +375,7 @@ export default function ProgressScreen() {
         {filteredItems.length === 0 && (
           <Text style={{ textAlign: 'center', marginTop: 40, color: colors.text, opacity: 0.6 }}>{t.emptyState}</Text>
         )}
-    </View>
+
 
       </ScrollView >
     </View >
