@@ -248,16 +248,16 @@ const styles = StyleSheet.create({
     actions: {
         justifyContent: 'flex-end',
         alignItems: 'center',
-        gap: 12, // Reduced gap to give more room for buttons
+        gap: 12,
         paddingHorizontal: 4,
-        flexShrink: 0, // CRITICAL: Prevent container from shrinking
-        minWidth: 140, // Increased min width to be safe
+        flexShrink: 0,
+        minWidth: 200, // Large enough to never shrink buttons
     },
     actionBtn: {
         alignItems: 'center',
         justifyContent: 'center',
         gap: 2,
-        paddingHorizontal: 6, // breathing room for text
-        minWidth: 48, // Touch target size
+        paddingHorizontal: 8, // More padding
+        minWidth: 64, // significantly wider
     }
 });
