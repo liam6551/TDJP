@@ -26,7 +26,7 @@ export const TariffService = {
     async createTariff(name: string, data: TariffExportData): Promise<SavedTariff> {
         const res = await apiFetch('/api/tariffs', {
             method: 'POST',
-            body: JSON.stringify({ name, data }),
+            body: { name, data },
         });
         if (!res.ok) throw new Error(res.error || 'Failed to save tariff');
         return res.tariff;
@@ -38,7 +38,7 @@ export const TariffService = {
     async updateTariff(id: string, updates: { name?: string; data?: TariffExportData }): Promise<SavedTariff> {
         const res = await apiFetch(`/api/tariffs/${id}`, {
             method: 'PUT',
-            body: JSON.stringify(updates),
+            body: updates,
         });
         if (!res.ok) throw new Error(res.error || 'Failed to update tariff');
         return res.tariff;
