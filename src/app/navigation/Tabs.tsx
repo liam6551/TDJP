@@ -7,6 +7,9 @@ import { useAppTheme } from '@/shared/theme/theme';
 import { useLang } from '@/shared/state/lang';
 import { t } from '@/shared/i18n';
 
+import { useNavigation } from '@react-navigation/native';
+
+
 import HomeScreen from '@/features/home';
 import CalculatorScreen from '@/features/calculator';
 import FlashcardsScreen from '@/features/flashcards';
@@ -14,6 +17,8 @@ import TariffStack from '@/app/navigation/TariffStack';
 import QuizStack from '@/app/navigation/QuizStack';
 
 const Tab = createBottomTabNavigator();
+
+// ... existing button components ...
 
 function CenterTabBarButton(props: any) {
   return (
@@ -52,6 +57,9 @@ export default function Tabs() {
   const insets = useSafeAreaInsets();
   const { lang } = useLang();
   const isRTL = lang === 'he';
+  const { user } = useAuth();
+  const [showGuestModal, setShowGuestModal] = React.useState(false);
+  const navigation = useNavigation<any>();
 
   const screensRTL = [
     { name: 'Tariff', component: TariffStack, icon: 'document-text-outline' as const, label: t(lang, 'tabs.tariff') },
@@ -74,59 +82,77 @@ export default function Tabs() {
   const insetBottom = Math.max(10, insets.bottom);
 
   return (
-    <Tab.Navigator
-      key={`tabs-${lang}-${isRTL ? 'rtl' : 'ltr'}`}
-      initialRouteName="Home"
-      detachInactiveScreens={false}
-      screenOptions={({ route }) => ({
-        headerShown: false,
-        tabBarActiveTintColor: colors.tint,
-        tabBarInactiveTintColor: '#8e8e93',
-        tabBarItemStyle: { top: -2 },
-        tabBarStyle: {
-          backgroundColor: colors.card,
-          borderTopColor: 'transparent',
-          borderTopWidth: 0,
-          elevation: 0,
-          shadowOpacity: 0,
-          height: barHeight,
-          paddingBottom: insetBottom,
-          paddingTop: 8
-        },
-        tabBarIcon: ({ size, color }) => {
-          const s = SCREENS.find(x => x.name === route.name);
-          const icon = s?.icon ?? 'ellipse-outline';
-          const wrapStyle = route.name === 'Home' ? styles.homeIconWrap : undefined;
-          const iconColor = route.name === 'Home' ? colors.bg : color;
-          const iconSize = route.name === 'Home' ? size + 4 : size;
-          return (
-            <View style={wrapStyle}>
-              <Ionicons name={icon as any} size={iconSize} color={iconColor as string} />
-            </View>
-          );
-        },
-        tabBarLabel: SCREENS.find(x => x.name === route.name)?.label,
-        tabBarButton: (props) =>
-          route.name === 'Home' ? <CenterTabBarButton {...props} /> : <RegularTabBarButton {...props} />
-      })}
-    >
-      {SCREENS.map(s => (
-        <Tab.Screen
-          key={`${s.name}-${lang}`}
-          name={s.name as any}
-          component={s.component}
-          listeners={({ navigation, route }) => ({
-            tabPress: (e) => {
-              if (s.name === 'Tariff' && navigation.isFocused()) {
-                e.preventDefault();
-                // Pass a timestamp to force update even if on same screen
-                navigation.navigate('Tariff', { screen: 'TariffHome', params: { resetTs: Date.now() } });
-              }
-            },
-          })}
-        />
-      ))}
-    </Tab.Navigator>
+    <>
+      <Tab.Navigator
+        key={`tabs-${lang}-${isRTL ? 'rtl' : 'ltr'}`}
+        initialRouteName="Home"
+        detachInactiveScreens={false}
+        screenOptions={({ route }) => ({
+          headerShown: false,
+          tabBarActiveTintColor: colors.tint,
+          tabBarInactiveTintColor: '#8e8e93',
+          tabBarItemStyle: { top: -2 },
+          tabBarStyle: {
+            backgroundColor: colors.card,
+            borderTopColor: 'transparent',
+            borderTopWidth: 0,
+            elevation: 0,
+            shadowOpacity: 0,
+            height: barHeight,
+            paddingBottom: insetBottom,
+            paddingTop: 8
+          },
+          tabBarIcon: ({ size, color }) => {
+            const s = SCREENS.find(x => x.name === route.name);
+            const icon = s?.icon ?? 'ellipse-outline';
+            const wrapStyle = route.name === 'Home' ? styles.homeIconWrap : undefined;
+            const iconColor = route.name === 'Home' ? colors.bg : color;
+            const iconSize = route.name === 'Home' ? size + 4 : size;
+            return (
+              <View style={wrapStyle}>
+                <Ionicons name={icon as any} size={iconSize} color={iconColor as string} />
+              </View>
+            );
+          },
+          tabBarLabel: SCREENS.find(x => x.name === route.name)?.label,
+          tabBarButton: (props) =>
+            route.name === 'Home' ? <CenterTabBarButton {...props} /> : <RegularTabBarButton {...props} />
+        })}
+      >
+        {SCREENS.map(s => (
+          <Tab.Screen
+            key={`${s.name}-${lang}`}
+            name={s.name as any}
+            component={s.component}
+            listeners={({ navigation: nav, route }) => ({
+              tabPress: (e) => {
+                if (s.name === 'Tariff') {
+                  if (!user) {
+                    e.preventDefault();
+                    setShowGuestModal(true);
+                    return;
+                  }
+
+                  if (nav.isFocused()) {
+                    e.preventDefault();
+                    // Pass a timestamp to force update even if on same screen
+                    nav.navigate('Tariff', { screen: 'TariffHome', params: { resetTs: Date.now() } });
+                  }
+                }
+              },
+            })}
+          />
+        ))}
+      </Tab.Navigator>
+      <GuestAccessModal
+        visible={showGuestModal}
+        onClose={() => setShowGuestModal(false)}
+        onConnect={() => {
+          setShowGuestModal(false);
+          navigation.navigate('Login');
+        }}
+      />
+    </>
   );
 }
 
