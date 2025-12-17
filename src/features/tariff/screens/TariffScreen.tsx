@@ -1,5 +1,5 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
-import { StyleSheet, View, Platform, Linking, LayoutChangeEvent, BackHandler, Pressable, Text } from 'react-native';
+import { StyleSheet, View, Platform, Linking, LayoutChangeEvent, BackHandler, Pressable, Text, Alert } from 'react-native';
 import * as Sharing from 'expo-sharing';
 import * as FileSystemLegacy from 'expo-file-system/legacy';
 import * as IntentLauncher from 'expo-intent-launcher';
@@ -465,8 +465,12 @@ export default function TariffScreen() {
     if (!exportedUri) return
     try {
       if (Platform.OS === 'android') {
-        // Use legacy FileSystem for getContentUriAsync as suggested by recent deprecation
-        const contentUri = await (FileSystemLegacy as any).getContentUriAsync(exportedUri);
+        const isContent = exportedUri.startsWith('content://');
+        let contentUri = exportedUri;
+        if (!isContent) {
+          // Only convert if it's not already a content URI
+          contentUri = await (FileSystemLegacy as any).getContentUriAsync(exportedUri);
+        }
         await IntentLauncher.startActivityAsync('android.intent.action.VIEW', {
           data: contentUri,
           flags: 1,
@@ -477,6 +481,7 @@ export default function TariffScreen() {
       }
     } catch (e) {
       console.error(e)
+      Alert.alert('Error', 'Could not open PDF');
     }
   }
   const handleSharePdf = async () => {
