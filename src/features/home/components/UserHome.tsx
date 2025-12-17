@@ -15,6 +15,9 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import * as SecureStore from 'expo-secure-store';
 import { getStoredUri, setStoredUri, requestAndroidPermissions } from '@/shared/filesystem/storage';
 import { Platform } from 'react-native';
+import { CopilotStep, walkthroughable } from 'react-native-copilot';
+
+const WalkthroughableView = walkthroughable(View);
 
 export default function UserHome() {
     const { colors } = useAppTheme();
@@ -284,31 +287,42 @@ export default function UserHome() {
                     </LinearGradient>
                 </View>
 
-                <View style={styles.grid}>
-                    <QuickAction
-                        icon="flash"
-                        label={t(lang, 'home.quickActions.quiz')}
-                        color={['#ff9a9e', '#fecfef'] as const}
-                        onPress={() => setShowQuickQuiz(true)}
-                    />
-                    <QuickAction
-                        icon="glasses"
-                        label={t(lang, 'home.quickActions.ai' as any)}
-                        color={['#a18cd1', '#fbc2eb'] as const}
-                        onPress={() => navigation.navigate('AIChat')}
-                    />
-                    <QuickAction
-                        icon="stats-chart"
-                        label={t(lang, 'home.quickActions.stats')}
-                        color={['#fbc2eb', '#a6c1ee'] as const}
-                    />
-                    <QuickAction
-                        icon="book"
-                        label={t(lang, 'home.quickActions.rules')}
-                        color={['#84fab0', '#8fd3f4'] as const}
-                        onPress={() => setShowTheoreticalModal(true)}
-                    />
-                </View>
+                <CopilotStep text="Quick Actions" order={1} name="home_quick_actions">
+                    <WalkthroughableView style={styles.grid}>
+                        <QuickAction
+                            icon="flash"
+                            label={t(lang, 'home.quickActions.quiz')}
+                            color={['#ff9a9e', '#fecfef'] as const}
+                            onPress={() => setShowQuickQuiz(true)}
+                        />
+                        <QuickAction
+                            icon="glasses"
+                            label={t(lang, 'home.quickActions.ai' as any)}
+                            color={['#a18cd1', '#fbc2eb'] as const}
+                            onPress={() => navigation.navigate('AIChat')}
+                        />
+                        <QuickAction
+                            icon="stats-chart"
+                            label={t(lang, 'home.quickActions.stats')}
+                            color={['#fbc2eb', '#a6c1ee'] as const}
+                        />
+                        <QuickAction
+                            icon="book"
+                            label={t(lang, 'home.quickActions.rules')}
+                            color={['#84fab0', '#8fd3f4'] as const}
+                            onPress={() => setShowTheoreticalModal(true)}
+                        />
+                        <QuickAction
+                            icon="refresh"
+                            label="Reset"
+                            color={['#ff9966', '#ff5e62'] as const}
+                            onPress={async () => {
+                                await import('@react-native-async-storage/async-storage').then(m => m.default.removeItem('@did_onboarding'));
+                                navigation.reset({ index: 0, routes: [{ name: 'Onboarding' }] });
+                            }}
+                        />
+                    </WalkthroughableView>
+                </CopilotStep>
             </ScrollView>
         </View>
     );

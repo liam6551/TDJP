@@ -132,6 +132,10 @@ async function savePdfToDownloads(tempUri: string): Promise<string> {
   }
 }
 
+import { CopilotStep, walkthroughable } from 'react-native-copilot';
+
+const WalkthroughablePressable = walkthroughable(Pressable);
+
 // Step Constants
 const STEP_HOME = 0;
 const STEP_DETAILS = 1;
@@ -146,6 +150,13 @@ export default function TariffScreen() {
 
   // Steps State
   const [currentStep, setCurrentStep] = useState(STEP_HOME);
+
+  useEffect(() => {
+    if (route.params?.forceStep !== undefined) {
+      setCurrentStep(route.params.forceStep);
+      nav.setParams({ forceStep: undefined });
+    }
+  }, [route.params?.forceStep]);
 
   const [elementMode, setElementMode] = useState<'text' | 'symbol'>('text')
   const [showPassWarning, setShowPassWarning] = useState(false)
@@ -598,12 +609,14 @@ export default function TariffScreen() {
       <Text style={[styles.homeDesc, { color: colors.text }]}>{t(lang, 'tariff.home.description')}</Text>
 
       <View style={{ gap: 20, marginTop: 40, width: '100%', alignItems: 'center' }}>
-        <Pressable
-          style={[styles.homeBtn, { backgroundColor: colors.tint }]}
-          onPress={goCreateNew}
-        >
-          <Text style={styles.homeBtnText}>{t(lang, 'tariff.home.newBtn')}</Text>
-        </Pressable>
+        <CopilotStep text="Create New" order={3} name="tariff_create">
+          <WalkthroughablePressable
+            style={[styles.homeBtn, { backgroundColor: colors.tint }]}
+            onPress={goCreateNew}
+          >
+            <Text style={styles.homeBtnText}>{t(lang, 'tariff.home.newBtn')}</Text>
+          </WalkthroughablePressable>
+        </CopilotStep>
 
         <Pressable
           style={[styles.homeBtn, { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }]}
@@ -870,9 +883,11 @@ export default function TariffScreen() {
               <Text style={[styles.footerBtnText, { color: '#ffffff' }]}>{t(lang, 'tariff.actions.back')}</Text>
             </Pressable>
             {/* Export - Swapped order */}
-            <Pressable style={[styles.footerBtn, { backgroundColor: colors.tint }]} onPress={handleExportPress}>
-              <Text style={styles.footerBtnText}>{t(lang, 'tariff.actions.exportPdf')}</Text>
-            </Pressable>
+            <CopilotStep text="Export" order={4} name="tariff_export">
+              <WalkthroughablePressable style={[styles.footerBtn, { backgroundColor: colors.tint }]} onPress={handleExportPress}>
+                <Text style={styles.footerBtnText}>{t(lang, 'tariff.actions.exportPdf')}</Text>
+              </WalkthroughablePressable>
+            </CopilotStep>
             {/* Save */}
             <Pressable style={[styles.footerBtn, { backgroundColor: colors.tint, borderWidth: 0 }]} onPress={handleSavePress}>
               <Text style={[styles.footerBtnText, { color: '#ffffff' }]}>{t(lang, 'tariff.actions.save')}</Text>

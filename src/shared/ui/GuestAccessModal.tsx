@@ -4,14 +4,16 @@ import { View, Text, StyleSheet, Modal, TouchableOpacity, Dimensions } from 'rea
 import { useAppTheme } from '@/shared/theme/theme';
 import { useLang } from '@/shared/state/lang';
 import { t } from '@/shared/i18n';
+import { LinearGradient } from 'expo-linear-gradient';
 
 type Props = {
     visible: boolean;
     onClose: () => void;
     onConnect: () => void;
+    onRegister: () => void;
 };
 
-export default function GuestAccessModal({ visible, onClose, onConnect }: Props) {
+export function GuestAccessModal({ visible, onClose, onConnect, onRegister }: Props) {
     const { colors } = useAppTheme();
     const { lang } = useLang();
 
@@ -20,13 +22,13 @@ export default function GuestAccessModal({ visible, onClose, onConnect }: Props)
     const message = t(lang, 'dialogs.guestAccess.message');
     const cancelText = t(lang, 'dialogs.guestAccess.cancel');
     const connectText = t(lang, 'dialogs.guestAccess.connect');
+    const noAccountText = t(lang, 'auth.noAccount');
+    const registerLinkText = t(lang, 'auth.registerLink');
 
     return (
         <Modal visible={visible} transparent animationType="fade">
             <View style={styles.overlay}>
                 <View style={[styles.dialog, { backgroundColor: colors.card, borderColor: colors.border }]}>
-
-                    {/* Icon / Header Graphic could go here if requested, but sticking to text for now as per "ExitModal" style */}
 
                     <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
                     <Text style={[styles.message, { color: colors.text }]}>{message}</Text>
@@ -38,9 +40,26 @@ export default function GuestAccessModal({ visible, onClose, onConnect }: Props)
                         </TouchableOpacity>
 
                         {/* Connect Button (Primary) */}
-                        <TouchableOpacity onPress={onConnect} style={[styles.btn, styles.btnPrimary, { backgroundColor: colors.tint }]}>
-                            <Text style={[styles.btnText, { color: '#fff' }]}>{connectText}</Text>
+                        <TouchableOpacity onPress={onConnect} style={{ flex: 1 }} activeOpacity={0.8}>
+                            <LinearGradient
+                                colors={['#FF8C00', '#FF0080']}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 1 }}
+                                style={[styles.btn, { width: '100%', borderWidth: 0 }]}
+                            >
+                                <Text style={[styles.btnText, { color: '#fff' }]}>{connectText}</Text>
+                            </LinearGradient>
                         </TouchableOpacity>
+                    </View>
+
+                    {/* Footer: Register Link */}
+                    <View style={styles.footer}>
+                        <Text style={[styles.footerText, { color: colors.text }]}>
+                            {noAccountText}
+                            <Text onPress={onRegister} style={[styles.linkText, { color: colors.tint }]}>
+                                {registerLinkText}
+                            </Text>
+                        </Text>
                     </View>
                 </View>
             </View>
@@ -86,6 +105,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         gap: 12,
         width: '100%',
+        marginBottom: 20,
     },
     btn: {
         flex: 1,
@@ -104,5 +124,17 @@ const styles = StyleSheet.create({
     btnText: {
         fontSize: 16,
         fontWeight: '600',
+    },
+    footer: {
+        marginTop: 4,
+    },
+    footerText: {
+        fontSize: 14,
+        textAlign: 'center',
+        opacity: 0.8,
+    },
+    linkText: {
+        fontWeight: 'bold',
+        textDecorationLine: 'underline',
     },
 });

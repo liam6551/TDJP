@@ -15,26 +15,33 @@ import CalculatorScreen from '@/features/calculator';
 import FlashcardsScreen from '@/features/flashcards';
 import TariffStack from '@/app/navigation/TariffStack';
 import QuizStack from '@/app/navigation/QuizStack';
+import { useAuth } from '@/shared/state/auth';
+import { GuestAccessModal } from '@/shared/ui/GuestAccessModal';
 
 const Tab = createBottomTabNavigator();
 
 // ... existing button components ...
 
+import { CopilotStep, walkthroughable } from 'react-native-copilot';
+const WalkthroughablePressable = walkthroughable(Pressable);
+
 function CenterTabBarButton(props: any) {
   return (
-    <Pressable
-      onPress={props.onPress}
-      accessibilityRole={props.accessibilityRole}
-      accessibilityState={props.accessibilityState}
-      testID={props.testID}
-      style={({ pressed }) => [styles.centerBtnWrapper, pressed && styles.pressedUp]}
-    >
-      {({ pressed }) => (
-        <View style={[styles.centerBtn, pressed && styles.centerBtnPressed]}>
-          {props.children}
-        </View>
-      )}
-    </Pressable>
+    <CopilotStep text="Navigation Bar" order={2} name="tabs_nav">
+      <WalkthroughablePressable
+        onPress={props.onPress}
+        accessibilityRole={props.accessibilityRole}
+        accessibilityState={props.accessibilityState}
+        testID={props.testID}
+        style={({ pressed }) => [styles.centerBtnWrapper, pressed && styles.pressedUp]}
+      >
+        {({ pressed }) => (
+          <View style={[styles.centerBtn, pressed && styles.centerBtnPressed]}>
+            {props.children}
+          </View>
+        )}
+      </WalkthroughablePressable>
+    </CopilotStep>
   );
 }
 
@@ -52,6 +59,9 @@ function RegularTabBarButton(props: any) {
   );
 }
 
+import { useCopilot } from 'react-native-copilot';
+import { useRoute } from '@react-navigation/native';
+
 export default function Tabs() {
   const { colors } = useAppTheme();
   const insets = useSafeAreaInsets();
@@ -60,6 +70,52 @@ export default function Tabs() {
   const { user } = useAuth();
   const [showGuestModal, setShowGuestModal] = React.useState(false);
   const navigation = useNavigation<any>();
+  const route = useRoute<any>();
+  const { start, copilotEvents } = useCopilot();
+
+  React.useEffect(() => {
+    if (route.params?.startTutorial) {
+      setTimeout(async () => {
+        try {
+          // If user is guest (no user object), start with the guest prompt
+          const startStep = user ? 'home_quick_actions' : 'guest_login_prompt';
+          await start(startStep);
+        } catch (e) {
+          console.error('Copilot start error:', e);
+        }
+      }, 1000);
+    }
+  }, [route.params]);
+
+  React.useEffect(() => {
+    const listener = (step: any) => {
+      const { name } = step;
+      switch (name) {
+        case 'tariff_create':
+        case 'tariff_export':
+          navigation.navigate('Tariff', { screen: 'TariffHome' });
+          break;
+        case 'calc_keyboard':
+          navigation.navigate('Calculator');
+          break;
+        case 'flashcards_card':
+          navigation.navigate('Flashcards');
+          break;
+        case 'settings_account':
+          navigation.navigate('Home');
+          break;
+        case 'home_quick_actions':
+        case 'tabs_nav':
+        case 'finish':
+          navigation.navigate('Home');
+          break;
+      }
+    };
+
+    copilotEvents.on('stepChange', listener);
+
+    return () => copilotEvents.off('stepChange', listener);
+  }, [copilotEvents, navigation]);
 
   const screensRTL = [
     { name: 'Tariff', component: TariffStack, icon: 'document-text-outline' as const, label: t(lang, 'tabs.tariff') },
@@ -150,6 +206,10 @@ export default function Tabs() {
         onConnect={() => {
           setShowGuestModal(false);
           navigation.navigate('Login');
+        }}
+        onRegister={() => {
+          setShowGuestModal(false);
+          navigation.navigate('Register');
         }}
       />
     </>

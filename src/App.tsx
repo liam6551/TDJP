@@ -1,4 +1,5 @@
 import React from 'react';
+import { View, Text } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { NavigationContainer, DefaultTheme, Theme } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -7,6 +8,9 @@ import { LangProvider, useLang } from '@/shared/state/lang';
 import RootStack from '@/app/navigation/RootStack';
 
 import { AuthProvider } from '@/shared/state/auth';
+
+import { CopilotProvider } from 'react-native-copilot';
+import { TutorialTooltip } from '@/features/onboarding/components/TutorialTooltip';
 
 function WithNav() {
   const { colors } = useAppTheme();
@@ -39,9 +43,18 @@ export default function App() {
       <SafeAreaProvider>
         <AppThemeProvider defaultMode="light">
           <LangProvider defaultLang="he">
-            <AuthProvider>
-              <WithNav />
-            </AuthProvider>
+            <CopilotProvider
+              tooltipComponent={TutorialTooltip}
+              stepNumberComponent={() => null}
+              overlay="view"
+              animated={true}
+              arrowColor="transparent"
+              labels={{ finish: "סיום", next: "הבא", previous: "הקודם", skip: "דלג" }}
+            >
+              <AuthProvider>
+                <WithNav />
+              </AuthProvider>
+            </CopilotProvider>
           </LangProvider>
         </AppThemeProvider>
       </SafeAreaProvider>

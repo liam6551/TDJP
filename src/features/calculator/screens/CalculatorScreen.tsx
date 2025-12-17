@@ -11,6 +11,9 @@ import SummaryBar from '../components/SummaryBar'
 import ActionsBar from '@/features/elementKeyboard/components/ActionsBar'
 import SortingBar from '@/features/elementKeyboard/components/SortingBar'
 import ElementsGrid from '@/features/elementKeyboard/components/ElementsGrid'
+import { CopilotStep, walkthroughable } from 'react-native-copilot';
+
+const WalkthroughableView = walkthroughable(View);
 
 export default function CalculatorScreen() {
   const { colors } = useAppTheme()
@@ -134,17 +137,19 @@ export default function CalculatorScreen() {
           textMinFont={mode === 'symbol' ? slotSymbolMinFont : 5}
         />
         <View style={{ height: 6, backgroundColor: colors.bg }} />
-        <View style={{ flex: 1 }}>
-          <ElementsGrid
-            elements={elements}
-            onSelect={it => addById(it.id, it.value)}
-            titleFontSize={14}
-            header={header}
-            forceLTR={forceLTR}
-            isSymbolMode={mode === 'symbol'}
-            symbolFontSize={keyboardSymbolFontSize}
-          />
-        </View>
+        <CopilotStep text="Calculator Keypad" order={5} name="calc_keyboard">
+          <WalkthroughableView style={{ flex: 1 }}>
+            <ElementsGrid
+              elements={elements}
+              onSelect={it => addById(it.id, it.value)}
+              titleFontSize={14}
+              header={header}
+              forceLTR={forceLTR}
+              isSymbolMode={mode === 'symbol'}
+              symbolFontSize={keyboardSymbolFontSize}
+            />
+          </WalkthroughableView>
+        </CopilotStep>
       </View>
     </View>
   )

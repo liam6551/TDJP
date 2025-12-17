@@ -13,9 +13,30 @@ import ProgressScreen from '@/features/progress/screens/ProgressScreen';
 
 const Stack = createNativeStackNavigator();
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ActivityIndicator, View } from 'react-native';
+import OnboardingScreen from '@/features/onboarding/screens/OnboardingScreen';
+
 export default function RootStack() {
+  const [initialRoute, setInitialRoute] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    AsyncStorage.getItem('@did_onboarding').then(value => {
+      setInitialRoute(value === 'true' ? 'Tabs' : 'Onboarding');
+    });
+  }, []);
+
+  if (initialRoute === null) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#FF8C00" />
+      </View>
+    );
+  }
+
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
+    <Stack.Navigator initialRouteName={initialRoute} screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
+      <Stack.Screen name="Onboarding" component={OnboardingScreen} />
       <Stack.Screen name="Tabs" component={Tabs} />
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="Register" component={RegisterScreen} />

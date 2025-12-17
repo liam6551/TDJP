@@ -5,11 +5,15 @@ import { useLang } from '@/shared/state/lang';
 import { t } from '@/shared/i18n';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
+import { CopilotStep, walkthroughable, useCopilot } from 'react-native-copilot';
+
+const WalkthroughableView = walkthroughable(View);
 
 export default function GuestHome() {
     const { colors } = useAppTheme();
     const { lang } = useLang();
     const navigation = useNavigation<any>();
+    const { start } = useCopilot();
 
     const isRTL = lang === 'he';
 
@@ -24,18 +28,27 @@ export default function GuestHome() {
                 </Text>
             </View>
 
-            <TouchableOpacity onPress={() => navigation.navigate('Login')} activeOpacity={0.8}>
-                <LinearGradient
-                    colors={['#FF8C00', '#FF0080']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.button}
-                >
-                    <Text style={styles.btnText}>
-                        {t(lang, 'home.loginAction')}
-                    </Text>
-                </LinearGradient>
-            </TouchableOpacity>
+            {/* For guests, we map guest_login_prompt to the Login button so the tutor has something to point to */}
+            <CopilotStep text="Login to start" order={1} name="guest_login_prompt">
+                <WalkthroughableView style={{ width: '100%' }} collapsable={false}>
+                    <TouchableOpacity
+                        onPress={() => navigation.navigate('Login')}
+                        activeOpacity={0.8}
+                        style={{ width: '100%', alignItems: 'center' }}
+                    >
+                        <LinearGradient
+                            colors={['#FF8C00', '#FF0080']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                            style={styles.button}
+                        >
+                            <Text style={styles.btnText}>
+                                {t(lang, 'home.loginAction')}
+                            </Text>
+                        </LinearGradient>
+                    </TouchableOpacity>
+                </WalkthroughableView>
+            </CopilotStep>
         </View>
     );
 }

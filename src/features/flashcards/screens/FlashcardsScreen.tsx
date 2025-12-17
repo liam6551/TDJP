@@ -8,6 +8,9 @@ import { useLang } from '@/shared/state/lang';
 import TopBar from '@/shared/ui/TopBar';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StatsService } from '@/shared/services/stats';
+import { CopilotStep, walkthroughable } from 'react-native-copilot';
+
+const WalkthroughableView = walkthroughable(View);
 
 const { width } = Dimensions.get('window');
 
@@ -167,11 +170,24 @@ export default function FlashcardsScreen() {
         elementMode={elementMode}
         onToggleElementMode={() => setElementMode(prev => (prev === 'text' ? 'symbol' : 'text'))}
       />
+
       <Animated.View style={{ flex: 1, opacity: listOpacity }}>
         <FlatList
           data={list}
           keyExtractor={i => i.id}
-          renderItem={({ item }) => <CardItem item={item} colors={colors as any} onSuccess={onSuccess} onFail={onFail} mode={elementMode} />}
+          renderItem={({ item, index }) => {
+            const card = <CardItem item={item} colors={colors as any} onSuccess={onSuccess} onFail={onFail} mode={elementMode} />;
+            if (index === 0) {
+              return (
+                <CopilotStep text="Flashcard" order={6} name="flashcards_card">
+                  <WalkthroughableView>
+                    {card}
+                  </WalkthroughableView>
+                </CopilotStep>
+              );
+            }
+            return card;
+          }}
           contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 72, paddingTop: 16 }}
           showsVerticalScrollIndicator={false}
           overScrollMode="never"
