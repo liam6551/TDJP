@@ -101,7 +101,7 @@ export default function SavedTariffsScreen() {
 
         // So, I will assume for now we pass the `tariff` object, and I will need to update `TariffScreen` to save `internalState` too.
 
-        nav.navigate('Tariff', {
+        nav.navigate('TariffHome', {
             editTariffId: tariff.id,
             initialData: tariff.data
         });
