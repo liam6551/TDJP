@@ -358,7 +358,7 @@ const en = {
       errorEmpty: 'Please enter a name',
     },
     saved: {
-      title: 'My Saved Tariff Sheets',
+      title: 'Saved Tariff Sheets',
       empty: 'No saved tariff sheets found',
       searchPlaceholder: 'Search by athlete name or tariff name...',
       deleteTitle: 'Delete Tariff',

@@ -14,9 +14,18 @@ export const TariffService = {
      * List all saved tariffs for the current user.
      */
     async getTariffs(): Promise<SavedTariff[]> {
-        const res = await apiFetch('/api/tariffs');
-        if (!res.ok) throw new Error(res.error || 'Failed to fetch tariffs');
-        return res.tariffs;
+        try {
+            const res = await apiFetch('/api/tariffs');
+
+            // apiFetch already throws on !res.ok, so if we're here, it succeeded
+            if (!res.tariffs) {
+                throw new Error('Invalid response: missing tariffs array');
+            }
+
+            return res.tariffs;
+        } catch (error: any) {
+            throw new Error(error.message || 'Failed to fetch tariffs');
+        }
     },
 
     /**

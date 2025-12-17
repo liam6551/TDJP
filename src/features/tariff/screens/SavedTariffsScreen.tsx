@@ -67,8 +67,6 @@ export default function SavedTariffsScreen() {
             // Remove from list immediately for UX
             setTariffs(prev => prev.filter(item => item.id !== deletingId));
         } catch (e) {
-            console.error(e);
-            Alert.alert('Error', 'Failed to delete');
         } finally {
             setDeletingId(null);
             setShowDeleteConfirm(false);

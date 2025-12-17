@@ -119,7 +119,8 @@ export default function Tabs() {
             tabPress: (e) => {
               if (s.name === 'Tariff' && navigation.isFocused()) {
                 e.preventDefault();
-                navigation.navigate('Tariff', { screen: 'TariffHome' });
+                // Pass a timestamp to force update even if on same screen
+                navigation.navigate('Tariff', { screen: 'TariffHome', params: { resetTs: Date.now() } });
               }
             },
           })}

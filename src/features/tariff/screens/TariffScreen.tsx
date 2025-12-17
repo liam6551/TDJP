@@ -94,7 +94,6 @@ async function savePdfToDownloads(tempUri: string): Promise<string> {
   const saf = fsAny.StorageAccessFramework
 
   if (!saf) {
-    console.warn('StorageAccessFramework is not available on this device')
     return tempUri
   }
 
@@ -129,7 +128,6 @@ async function savePdfToDownloads(tempUri: string): Promise<string> {
 
     return newUri
   } catch (e) {
-    console.warn('Failed to save PDF to Downloads-like folder', e)
     return tempUri
   }
 }
@@ -316,6 +314,13 @@ export default function TariffScreen() {
     }
   }, [route.params?.editTariffId]);
 
+  useEffect(() => {
+    if (route.params?.resetTs) {
+      handleResetPage();
+      nav.setParams({ resetTs: undefined });
+    }
+  }, [route.params?.resetTs]);
+
   // --- Logic & Memos ---
   const bonusMeta = useMemo(() => ({
     track: athlete.track ?? null,
@@ -380,11 +385,10 @@ export default function TariffScreen() {
         if (storedUri) {
           finalUri = storedUri;
         }
-      } catch (e) { console.warn('Tariff save failed', e) }
+      } catch (e) { }
       setExportedUri(finalUri)
       setShowExportModal(true)
     } catch (e) {
-      console.warn('Tariff export failed', e)
     } finally {
       setIsExporting(false)
     }
@@ -456,7 +460,6 @@ export default function TariffScreen() {
       setShowSaveDialog(false);
       setShowSuccessDialog(true); // "Green V"
     } catch (e) {
-      console.error('Save tariff failed', e);
       // alert('Failed to save'); // Simple fallback
     } finally {
       setIsSaving(false);
@@ -530,7 +533,6 @@ export default function TariffScreen() {
         await Sharing.shareAsync(exportedUri)
       }
     } catch (e) {
-      console.error(e)
       Alert.alert('Error', 'Could not open PDF');
     }
   }
