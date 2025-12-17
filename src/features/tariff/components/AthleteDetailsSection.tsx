@@ -164,6 +164,14 @@ export default function AthleteDetailsSection({ value, onChange }: Props) {
         </View>
       </View>
 
+      {!isIsrael && (
+        <View style={{ alignItems: 'center', marginTop: 60 }}>
+          <Text style={{ fontSize: 24, fontWeight: 'bold', color: colors.text }}>
+            {t(lang, 'tariff.athlete.countryComingSoon')}
+          </Text>
+        </View>
+      )}
+
       {isIsrael && (
         <>
           <View
