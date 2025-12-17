@@ -559,6 +559,9 @@ export default function TariffScreen() {
   }
 
   const goNextFromDetails = () => {
+    if (athlete.country !== 'ISR') {
+      return;
+    }
     setCurrentStep(STEP_PASSES);
   }
 
@@ -639,8 +642,10 @@ export default function TariffScreen() {
         <Pressable
           style={[
             styles.footerBtn,
-            { backgroundColor: colors.tint }
+            { backgroundColor: (athlete.country !== 'ISR') ? colors.border : colors.tint },
+            (athlete.country !== 'ISR') && { opacity: 0.5 }
           ]}
+          disabled={athlete.country !== 'ISR'}
           onPress={goNextFromDetails}
         >
           <Text style={styles.actionBtnText}>{t(lang, 'tariff.actions.next')}</Text>

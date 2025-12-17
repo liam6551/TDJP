@@ -377,8 +377,12 @@ export default function ProgressScreen() {
         )}
 
 
-      </ScrollView >
-    </View >
+      </ScrollView>
+
+      {/* Fixed Bottom Border */}
+      {/* Fixed Empty Bottom Tab */}
+      <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 60, backgroundColor: colors.card, borderTopWidth: 1, borderTopColor: colors.border }} />
+    </View>
   );
 }
 

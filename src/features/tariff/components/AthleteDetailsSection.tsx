@@ -164,259 +164,263 @@ export default function AthleteDetailsSection({ value, onChange }: Props) {
         </View>
       </View>
 
-      <View
-        style={[
-          styles.row,
-          { flexDirection: isRTL ? 'row-reverse' : 'row' },
-        ]}
-      >
-        <View
-          style={[
-            styles.fieldHalf,
-            {
-              marginStart: isRTL ? 8 : 0,
-              marginEnd: isRTL ? 0 : 8,
-            },
-          ]}
-        >
-          <FieldLabel
-            text={t(lang, 'tariff.athlete.name')}
-            color={colors.text}
-            isRTL={isRTL}
-          />
-          <TextInput
-            value={value.name}
-            onChangeText={text => setField('name', text)}
-            style={[
-              styles.input,
-              {
-                borderColor: colors.border,
-                color: colors.text,
-                backgroundColor: colors.card,
-                textAlign: isRTL ? 'right' : 'left',
-              },
-            ]}
-          />
-        </View>
-
-        <View
-          style={[
-            styles.fieldHalf,
-            {
-              marginStart: isRTL ? 0 : 8,
-              marginEnd: isRTL ? 8 : 0,
-            },
-          ]}
-        >
-          <FieldLabel
-            text={t(lang, 'tariff.athlete.club')}
-            color={colors.text}
-            isRTL={isRTL}
-          />
-
-          <Pressable
-            onPress={() => setClubPickerVisible(true)}
-            style={[
-              styles.input,
-              {
-                borderColor: colors.border,
-                backgroundColor: colors.card,
-                flexDirection: isRTL ? 'row-reverse' : 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                height: 40, // Match typical input height
-              }
-            ]}
-          >
-            <Text style={{
-              color: value.club ? colors.text : colors.border,
-              textAlign: isRTL ? 'right' : 'left',
-              flex: 1
-            }} numberOfLines={1}>
-              {value.club || t(lang, 'tariff.athlete.selectClub') || ''}
-            </Text>
-          </Pressable>
-        </View>
-      </View>
-
-      <View
-        style={[
-          styles.row,
-          { flexDirection: isRTL ? 'row-reverse' : 'row' },
-        ]}
-      >
-        <View
-          style={[
-            styles.fieldThird,
-            {
-              marginStart: isRTL ? 8 : 0,
-              marginEnd: isRTL ? 0 : 8,
-            },
-          ]}
-        >
-          <FieldLabel
-            text={t(lang, 'tariff.athlete.number')}
-            color={colors.text}
-            isRTL={isRTL}
-          />
-          <TextInput
-            value={value.athleteNumber}
-            onChangeText={text =>
-              setField(
-                'athleteNumber',
-                text.replace(/[^0-9]/g, '').slice(0, 4)
-              )
-            }
-            keyboardType="number-pad"
-            style={[
-              styles.input,
-              styles.inputCentered,
-              {
-                borderColor: colors.border,
-                color: colors.text,
-                backgroundColor: colors.card,
-              },
-            ]}
-            maxLength={4}
-          />
-        </View>
-
-        <View style={styles.fieldThirdMiddle}>
-          <FieldLabel
-            text={t(lang, 'tariff.athlete.round')}
-            color={colors.text}
-            isRTL={isRTL}
-          />
-          <TextInput
-            value={value.round}
-            onChangeText={text =>
-              setField('round', text.replace(/[^0-9]/g, '').slice(0, 3))
-            }
-            keyboardType="number-pad"
-            style={[
-              styles.input,
-              styles.inputCentered,
-              {
-                borderColor: colors.border,
-                color: colors.text,
-                backgroundColor: colors.card,
-              },
-            ]}
-            maxLength={3}
-          />
-        </View>
-
-        <View
-          style={[
-            styles.fieldThird,
-            {
-              marginStart: isRTL ? 0 : 8,
-              marginEnd: isRTL ? 8 : 0,
-            },
-          ]}
-        >
-          <FieldLabel
-            text={t(lang, 'tariff.athlete.gender')}
-            color={colors.text}
-            isRTL={isRTL}
-          />
+      {isIsrael && (
+        <>
           <View
             style={[
-              styles.genderRow,
+              styles.row,
               { flexDirection: isRTL ? 'row-reverse' : 'row' },
             ]}
           >
-            <GenderChip
-              label={genderLabel('F')}
-              selected={value.gender === 'F'}
-              onPress={() =>
-                setField('gender', value.gender === 'F' ? null : 'F')
-              }
-            />
-            <GenderChip
-              label={genderLabel('M')}
-              selected={value.gender === 'M'}
-              onPress={() =>
-                setField('gender', value.gender === 'M' ? null : 'M')
-              }
-            />
-          </View>
-        </View>
-      </View>
-
-      <View
-        style={[
-          styles.row,
-          { flexDirection: isRTL ? 'row-reverse' : 'row' },
-        ]}
-      >
-        <View style={styles.fieldFull}>
-          <FieldLabel
-            text={t(lang, 'tariff.athlete.track')}
-            color={colors.text}
-            isRTL={isRTL}
-          />
-          <View
-            style={[
-              styles.trackRow,
-              { flexDirection: isRTL ? 'row-reverse' : 'row' },
-            ]}
-          >
-            <TrackChip
-              label={t(lang, 'tariff.athlete.trackLeague')}
-              selected={value.track === 'league'}
-              onPress={() => handleTrackPress('league')}
-            />
-            <TrackChip
-              label={t(lang, 'tariff.athlete.trackNational')}
-              selected={value.track === 'national'}
-              onPress={() => handleTrackPress('national')}
-            />
-            <TrackChip
-              label={t(lang, 'tariff.athlete.trackInternational')}
-              selected={value.track === 'international'}
-              onPress={() => handleTrackPress('international')}
-            />
-          </View>
-
-          {value.track && currentLevels.length > 0 && (
-            <View style={styles.levelSection}>
+            <View
+              style={[
+                styles.fieldHalf,
+                {
+                  marginStart: isRTL ? 8 : 0,
+                  marginEnd: isRTL ? 0 : 8,
+                },
+              ]}
+            >
               <FieldLabel
-                text={t(lang, 'tariff.athlete.level')}
+                text={t(lang, 'tariff.athlete.name')}
+                color={colors.text}
+                isRTL={isRTL}
+              />
+              <TextInput
+                value={value.name}
+                onChangeText={text => setField('name', text)}
+                style={[
+                  styles.input,
+                  {
+                    borderColor: colors.border,
+                    color: colors.text,
+                    backgroundColor: colors.card,
+                    textAlign: isRTL ? 'right' : 'left',
+                  },
+                ]}
+              />
+            </View>
+
+            <View
+              style={[
+                styles.fieldHalf,
+                {
+                  marginStart: isRTL ? 0 : 8,
+                  marginEnd: isRTL ? 8 : 0,
+                },
+              ]}
+            >
+              <FieldLabel
+                text={t(lang, 'tariff.athlete.club')}
+                color={colors.text}
+                isRTL={isRTL}
+              />
+
+              <Pressable
+                onPress={() => setClubPickerVisible(true)}
+                style={[
+                  styles.input,
+                  {
+                    borderColor: colors.border,
+                    backgroundColor: colors.card,
+                    flexDirection: isRTL ? 'row-reverse' : 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    height: 40, // Match typical input height
+                  }
+                ]}
+              >
+                <Text style={{
+                  color: value.club ? colors.text : colors.border,
+                  textAlign: isRTL ? 'right' : 'left',
+                  flex: 1
+                }} numberOfLines={1}>
+                  {value.club || t(lang, 'tariff.athlete.selectClub') || ''}
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+
+          <View
+            style={[
+              styles.row,
+              { flexDirection: isRTL ? 'row-reverse' : 'row' },
+            ]}
+          >
+            <View
+              style={[
+                styles.fieldThird,
+                {
+                  marginStart: isRTL ? 8 : 0,
+                  marginEnd: isRTL ? 0 : 8,
+                },
+              ]}
+            >
+              <FieldLabel
+                text={t(lang, 'tariff.athlete.number')}
+                color={colors.text}
+                isRTL={isRTL}
+              />
+              <TextInput
+                value={value.athleteNumber}
+                onChangeText={text =>
+                  setField(
+                    'athleteNumber',
+                    text.replace(/[^0-9]/g, '').slice(0, 4)
+                  )
+                }
+                keyboardType="number-pad"
+                style={[
+                  styles.input,
+                  styles.inputCentered,
+                  {
+                    borderColor: colors.border,
+                    color: colors.text,
+                    backgroundColor: colors.card,
+                  },
+                ]}
+                maxLength={4}
+              />
+            </View>
+
+            <View style={styles.fieldThirdMiddle}>
+              <FieldLabel
+                text={t(lang, 'tariff.athlete.round')}
+                color={colors.text}
+                isRTL={isRTL}
+              />
+              <TextInput
+                value={value.round}
+                onChangeText={text =>
+                  setField('round', text.replace(/[^0-9]/g, '').slice(0, 3))
+                }
+                keyboardType="number-pad"
+                style={[
+                  styles.input,
+                  styles.inputCentered,
+                  {
+                    borderColor: colors.border,
+                    color: colors.text,
+                    backgroundColor: colors.card,
+                  },
+                ]}
+                maxLength={3}
+              />
+            </View>
+
+            <View
+              style={[
+                styles.fieldThird,
+                {
+                  marginStart: isRTL ? 0 : 8,
+                  marginEnd: isRTL ? 8 : 0,
+                },
+              ]}
+            >
+              <FieldLabel
+                text={t(lang, 'tariff.athlete.gender')}
                 color={colors.text}
                 isRTL={isRTL}
               />
               <View
                 style={[
-                  styles.levelRow,
-                  {
-                    flexDirection: levelDirection,
-                    flexWrap: value.track === 'national' ? 'nowrap' : 'wrap',
-                    justifyContent:
-                      value.track === 'national' ? 'space-between' : 'flex-start',
-                  },
+                  styles.genderRow,
+                  { flexDirection: isRTL ? 'row-reverse' : 'row' },
                 ]}
               >
-                {currentLevels.map(level => (
-                  <LevelChip
-                    key={level}
-                    label={level}
-                    selected={value.level === level}
-                    onPress={() =>
-                      setField(
-                        'level',
-                        value.level === level ? null : (level as TrackLevel)
-                      )
-                    }
-                  />
-                ))}
+                <GenderChip
+                  label={genderLabel('F')}
+                  selected={value.gender === 'F'}
+                  onPress={() =>
+                    setField('gender', value.gender === 'F' ? null : 'F')
+                  }
+                />
+                <GenderChip
+                  label={genderLabel('M')}
+                  selected={value.gender === 'M'}
+                  onPress={() =>
+                    setField('gender', value.gender === 'M' ? null : 'M')
+                  }
+                />
               </View>
             </View>
-          )}
+          </View>
+
+          <View
+            style={[
+              styles.row,
+              { flexDirection: isRTL ? 'row-reverse' : 'row' },
+            ]}
+          >
+            <View style={styles.fieldFull}>
+              <FieldLabel
+                text={t(lang, 'tariff.athlete.track')}
+                color={colors.text}
+                isRTL={isRTL}
+              />
+              <View
+                style={[
+                  styles.trackRow,
+                  { flexDirection: isRTL ? 'row-reverse' : 'row' },
+                ]}
+              >
+                <TrackChip
+                  label={t(lang, 'tariff.athlete.trackLeague')}
+                  selected={value.track === 'league'}
+                  onPress={() => handleTrackPress('league')}
+                />
+                <TrackChip
+                  label={t(lang, 'tariff.athlete.trackNational')}
+                  selected={value.track === 'national'}
+                  onPress={() => handleTrackPress('national')}
+                />
+                <TrackChip
+                  label={t(lang, 'tariff.athlete.trackInternational')}
+                  selected={value.track === 'international'}
+                  onPress={() => handleTrackPress('international')}
+                />
+              </View>
+
+              {value.track && currentLevels.length > 0 && (
+                <View style={styles.levelSection}>
+                  <FieldLabel
+                    text={t(lang, 'tariff.athlete.level')}
+                    color={colors.text}
+                    isRTL={isRTL}
+                  />
+                  <View
+                    style={[
+                      styles.levelRow,
+                      {
+                        flexDirection: levelDirection,
+                        flexWrap: value.track === 'national' ? 'nowrap' : 'wrap',
+                        justifyContent:
+                          value.track === 'national' ? 'space-between' : 'flex-start',
+                      },
+                    ]}
+                  >
+                    {currentLevels.map(level => (
+                      <LevelChip
+                        key={level}
+                        label={level}
+                        selected={value.level === level}
+                        onPress={() =>
+                          setField(
+                            'level',
+                            value.level === level ? null : (level as TrackLevel)
+                          )
+                        }
+                      />
+                    ))}
+                  </View>
+                </View>
+              )}
 
 
-        </View>
-      </View>
+            </View>
+          </View>
+        </>
+      )}
 
 
       <CountryPickerModal
