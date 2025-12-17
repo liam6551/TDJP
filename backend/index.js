@@ -1424,6 +1424,104 @@ app.delete('/admin/users/:id', requireAuth, requireAdmin, async (req, res) => {
   res.json({ ok: true });
 });
 
+/* ---------- Saved Tariffs API ---------- */
+
+// Helper to ensure unique name
+async function getUniqueTariffName(userId, baseName, excludeId = null) {
+  let name = baseName.trim();
+  let count = 0;
+  while (true) {
+    const checkName = count === 0 ? name : `${name} (${count})`;
+    const params = [userId, checkName];
+    let query = `SELECT 1 FROM tariffs WHERE user_id=$1 AND name=$2`;
+    if (excludeId) {
+      query += ` AND id != $3`;
+      params.push(excludeId);
+    }
+    const res = await pool.query(query, params);
+    if (res.rowCount === 0) return checkName;
+    count++;
+  }
+}
+
+app.get('/api/tariffs', requireAuth, async (req, res) => {
+  try {
+    const q = await pool.query(
+      `SELECT * FROM tariffs WHERE user_id=$1 ORDER BY updated_at DESC`,
+      [req.user.uid]
+    );
+    res.json({ tariffs: q.rows });
+  } catch (e) {
+    console.error('Get tariffs error:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/tariffs', requireAuth, async (req, res) => {
+  try {
+    const { name, data } = req.body;
+    if (!name || !data) return res.status(400).json({ error: 'Missing name or data' });
+
+    const uniqueName = await getUniqueTariffName(req.user.uid, name);
+
+    const q = await pool.query(
+      `INSERT INTO tariffs (user_id, name, data, updated_at) VALUES ($1, $2, $3, now()) RETURNING *`,
+      [req.user.uid, uniqueName, data]
+    );
+    res.json({ tariff: q.rows[0] });
+  } catch (e) {
+    console.error('Create tariff error:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.put('/api/tariffs/:id', requireAuth, async (req, res) => {
+  try {
+    const { name, data } = req.body;
+    if (!name && !data) return res.status(400).json({ error: 'No updates provided' });
+
+    let finalName = name;
+    if (name) {
+      finalName = await getUniqueTariffName(req.user.uid, name, req.params.id);
+    }
+
+    const sets = [];
+    const vals = [req.params.id, req.user.uid];
+    if (finalName) {
+      sets.push(`name=$${vals.length + 1}`);
+      vals.push(finalName);
+    }
+    if (data) {
+      sets.push(`data=$${vals.length + 1}`);
+      vals.push(data);
+    }
+    sets.push(`updated_at=now()`); // Always update timestamp
+
+    const q = await pool.query(
+      `UPDATE tariffs SET ${sets.join(', ')} WHERE id=$1 AND user_id=$2 RETURNING *`,
+      vals
+    );
+
+    if (q.rowCount === 0) return res.status(404).json({ error: 'Tariff not found' });
+    res.json({ tariff: q.rows[0] });
+
+  } catch (e) {
+    console.error('Update tariff error:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.delete('/api/tariffs/:id', requireAuth, async (req, res) => {
+  try {
+    const q = await pool.query(`DELETE FROM tariffs WHERE id=$1 AND user_id=$2`, [req.params.id, req.user.uid]);
+    if (q.rowCount === 0) return res.status(404).json({ error: 'Tariff not found' });
+    res.json({ ok: true });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 /* ---------- Notifications API ---------- */
 app.get('/notifications', requireAuth, async (req, res) => {
   const q = await pool.query(
