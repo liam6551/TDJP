@@ -12,6 +12,12 @@ import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
 import * as IntentLauncher from 'expo-intent-launcher';
 import TariffExportSuccessModal from '@/features/tariff/components/TariffExportSuccessModal';
+// @ts-ignore
+import { getContentUriAsync } from 'expo-file-system'; // Try importing directly again, as legacy might not be exposed? 
+// No, error said import FROM 'expo-file-system/legacy'.
+// Let's do that.
+// @ts-ignore
+const getContentUriAsyncLegacy = require('expo-file-system/legacy').getContentUriAsync;
 
 export default function SavedTariffsScreen() {
     const { colors } = useAppTheme();
@@ -126,7 +132,7 @@ export default function SavedTariffsScreen() {
         if (!exportedUri) return;
         try {
             if (Platform.OS === 'android') {
-                const contentUri = await FileSystem.getContentUriAsync(exportedUri);
+                const contentUri = await getContentUriAsyncLegacy(exportedUri);
                 await IntentLauncher.startActivityAsync('android.intent.action.VIEW', {
                     data: contentUri,
                     flags: 1,
