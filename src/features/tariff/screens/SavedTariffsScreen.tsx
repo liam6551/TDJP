@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, FlatList, StyleSheet, Pressable, TextInput, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, StyleSheet, Pressable, TextInput, Alert, ActivityIndicator, Platform } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useAppTheme } from '@/shared/theme/theme';
 import { useLang } from '@/shared/state/lang';
@@ -9,6 +9,8 @@ import { TariffService, SavedTariff } from '@/features/tariff/services/TariffSer
 import { Ionicons } from '@expo/vector-icons';
 import { exportTariffPdf } from '@/features/tariff/export/exportTariffPdf';
 import * as Sharing from 'expo-sharing';
+import * as FileSystem from 'expo-file-system';
+import * as IntentLauncher from 'expo-intent-launcher';
 import TariffExportSuccessModal from '@/features/tariff/components/TariffExportSuccessModal';
 
 export default function SavedTariffsScreen() {
@@ -123,8 +125,20 @@ export default function SavedTariffsScreen() {
     const handleOpenPdf = async () => {
         if (!exportedUri) return;
         try {
-            await Sharing.shareAsync(exportedUri);
-        } catch (e) { }
+            if (Platform.OS === 'android') {
+                const contentUri = await FileSystem.getContentUriAsync(exportedUri);
+                await IntentLauncher.startActivityAsync('android.intent.action.VIEW', {
+                    data: contentUri,
+                    flags: 1,
+                    type: 'application/pdf'
+                });
+            } else {
+                await Sharing.shareAsync(exportedUri);
+            }
+        } catch (e) {
+            console.error(e);
+            Alert.alert('Error', 'Could not open PDF');
+        }
     };
 
     const handleSharePdf = async () => {
