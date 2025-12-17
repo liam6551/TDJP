@@ -387,7 +387,7 @@ const colWidth = (width - 48) / 3;
 
 const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  scroll: { padding: 16, paddingBottom: 100 },
+  scroll: { padding: 16, paddingBottom: 180 },
   hero: { flexDirection: 'row', borderRadius: 16, padding: 20, marginBottom: 24, elevation: 2, alignItems: 'center' },
   heroCol: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   divider: { width: 1, height: '80%', marginHorizontal: 10 },

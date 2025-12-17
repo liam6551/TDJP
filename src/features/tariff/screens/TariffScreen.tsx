@@ -559,11 +559,6 @@ export default function TariffScreen() {
   }
 
   const goNextFromDetails = () => {
-    if (athlete.country !== 'ISR') {
-      // Ideally show a toast, but user said "Coming Soon" text will be shown on screen
-      // and button disabled. But double check logic here.
-      return;
-    }
     setCurrentStep(STEP_PASSES);
   }
 
@@ -628,18 +623,7 @@ export default function TariffScreen() {
       <View style={styles.formContainer}>
         <AthleteDetailsSection value={athlete} onChange={setAthlete} />
 
-        {/* Coming Soon Warning */}
-        {athlete.country && athlete.country !== 'ISR' && (
-          <Text style={{
-            color: '#ff3b30',
-            textAlign: 'center',
-            marginTop: 20,
-            fontWeight: 'bold',
-            fontSize: 18
-          }}>
-            {t(lang, 'tariff.athlete.countryComingSoon')}
-          </Text>
-        )}
+
       </View>
 
       <View style={styles.footerActions}>
@@ -655,9 +639,8 @@ export default function TariffScreen() {
         <Pressable
           style={[
             styles.footerBtn,
-            { backgroundColor: (athlete.country !== 'ISR') ? colors.border : colors.tint }
+            { backgroundColor: colors.tint }
           ]}
-          disabled={athlete.country !== 'ISR'}
           onPress={goNextFromDetails}
         >
           <Text style={styles.actionBtnText}>{t(lang, 'tariff.actions.next')}</Text>
