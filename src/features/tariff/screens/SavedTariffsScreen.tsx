@@ -248,16 +248,14 @@ const styles = StyleSheet.create({
     actions: {
         justifyContent: 'flex-end',
         alignItems: 'center',
-        gap: 12,
-        paddingHorizontal: 4,
-        flexShrink: 0,
-        minWidth: 200, // Large enough to never shrink buttons
+        gap: 8, // Compact gap
+        flexShrink: 0, // Prevent shrinking
     },
     actionBtn: {
         alignItems: 'center',
         justifyContent: 'center',
         gap: 2,
-        paddingHorizontal: 8, // More padding
-        minWidth: 64, // significantly wider
+        paddingHorizontal: 10, // Ensure text has room
+        flexShrink: 0,
     }
 });
