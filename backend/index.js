@@ -367,10 +367,10 @@ async function ensureSchema() {
     ON users(phone_e164)
     WHERE phone_e164 IS NOT NULL;
   `);
-}
 
-/* ---------- Tariffs DB ---------- */
-await pool.query(`
+
+  /* ---------- Tariffs DB ---------- */
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS tariffs (
       id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
       user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -380,8 +380,8 @@ await pool.query(`
       updated_at timestamptz NOT NULL DEFAULT now()
     );
   `);
-await pool.query(`CREATE INDEX IF NOT EXISTS idx_tariffs_user ON tariffs(user_id);`);
-await pool.query(`CREATE INDEX IF NOT EXISTS idx_tariffs_updated ON tariffs(updated_at DESC);`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_tariffs_user ON tariffs(user_id);`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_tariffs_updated ON tariffs(updated_at DESC);`);
 }
 
 /* ---------- Helpers ---------- */
