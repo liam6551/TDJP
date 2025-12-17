@@ -351,7 +351,7 @@ export default function TariffScreen() {
       form: {
         athleteName: athlete.name || '',
         club: athlete.club || '',
-        gender: athlete.gender === 'M' ? (lang === 'he' ? 'זכר' : 'Male') : (lang === 'he' ? 'נקבה' : 'Female'),
+        gender: athlete.gender === 'M' ? (lang === 'he' ? 'M' : 'M') : (lang === 'he' ? 'F' : 'F'),
         track: (athlete.track || '') as any,
         level: (athlete.level || '') as any,
         athleteNo: athlete.athleteNumber || '',
@@ -462,13 +462,22 @@ export default function TariffScreen() {
   }
 
   const handleOpenPdf = async () => {
-    // ... existing open pdf logic ...
-    // NOTE: Copying existing logic here or keeping usage of existing helper if available?
-    // User asked to Keep existing logic "one to one".
     if (!exportedUri) return
     try {
-      await Sharing.shareAsync(exportedUri)
-    } catch (e) { }
+      if (Platform.OS === 'android') {
+        // Use legacy FileSystem for getContentUriAsync as suggested by recent deprecation
+        const contentUri = await (FileSystemLegacy as any).getContentUriAsync(exportedUri);
+        await IntentLauncher.startActivityAsync('android.intent.action.VIEW', {
+          data: contentUri,
+          flags: 1,
+          type: 'application/pdf'
+        });
+      } else {
+        await Sharing.shareAsync(exportedUri)
+      }
+    } catch (e) {
+      console.error(e)
+    }
   }
   const handleSharePdf = async () => {
     if (!exportedUri) return
@@ -477,7 +486,8 @@ export default function TariffScreen() {
 
   const handleExportSuccessClose = () => {
     setShowExportModal(false);
-    handleResetPage(); // Resets and goes to Home
+    // User requested to stay on the same page, NOT reset.
+    // handleResetPage(); 
   }
 
   // --- Step Navigation ---
