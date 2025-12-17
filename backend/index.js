@@ -26,7 +26,7 @@ app.use(helmet());
 app.use(cors({ origin: '*', credentials: false }));
 app.use(express.json({ limit: '1mb' }));
 
-const BUILD_TAG = 'auth-api v1.3.2-reject-fix';
+const BUILD_TAG = 'auth-api v1.4.0-tariffs';
 
 /* ---------- Constants ---------- */
 const ALLOWED_COUNTRIES = ['ישראל', 'בריטניה', 'ארצות הברית', 'רוסיה', 'אוקראינה', 'סין'];
@@ -1425,6 +1425,7 @@ app.delete('/admin/users/:id', requireAuth, requireAdmin, async (req, res) => {
 });
 
 /* ---------- Saved Tariffs API ---------- */
+console.log('[INIT] Mounting Saved Tariffs API routes');
 
 // Helper to ensure unique name
 async function getUniqueTariffName(userId, baseName, excludeId = null) {
@@ -1444,15 +1445,22 @@ async function getUniqueTariffName(userId, baseName, excludeId = null) {
   }
 }
 
+// Debug ping endpoint (no auth required)
+app.get('/api/tariffs/ping', (req, res) => {
+  res.json({ ok: true, message: 'Tariffs API is mounted', version: BUILD_TAG });
+});
+
 app.get('/api/tariffs', requireAuth, async (req, res) => {
   try {
+    console.log('[TARIFFS] GET /api/tariffs - user:', req.user?.uid);
     const q = await pool.query(
       `SELECT * FROM tariffs WHERE user_id=$1 ORDER BY updated_at DESC`,
       [req.user.uid]
     );
+    console.log('[TARIFFS] Found', q.rows.length, 'tariffs');
     res.json({ tariffs: q.rows });
   } catch (e) {
-    console.error('Get tariffs error:', e);
+    console.error('[TARIFFS] Get tariffs error:', e);
     res.status(500).json({ error: e.message });
   }
 });
