@@ -143,6 +143,7 @@ export default function TariffScreen() {
   const { colors } = useAppTheme()
   const { lang } = useLang()
   const nav = useNavigation<any>()
+  const route = useRoute<any>() // Add route parsing
   const isRTL = lang === 'he'
 
   // Steps State
@@ -235,6 +236,8 @@ export default function TariffScreen() {
     maxSlots,
     pass1Display,
     pass2Display,
+    setPass1,
+    setPass2,
   } = useTariffPassKeyboard(athlete.track ?? null, elementMode)
 
   const barDirection: 'ltr' | 'rtl' =
@@ -267,6 +270,51 @@ export default function TariffScreen() {
     setActivePass(null)
     setCurrentStep(STEP_HOME);
   }
+
+  // Effect to load initial data when editing
+  useEffect(() => {
+    if (route.params?.editTariffId && route.params?.initialData) {
+      const { editTariffId, initialData } = route.params;
+      const internal = initialData.internalState;
+
+      if (internal) {
+        // Restore Athlete Form
+        if (internal.athlete) {
+          setAthlete(internal.athlete);
+        }
+
+        // Restore Passes
+        if (internal.pass1Display) {
+          const p1 = internal.pass1Display
+            .filter((x: any) => x && x.id)
+            .map((x: any) => ({
+              id: String(x.id),
+              value: Number(x.value || x.points || 0)
+            }));
+          setPass1(p1);
+        }
+        if (internal.pass2Display) {
+          const p2 = internal.pass2Display
+            .filter((x: any) => x && x.id)
+            .map((x: any) => ({
+              id: String(x.id),
+              value: Number(x.value || x.points || 0)
+            }));
+          setPass2(p2);
+        }
+
+        // Set Step based on data presence? User requested "pop you to first and second page". 
+        // STEP_DETAILS (1) is good start.
+        setCurrentStep(STEP_DETAILS);
+      }
+
+      setExistingTariffId(editTariffId);
+      setTariffName(initialData.form?.athleteName || ''); // Pre-fill name for save dialog
+
+      // Clear params to avoid loop if we re-render
+      nav.setParams({ editTariffId: undefined, initialData: undefined });
+    }
+  }, [route.params?.editTariffId]);
 
   // --- Logic & Memos ---
   const bonusMeta = useMemo(() => ({
