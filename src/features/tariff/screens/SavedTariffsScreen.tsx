@@ -134,21 +134,39 @@ export default function SavedTariffsScreen() {
             <View style={[styles.actions, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
                 <Pressable style={styles.actionBtn} onPress={() => handleDelete(item.id)}>
                     <Ionicons name="trash-outline" size={20} color="#ef4444" />
-                    <Text style={{ color: '#ef4444', fontSize: 12 }}>
+                    <Text
+                        style={{ color: '#ef4444', fontSize: 11, textAlign: 'center', width: '100%' }}
+                        maxFontSizeMultiplier={1} // Prevent scaling up
+                        allowFontScaling={false}  // Bulletproof scaling
+                        numberOfLines={1}
+                        adjustsFontSizeToFit    // Shrink if needed
+                    >
                         {t(lang, 'tariff.saved.actions.delete')}
                     </Text>
                 </Pressable>
 
                 <Pressable style={styles.actionBtn} onPress={() => handleEdit(item)}>
                     <Ionicons name="create-outline" size={20} color={colors.tint} />
-                    <Text style={{ color: colors.tint, fontSize: 12 }}>
+                    <Text
+                        style={{ color: colors.tint, fontSize: 11, textAlign: 'center', width: '100%' }}
+                        maxFontSizeMultiplier={1}
+                        allowFontScaling={false}
+                        numberOfLines={1}
+                        adjustsFontSizeToFit
+                    >
                         {t(lang, 'tariff.saved.actions.edit')}
                     </Text>
                 </Pressable>
 
                 <Pressable style={styles.actionBtn} onPress={() => handleExport(item)}>
                     <Ionicons name="share-outline" size={20} color={colors.text} />
-                    <Text style={{ color: colors.text, fontSize: 12 }}>
+                    <Text
+                        style={{ color: colors.text, fontSize: 11, textAlign: 'center', width: '100%' }}
+                        maxFontSizeMultiplier={1}
+                        allowFontScaling={false}
+                        numberOfLines={1}
+                        adjustsFontSizeToFit
+                    >
                         {t(lang, 'tariff.saved.actions.export')}
                     </Text>
                 </Pressable>
@@ -248,14 +266,16 @@ const styles = StyleSheet.create({
     actions: {
         justifyContent: 'flex-end',
         alignItems: 'center',
-        gap: 8, // Compact gap
-        flexShrink: 0, // Prevent shrinking
+        gap: 8,
+        paddingHorizontal: 4,
+        flexShrink: 0,
+        minWidth: 180, // Safe zone
     },
     actionBtn: {
         alignItems: 'center',
         justifyContent: 'center',
         gap: 2,
-        paddingHorizontal: 10, // Ensure text has room
+        width: 54, // Fixed width per button
         flexShrink: 0,
     }
 });
