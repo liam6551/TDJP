@@ -134,21 +134,21 @@ export default function SavedTariffsScreen() {
             <View style={[styles.actions, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
                 <Pressable style={styles.actionBtn} onPress={() => handleDelete(item.id)}>
                     <Ionicons name="trash-outline" size={20} color="#ef4444" />
-                    <Text style={{ color: '#ef4444', fontSize: 12 }} numberOfLines={1}>
+                    <Text style={{ color: '#ef4444', fontSize: 12 }}>
                         {t(lang, 'tariff.saved.actions.delete')}
                     </Text>
                 </Pressable>
 
                 <Pressable style={styles.actionBtn} onPress={() => handleEdit(item)}>
                     <Ionicons name="create-outline" size={20} color={colors.tint} />
-                    <Text style={{ color: colors.tint, fontSize: 12 }} numberOfLines={1}>
+                    <Text style={{ color: colors.tint, fontSize: 12 }}>
                         {t(lang, 'tariff.saved.actions.edit')}
                     </Text>
                 </Pressable>
 
                 <Pressable style={styles.actionBtn} onPress={() => handleExport(item)}>
                     <Ionicons name="share-outline" size={20} color={colors.text} />
-                    <Text style={{ color: colors.text, fontSize: 12 }} numberOfLines={1}>
+                    <Text style={{ color: colors.text, fontSize: 12 }}>
                         {t(lang, 'tariff.saved.actions.export')}
                     </Text>
                 </Pressable>
@@ -247,10 +247,8 @@ const styles = StyleSheet.create({
     },
     actions: {
         justifyContent: 'flex-end',
-        gap: 20,
-        borderTopWidth: 1,
-        borderTopColor: 'rgba(150,150,150, 0.2)',
-        paddingTop: 12,
+        alignItems: 'center',
+        gap: 16, // slightly reduced gap to ensure fit
     },
     actionBtn: {
         alignItems: 'center',
