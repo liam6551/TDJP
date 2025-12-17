@@ -152,6 +152,7 @@ export default function TariffScreen() {
   const [showPassWarning, setShowPassWarning] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
   const [exportedUri, setExportedUri] = useState<string | null>(null)
+  const [tempPdfUri, setTempPdfUri] = useState<string | null>(null) // For Sharing (more robust with file://)
   const [showExportModal, setShowExportModal] = useState(false)
 
   // Save Feature State
@@ -323,6 +324,7 @@ export default function TariffScreen() {
         pass2: mapPassDisplayToExport(pass2Display, pass2Bonuses),
       }
       const result = await exportTariffPdf(data)
+      setTempPdfUri(result.uri) // Keep the original temp URI for sharing
       let finalUri = result.uri
       try {
         const fileName = `TDJP Tariff - ${athlete.name || 'Athlete'} - ${Date.now()}.pdf`;
@@ -485,8 +487,10 @@ export default function TariffScreen() {
     }
   }
   const handleSharePdf = async () => {
-    if (!exportedUri) return
-    await Sharing.shareAsync(exportedUri)
+    // Prefer tempPdfUri for sharing as it is a standard file:// URI which is easier to share reliably
+    const uriToShare = tempPdfUri || exportedUri;
+    if (!uriToShare) return
+    await Sharing.shareAsync(uriToShare)
   }
 
   const handleExportSuccessClose = () => {
