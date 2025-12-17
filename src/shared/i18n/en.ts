@@ -131,7 +131,7 @@ const en = {
       deleteConfirmTitle: 'Delete Account',
       deleteConfirmBody: 'Are you sure? This action cannot be undone.',
       deleteConfirmBtn: 'Delete',
-      save: 'Save'
+      save: 'Save',
     }
   },
 
@@ -348,6 +348,28 @@ const en = {
       message: 'Passes are not legal. Do you want to export to PDF anyway?',
       yes: 'Yes',
       no: 'No',
+    },
+    saveDialog: {
+      title: 'Save Tariff Sheet',
+      label: 'Tariff Sheet Name',
+      placeholder: 'Enter name (e.g. My Routine)',
+      cancel: 'Cancel',
+      save: 'Save',
+      errorEmpty: 'Please enter a name',
+    },
+    saved: {
+      title: 'My Saved Tariff Sheets',
+      empty: 'No saved tariff sheets found',
+      searchPlaceholder: 'Search by athlete name or tariff name...',
+      deleteTitle: 'Delete Tariff',
+      deleteConfirm: 'Are you sure you want to delete this tariff sheet?',
+      lastUpdated: 'Last updated:',
+      success: 'Tariff saved successfully!',
+      actions: {
+        delete: 'Delete',
+        edit: 'Edit',
+        export: 'PDF',
+      },
     },
   },
 

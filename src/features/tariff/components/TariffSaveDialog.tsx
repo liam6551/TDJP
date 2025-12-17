@@ -30,7 +30,7 @@ export function TariffSaveDialog({ visible, initialName = '', loading = false, o
     const handleSave = () => {
         const trimmed = name.trim();
         if (!trimmed) {
-            setError(lang === 'he' ? 'יש לבחור שם לשמירת הטריף' : 'Please verify tariff name');
+            setError(t(lang, 'tariff.saveDialog.errorEmpty'));
             return;
         }
         onSave(trimmed);
@@ -41,7 +41,7 @@ export function TariffSaveDialog({ visible, initialName = '', loading = false, o
             <View style={styles.overlay}>
                 <View style={[styles.dialog, { backgroundColor: colors.card, borderColor: colors.border }]}>
                     <Text style={[styles.title, { color: colors.text, textAlign: isRTL ? 'right' : 'left' }]}>
-                        {lang === 'he' ? 'שם הדף טריף' : 'Tariff Sheet Name'}
+                        {t(lang, 'tariff.saveDialog.title')}
                     </Text>
 
                     <TextInput
@@ -56,7 +56,7 @@ export function TariffSaveDialog({ visible, initialName = '', loading = false, o
                         ]}
                         value={name}
                         onChangeText={(t) => { setName(t); setError(''); }}
-                        placeholder={lang === 'he' ? 'הכנס שם כאן...' : 'Enter name here...'}
+                        placeholder={t(lang, 'tariff.saveDialog.placeholder')}
                         placeholderTextColor={colors.muted}
                     />
 
@@ -73,7 +73,7 @@ export function TariffSaveDialog({ visible, initialName = '', loading = false, o
                             disabled={loading}
                         >
                             <Text style={[styles.btnText, { color: colors.text }]}>
-                                {t(lang, 'common.cancel') || (lang === 'he' ? 'בטל' : 'Cancel')}
+                                {t(lang, 'tariff.saveDialog.cancel')}
                             </Text>
                         </Pressable>
 
@@ -86,7 +86,7 @@ export function TariffSaveDialog({ visible, initialName = '', loading = false, o
                                 <ActivityIndicator color="#fff" size="small" />
                             ) : (
                                 <Text style={styles.btnText}>
-                                    {t(lang, 'common.save') || (lang === 'he' ? 'שמור' : 'Save')}
+                                    {t(lang, 'tariff.saveDialog.save')}
                                 </Text>
                             )}
                         </Pressable>

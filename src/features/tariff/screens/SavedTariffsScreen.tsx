@@ -43,12 +43,12 @@ export default function SavedTariffsScreen() {
     const handleDelete = (id: string) => {
         // Show confirmation
         Alert.alert(
-            lang === 'he' ? 'מחיקת דף טריף' : 'Delete Tariff Sheet',
-            lang === 'he' ? 'האם אתה בטוח שברצונך למחוק את דף הטריף הזה?' : 'Are you sure you want to delete this tariff sheet?',
+            t(lang, 'tariff.saved.deleteTitle'),
+            t(lang, 'tariff.saved.deleteConfirm'),
             [
-                { text: lang === 'he' ? 'בטל' : 'Cancel', style: 'cancel' },
+                { text: t(lang, 'tariff.saveDialog.cancel'), style: 'cancel' },
                 {
-                    text: lang === 'he' ? 'מחק' : 'Delete',
+                    text: t(lang, 'tariff.saved.actions.delete'),
                     style: 'destructive',
                     onPress: async () => {
                         setDeletingId(id);
@@ -132,17 +132,17 @@ export default function SavedTariffsScreen() {
             <View style={[styles.actions, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
                 <Pressable style={styles.actionBtn} onPress={() => handleDelete(item.id)}>
                     <Ionicons name="trash-outline" size={20} color="#ef4444" />
-                    <Text style={{ color: '#ef4444', fontSize: 12 }}>{lang === 'he' ? 'מחק' : 'Delete'}</Text>
+                    <Text style={{ color: '#ef4444', fontSize: 12 }}>{t(lang, 'tariff.saved.actions.delete')}</Text>
                 </Pressable>
 
                 <Pressable style={styles.actionBtn} onPress={() => handleEdit(item)}>
                     <Ionicons name="create-outline" size={20} color={colors.tint} />
-                    <Text style={{ color: colors.tint, fontSize: 12 }}>{lang === 'he' ? 'ערוך' : 'Edit'}</Text>
+                    <Text style={{ color: colors.tint, fontSize: 12 }}>{t(lang, 'tariff.saved.actions.edit')}</Text>
                 </Pressable>
 
                 <Pressable style={styles.actionBtn} onPress={() => handleExport(item)}>
                     <Ionicons name="share-outline" size={20} color={colors.text} />
-                    <Text style={{ color: colors.text, fontSize: 12 }}>PDF</Text>
+                    <Text style={{ color: colors.text, fontSize: 12 }}>{t(lang, 'tariff.saved.actions.export')}</Text>
                 </Pressable>
             </View>
         </View>
@@ -151,7 +151,7 @@ export default function SavedTariffsScreen() {
     return (
         <View style={[styles.container, { backgroundColor: colors.bg }]}>
             <TopBar
-                title={lang === 'he' ? 'דפי טריף שמורים' : 'Saved Tariff Sheets'} // Subtitle as title for this screen
+                title={t(lang, 'tariff.saved.title')}
             // back? yes
             />
 
@@ -159,7 +159,7 @@ export default function SavedTariffsScreen() {
                 <Ionicons name="search" size={20} color={colors.muted} style={{ marginHorizontal: 8 }} />
                 <TextInput
                     style={[styles.searchInput, { color: colors.text, textAlign: isRTL ? 'right' : 'left' }]}
-                    placeholder={lang === 'he' ? 'חיפוש...' : 'Search...'}
+                    placeholder={t(lang, 'tariff.saved.searchPlaceholder')}
                     placeholderTextColor={colors.muted}
                     value={searchQuery}
                     onChangeText={setSearchQuery}
@@ -176,7 +176,7 @@ export default function SavedTariffsScreen() {
                     contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
                     ListEmptyComponent={
                         <Text style={{ textAlign: 'center', color: colors.muted, marginTop: 40 }}>
-                            {lang === 'he' ? 'אין דפי טריף שמורים' : 'No saved tariff sheets'}
+                            {t(lang, 'tariff.saved.empty')}
                         </Text>
                     }
                 />

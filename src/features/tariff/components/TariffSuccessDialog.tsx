@@ -31,7 +31,7 @@ export function TariffSuccessDialog({ visible, onFinish }: TariffSuccessDialogPr
                         <Ionicons name="checkmark-circle" size={64} color="#15803d" />
                     </View>
                     <Text style={[styles.text, { color: colors.text }]}>
-                        {lang === 'he' ? 'הטריף נשמר בהצלחה !' : 'Tariff saved successfully!'}
+                        {t(lang, 'tariff.saved.success')}
                     </Text>
                 </View>
             </View>

@@ -366,6 +366,28 @@ const he = {
       yes: 'כן',
       no: 'לא',
     },
+    saveDialog: {
+      title: 'שמירת טופס דרגות',
+      label: 'שם הטופס',
+      placeholder: 'הכנס שם (לדוגמה: התרגיל שלי)',
+      cancel: 'ביטול',
+      save: 'שמור',
+      errorEmpty: 'נא להזין שם',
+    },
+    saved: {
+      title: 'טפסי הדרגות שלי',
+      empty: 'לא נמצאו טפסי דרגות שמורים',
+      searchPlaceholder: 'חיפוש לפי שם ספורטאי או שם טופס...',
+      deleteTitle: 'מחיקת טופס',
+      deleteConfirm: 'האם אתה בטוח שברצונך למחוק טופס זה?',
+      lastUpdated: 'עודכן לאחרונה:',
+      success: 'הטריף נשמר בהצלחה !',
+      actions: {
+        delete: 'מחק',
+        edit: 'ערוך',
+        export: 'PDF',
+      },
+    },
   },
 
   common: {
