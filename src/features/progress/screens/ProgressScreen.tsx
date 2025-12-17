@@ -375,9 +375,10 @@ export default function ProgressScreen() {
         {filteredItems.length === 0 && (
           <Text style={{ textAlign: 'center', marginTop: 40, color: colors.text, opacity: 0.6 }}>{t.emptyState}</Text>
         )}
-
-      </ScrollView>
     </View>
+
+      </ScrollView >
+    </View >
   );
 }
 
@@ -386,7 +387,7 @@ const colWidth = (width - 48) / 3;
 
 const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  scroll: { padding: 16 },
+  scroll: { padding: 16, paddingBottom: 100 },
   hero: { flexDirection: 'row', borderRadius: 16, padding: 20, marginBottom: 24, elevation: 2, alignItems: 'center' },
   heroCol: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   divider: { width: 1, height: '80%', marginHorizontal: 10 },

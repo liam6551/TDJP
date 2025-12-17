@@ -166,20 +166,14 @@ export default function AthleteDetailsSection({ value, onChange }: Props) {
 
       {!isIsrael ? (
         <View
-          style={[
-            styles.comingSoonBox,
-            {
-              borderColor: colors.border,
-              backgroundColor: colors.card,
-            },
-          ]}
+          style={styles.comingSoonBox}
         >
           <Text
             style={[
               styles.comingSoonText,
               {
-                color: colors.text,
-                textAlign: isRTL ? 'right' : 'left',
+                color: colors.text, // Matches 'black' in light, 'white' in dark/blue
+                textAlign: 'center',
               },
             ]}
           >
@@ -743,6 +737,7 @@ const styles = StyleSheet.create({
   container: {
     marginTop: 12,
     gap: 12,
+    flex: 1, // Full height for centering
   },
   row: {
     alignItems: 'flex-start',
@@ -801,11 +796,12 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   comingSoonBox: {
-    marginTop: 8,
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 16,
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 0,
+    backgroundColor: 'transparent',
+    borderWidth: 0,
   },
   comingSoonText: {
     fontSize: 14,
