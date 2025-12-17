@@ -248,16 +248,16 @@ const styles = StyleSheet.create({
     actions: {
         justifyContent: 'flex-end',
         alignItems: 'center',
-        gap: 16,
-        paddingHorizontal: 8,
-        minWidth: 120, // ensure space for buttons
-        // flexShrink: 0 is default unless parent forces shrink? 
-        // Parent card row has flex:1 on info. 
-        // We should ensure actions doesn't shrink.
+        gap: 12, // Reduced gap to give more room for buttons
+        paddingHorizontal: 4,
+        flexShrink: 0, // CRITICAL: Prevent container from shrinking
+        minWidth: 140, // Increased min width to be safe
     },
     actionBtn: {
         alignItems: 'center',
-        gap: 4,
-        minWidth: 40, // ensure text has space
+        justifyContent: 'center',
+        gap: 2,
+        paddingHorizontal: 6, // breathing room for text
+        minWidth: 48, // Touch target size
     }
 });
