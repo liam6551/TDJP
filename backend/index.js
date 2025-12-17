@@ -369,6 +369,21 @@ async function ensureSchema() {
   `);
 }
 
+/* ---------- Tariffs DB ---------- */
+await pool.query(`
+    CREATE TABLE IF NOT EXISTS tariffs (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      name text NOT NULL,
+      data jsonb NOT NULL,
+      created_at timestamptz NOT NULL DEFAULT now(),
+      updated_at timestamptz NOT NULL DEFAULT now()
+    );
+  `);
+await pool.query(`CREATE INDEX IF NOT EXISTS idx_tariffs_user ON tariffs(user_id);`);
+await pool.query(`CREATE INDEX IF NOT EXISTS idx_tariffs_updated ON tariffs(updated_at DESC);`);
+}
+
 /* ---------- Helpers ---------- */
 const normEmail = (s = '') => s.trim().toLowerCase();
 const toFullName = (first = '', last = '') => `${(first || '').trim()} ${(last || '').trim()}`.trim();
@@ -418,7 +433,8 @@ app.get('/', (_req, res) => {
       '/me (GET/PUT)',
       '/admin/users',
       '/ai/chat', '/ai/debug',
-      '/api/stats/results', '/api/stats/user'
+      '/api/stats/results', '/api/stats/user',
+      '/api/tariffs (GET/POST/PUT/DELETE)'
     ],
   });
 });
@@ -479,6 +495,115 @@ app.get('/api/stats/user', requireAuth, async (req, res) => {
     res.json({ results: q.rows });
   } catch (e) {
     console.error('Get stats error:', e);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+/* ---------- Tariffs API ---------- */
+// List
+app.get('/api/tariffs', requireAuth, async (req, res) => {
+  try {
+    const userId = req.user.uid;
+    const q = await pool.query(
+      `SELECT id, name, created_at, updated_at, data FROM tariffs WHERE user_id=$1 ORDER BY updated_at DESC`,
+      [userId]
+    );
+    res.json({ tariffs: q.rows });
+  } catch (e) {
+    console.error('Get tariffs error:', e);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Create
+app.post('/api/tariffs', requireAuth, async (req, res) => {
+  try {
+    const userId = req.user.uid;
+    const { name, data } = req.body;
+    if (!name || !data) return res.status(400).json({ error: 'Missing name or data' });
+
+    // Simple duplicate name handling: if exists, append (1), (2)...
+    // Or client handles it. But user asked for automatic handling.
+    // Let's implement robust auto-renaming on server.
+
+    let finalName = name;
+    let counter = 1;
+    while (true) {
+      const check = await pool.query(`SELECT 1 FROM tariffs WHERE user_id=$1 AND name=$2`, [userId, finalName]);
+      if (check.rowCount === 0) break; // Name is free
+      finalName = `${name} (${counter})`;
+      counter++;
+      if (counter > 20) return res.status(400).json({ error: 'Too many duplicate names' }); // Safety break
+    }
+
+    const ins = await pool.query(
+      `INSERT INTO tariffs (user_id, name, data) VALUES ($1, $2, $3) RETURNING id, name, updated_at`,
+      [userId, finalName, data]
+    );
+    res.json({ ok: true, tariff: ins.rows[0] });
+  } catch (e) {
+    console.error('Create tariff error:', e);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Update
+app.put('/api/tariffs/:id', requireAuth, async (req, res) => {
+  try {
+    const userId = req.user.uid;
+    const { id } = req.params;
+    const { name, data } = req.body;
+
+    // If name is changing, check uniqueness? 
+    // Usually updates overwrite. But if user renames to existing, we probably should error or auto-rename.
+    // For now, let's assume update is mainly for 'saving changes' to same tariff.
+
+    const updates = [];
+    const values = [];
+    let idx = 1;
+
+    if (name) {
+      // Check collision if name changed? Let's keep it simple for now, allow overwrite or simple update.
+      // User requirement: "If name exists... add (1)". This applies to NEW saves usually.
+      // For EDIT existing, usually we just update content. 
+      updates.push(`name=$${idx++}`);
+      values.push(name);
+    }
+    if (data) {
+      updates.push(`data=$${idx++}`);
+      values.push(data);
+    }
+
+    if (!updates.length) return res.json({ ok: true }); // No changes
+
+    updates.push(`updated_at=now()`);
+
+    values.push(id);
+    values.push(userId);
+
+    const q = await pool.query(
+      `UPDATE tariffs SET ${updates.join(', ')} WHERE id=$${idx} AND user_id=$${idx + 1} RETURNING *`,
+      values
+    );
+
+    if (!q.rowCount) return res.status(404).json({ error: 'Tariff not found' });
+    res.json({ ok: true, tariff: q.rows[0] });
+  } catch (e) {
+    console.error('Update tariff error:', e);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Delete
+app.delete('/api/tariffs/:id', requireAuth, async (req, res) => {
+  try {
+    const userId = req.user.uid;
+    const { id } = req.params;
+    const q = await pool.query(`DELETE FROM tariffs WHERE id=$1 AND user_id=$2`, [id, userId]);
+    if (!q.rowCount) return res.status(404).json({ error: 'Tariff not found' });
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('Delete tariff error:', e);
     res.status(500).json({ error: 'Server error' });
   }
 });

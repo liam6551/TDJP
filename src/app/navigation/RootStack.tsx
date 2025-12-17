@@ -9,6 +9,8 @@ import InternationalCodeScreen from '@/features/home/screens/InternationalCodeSc
 import AIChatScreen from '@/features/ai/screens/AIChatScreen';
 import ProgressScreen from '@/features/progress/screens/ProgressScreen';
 
+import SavedTariffsScreen from '@/features/tariff/screens/SavedTariffsScreen';
+
 const Stack = createNativeStackNavigator();
 
 export default function RootStack() {
@@ -22,6 +24,7 @@ export default function RootStack() {
       <Stack.Screen name="InternationalCode" component={InternationalCodeScreen} />
       <Stack.Screen name="AIChat" component={AIChatScreen} />
       <Stack.Screen name="Progress" component={ProgressScreen} />
+      <Stack.Screen name="SavedTariffs" component={SavedTariffsScreen} />
     </Stack.Navigator>
   );
 }

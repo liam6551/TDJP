@@ -83,7 +83,7 @@ export default function AthleteDetailsSection({ value, onChange }: Props) {
         ? t(lang, 'tariff.athlete.genderM')
         : ''
 
-  const autoBonusText = t(lang, 'tariff.athlete.autoBonus')
+
 
   const handleTrackPress = (track: Exclude<Track, null>) => {
     if (value.track === track) {
@@ -438,51 +438,7 @@ export default function AthleteDetailsSection({ value, onChange }: Props) {
                 </View>
               )}
 
-              <Pressable
-                onPress={() => setField('autoBonus', !value.autoBonus)}
-                style={({ pressed }) => [
-                  styles.autoBonusContainer,
-                  {
-                    flexDirection: isRTL ? 'row-reverse' : 'row',
-                    opacity: pressed ? 0.7 : 1,
-                    alignSelf: 'stretch',
-                  },
-                ]}
-              >
-                <View
-                  style={[
-                    styles.checkboxOuter,
-                    {
-                      borderColor: colors.border,
-                      backgroundColor: value.autoBonus ? accent + '33' : colors.card,
-                    },
-                  ]}
-                >
-                  {value.autoBonus ? (
-                    <View
-                      style={[
-                        styles.checkboxInner,
-                        {
-                          backgroundColor: accent,
-                        },
-                      ]}
-                    />
-                  ) : null}
-                </View>
-                <View style={styles.autoBonusTextWrapper}>
-                  <Text
-                    style={[
-                      styles.autoBonusLabel,
-                      {
-                        color: colors.text,
-                        textAlign: isRTL ? 'right' : 'left',
-                      },
-                    ]}
-                  >
-                    {autoBonusText}
-                  </Text>
-                </View>
-              </Pressable>
+
             </View>
           </View>
         </>

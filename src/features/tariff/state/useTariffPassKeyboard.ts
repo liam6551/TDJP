@@ -49,7 +49,7 @@ function getElements(lang: 'he' | 'en', isRTL: boolean) {
     try {
       const res = fn?.();
       if (Array.isArray(res) && res.length) return res;
-    } catch {}
+    } catch { }
   }
   return [];
 }
@@ -173,16 +173,16 @@ export default function useTariffPassKeyboard(track: Track, mode: ModeToggle) {
     }
   }, [activePass]);
 
-    const clearAll = useCallback(() => {
-      if (activePass === 1) {
-        setPass1([]);
-      } else if (activePass === 2) {
-        setPass2([]);
-      } else {
-        setPass1([]);
-        setPass2([]);
-      }
-    }, [activePass]);
+  const clearAll = useCallback(() => {
+    if (activePass === 1) {
+      setPass1([]);
+    } else if (activePass === 2) {
+      setPass2([]);
+    } else {
+      setPass1([]);
+      setPass2([]);
+    }
+  }, [activePass]);
 
 
   const toggleOrder = useCallback(
@@ -215,5 +215,7 @@ export default function useTariffPassKeyboard(track: Track, mode: ModeToggle) {
     maxSlots,
     pass1Display,
     pass2Display,
+    setPass1,
+    setPass2,
   };
 }

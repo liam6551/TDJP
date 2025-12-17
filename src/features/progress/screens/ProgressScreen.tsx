@@ -151,7 +151,7 @@ export default function ProgressScreen() {
 
       const fetchData = async () => {
         try {
-          const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Request timeout')), 5000));
+          const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Request timeout')), 15000));
           const data = await Promise.race([StatsService.getUserStats(), timeoutPromise]);
           if (mounted) {
             setStats(data as UserStatItem[]);

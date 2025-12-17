@@ -63,7 +63,7 @@ async function clearToken() {
   await SecureStore.deleteItemAsync('tdjp_token');
 }
 
-async function apiFetch(path: string, { method = 'GET', body, auth = true }: any = {}) {
+export async function apiFetch(path: string, { method = 'GET', body, auth = true }: any = {}) {
   const headers: any = { 'Content-Type': 'application/json' };
   if (auth) {
     const token = await getToken();

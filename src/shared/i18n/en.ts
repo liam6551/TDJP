@@ -277,6 +277,18 @@ const en = {
       },
     },
 
+    home: {
+      title: 'Welcome to the Tariff Page!',
+      description: 'Here you can write your tariff sheets virtually\nwithout room for errors, save them, and even\nconvert them to PDF.',
+      newBtn: 'Create New Tariff Sheet',
+      savedBtn: 'My Saved Tariff Sheets',
+    },
+
+    steps: {
+      details: 'Athlete Details',
+      passes: 'Passes',
+    },
+
     athlete: {
       title: 'Athlete details',
       country: 'Country',
@@ -319,6 +331,9 @@ const en = {
     actions: {
       resetPage: 'Reset page',
       exportPdf: 'Export to PDF',
+      next: 'Next',
+      back: 'Back',
+      save: 'Save Tariff',
     },
 
     export: {
