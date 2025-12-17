@@ -350,9 +350,9 @@ const en = {
       no: 'No',
     },
     saveDialog: {
-      title: 'Save Tariff Sheet',
+      title: 'Save Tariff',
       label: 'Tariff Sheet Name',
-      placeholder: 'Enter name (e.g. My Routine)',
+      placeholder: '',
       cancel: 'Cancel',
       save: 'Save',
       errorEmpty: 'Please enter a name',

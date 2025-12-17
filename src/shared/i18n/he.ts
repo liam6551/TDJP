@@ -367,9 +367,9 @@ const he = {
       no: 'לא',
     },
     saveDialog: {
-      title: 'שמירת טופס דרגות',
+      title: 'שמירת טריף',
       label: 'שם הטופס',
-      placeholder: 'הכנס שם (לדוגמה: התרגיל שלי)',
+      placeholder: '',
       cancel: 'ביטול',
       save: 'שמור',
       errorEmpty: 'נא להזין שם',
