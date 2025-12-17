@@ -9,6 +9,7 @@ import { TariffService, SavedTariff } from '@/features/tariff/services/TariffSer
 import { Ionicons } from '@expo/vector-icons';
 import { exportTariffPdf } from '@/features/tariff/export/exportTariffPdf';
 import * as Sharing from 'expo-sharing';
+import TariffExportSuccessModal from '@/features/tariff/components/TariffExportSuccessModal';
 
 export default function SavedTariffsScreen() {
     const { colors } = useAppTheme();
@@ -20,6 +21,10 @@ export default function SavedTariffsScreen() {
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [deletingId, setDeletingId] = useState<string | null>(null);
+
+    // Export Modal State
+    const [showExportModal, setShowExportModal] = useState(false);
+    const [exportedUri, setExportedUri] = useState<string | null>(null);
 
     const loadTariffs = useCallback(async () => {
         setLoading(true);
@@ -107,13 +112,24 @@ export default function SavedTariffsScreen() {
         // We have the export data ready!
         try {
             const { uri } = await exportTariffPdf(tariff.data);
-            if (await Sharing.isAvailableAsync()) {
-                await Sharing.shareAsync(uri, { mimeType: 'application/pdf', UTI: 'com.adobe.pdf' });
-            }
+            setExportedUri(uri);
+            setShowExportModal(true);
         } catch (e) {
             console.error(e);
             Alert.alert('Error', 'Failed to generate PDF');
         }
+    };
+
+    const handleOpenPdf = async () => {
+        if (!exportedUri) return;
+        try {
+            await Sharing.shareAsync(exportedUri);
+        } catch (e) { }
+    };
+
+    const handleSharePdf = async () => {
+        if (!exportedUri) return;
+        await Sharing.shareAsync(exportedUri);
     };
 
     const filtered = tariffs.filter(t => t.name.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -215,6 +231,13 @@ export default function SavedTariffsScreen() {
                     }
                 />
             )}
+
+            <TariffExportSuccessModal
+                visible={showExportModal}
+                onClose={() => setShowExportModal(false)}
+                onOpen={handleOpenPdf}
+                onShare={handleSharePdf}
+            />
         </View>
     );
 }
@@ -266,8 +289,8 @@ const styles = StyleSheet.create({
     actions: {
         justifyContent: 'flex-end',
         alignItems: 'center',
-        gap: 8,
-        paddingHorizontal: 4,
+        gap: 4,
+        paddingHorizontal: 0,
         flexShrink: 0,
         minWidth: 180, // Safe zone
     },
