@@ -12,6 +12,7 @@ import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
 import * as IntentLauncher from 'expo-intent-launcher';
 import TariffExportSuccessModal from '@/features/tariff/components/TariffExportSuccessModal';
+import TariffDeleteConfirmModal from '@/features/tariff/components/TariffDeleteConfirmModal';
 // @ts-ignore
 import { getContentUriAsync } from 'expo-file-system'; // Try importing directly again, as legacy might not be exposed? 
 // No, error said import FROM 'expo-file-system/legacy'.
@@ -29,6 +30,7 @@ export default function SavedTariffsScreen() {
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [deletingId, setDeletingId] = useState<string | null>(null);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
     // Export Modal State
     const [showExportModal, setShowExportModal] = useState(false);
@@ -54,31 +56,23 @@ export default function SavedTariffsScreen() {
     );
 
     const handleDelete = (id: string) => {
-        // Show confirmation
-        Alert.alert(
-            t(lang, 'tariff.saved.deleteTitle'),
-            t(lang, 'tariff.saved.deleteConfirm'),
-            [
-                { text: t(lang, 'tariff.saveDialog.cancel'), style: 'cancel' },
-                {
-                    text: t(lang, 'tariff.saved.actions.delete'),
-                    style: 'destructive',
-                    onPress: async () => {
-                        setDeletingId(id);
-                        try {
-                            await TariffService.deleteTariff(id);
-                            // Remove from list immediately for UX
-                            setTariffs(prev => prev.filter(item => item.id !== id));
-                        } catch (e) {
-                            console.error(e);
-                            Alert.alert('Error', 'Failed to delete');
-                        } finally {
-                            setDeletingId(null);
-                        }
-                    }
-                }
-            ]
-        );
+        setDeletingId(id);
+        setShowDeleteConfirm(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!deletingId) return;
+        try {
+            await TariffService.deleteTariff(deletingId);
+            // Remove from list immediately for UX
+            setTariffs(prev => prev.filter(item => item.id !== deletingId));
+        } catch (e) {
+            console.error(e);
+            Alert.alert('Error', 'Failed to delete');
+        } finally {
+            setDeletingId(null);
+            setShowDeleteConfirm(false);
+        }
     };
 
     const handleEdit = (tariff: SavedTariff) => {
@@ -257,6 +251,12 @@ export default function SavedTariffsScreen() {
                 onClose={() => setShowExportModal(false)}
                 onOpen={handleOpenPdf}
                 onShare={handleSharePdf}
+            />
+
+            <TariffDeleteConfirmModal
+                visible={showDeleteConfirm}
+                onConfirm={confirmDelete}
+                onCancel={() => setShowDeleteConfirm(false)}
             />
         </View>
     );
