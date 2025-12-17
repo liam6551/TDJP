@@ -68,17 +68,17 @@ export function TariffSaveDialog({ visible, initialName = '', loading = false, o
 
                     <View style={[styles.actions, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
                         <Pressable
-                            style={[styles.btn, { backgroundColor: colors.border }]}
+                            style={[styles.btn, { backgroundColor: '#ef4444' }]}
                             onPress={onCancel}
                             disabled={loading}
                         >
-                            <Text style={[styles.btnText, { color: colors.text }]}>
+                            <Text style={[styles.btnText, { color: '#ffffff' }]}>
                                 {t(lang, 'tariff.saveDialog.cancel')}
                             </Text>
                         </Pressable>
 
                         <Pressable
-                            style={[styles.btn, { backgroundColor: '#15803d' }]} // Green for save
+                            style={[styles.btn, { backgroundColor: colors.tint }]}
                             onPress={handleSave}
                             disabled={loading}
                         >
@@ -136,9 +136,9 @@ const styles = StyleSheet.create({
         marginBottom: 12,
     },
     actions: {
-        justifyContent: 'flex-end',
+        justifyContent: 'center',
         gap: 12,
-        marginTop: 8,
+        marginTop: 16,
     },
     btn: {
         paddingVertical: 10,
