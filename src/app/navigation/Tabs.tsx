@@ -115,6 +115,14 @@ export default function Tabs() {
           key={`${s.name}-${lang}`}
           name={s.name as any}
           component={s.component}
+          listeners={({ navigation, route }) => ({
+            tabPress: (e) => {
+              if (s.name === 'Tariff' && navigation.isFocused()) {
+                e.preventDefault();
+                navigation.navigate('Tariff', { screen: 'TariffHome' });
+              }
+            },
+          })}
         />
       ))}
     </Tab.Navigator>

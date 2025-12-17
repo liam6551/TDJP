@@ -375,10 +375,10 @@ const he = {
       errorEmpty: 'נא להזין שם',
     },
     saved: {
-      title: 'טפסי הדרגות שלי',
+      title: 'דפי טריף שמורים',
       empty: 'לא נמצאו טפסי דרגות שמורים',
       searchPlaceholder: 'חיפוש לפי שם ספורטאי או שם טופס...',
-      deleteTitle: 'מחיקת טופס',
+      deleteTitle: 'מחיקת טריף',
       deleteConfirm: 'האם אתה בטוח שברצונך למחוק טופס זה?',
       lastUpdated: 'עודכן לאחרונה:',
       success: 'הטריף נשמר בהצלחה !',

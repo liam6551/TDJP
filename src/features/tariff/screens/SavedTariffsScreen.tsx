@@ -159,7 +159,10 @@ export default function SavedTariffsScreen() {
 
             {/* Actions Section */}
             <View style={[styles.actions, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
-                <Pressable style={styles.actionBtn} onPress={() => handleDelete(item.id)}>
+                <Pressable
+                    style={({ pressed }) => [styles.actionBtn, pressed && { opacity: 0.5, backgroundColor: '#f9fafb' }]}
+                    onPress={() => handleDelete(item.id)}
+                >
                     <Ionicons name="trash-outline" size={20} color="#ef4444" />
                     <Text
                         style={{ color: '#ef4444', fontSize: 11, textAlign: 'center', width: '100%' }}
@@ -172,7 +175,10 @@ export default function SavedTariffsScreen() {
                     </Text>
                 </Pressable>
 
-                <Pressable style={styles.actionBtn} onPress={() => handleEdit(item)}>
+                <Pressable
+                    style={({ pressed }) => [styles.actionBtn, pressed && { opacity: 0.5, backgroundColor: '#f9fafb' }]}
+                    onPress={() => handleEdit(item)}
+                >
                     <Ionicons name="create-outline" size={20} color={colors.tint} />
                     <Text
                         style={{ color: colors.tint, fontSize: 11, textAlign: 'center', width: '100%' }}
@@ -185,7 +191,10 @@ export default function SavedTariffsScreen() {
                     </Text>
                 </Pressable>
 
-                <Pressable style={styles.actionBtn} onPress={() => handleExport(item)}>
+                <Pressable
+                    style={({ pressed }) => [styles.actionBtn, pressed && { opacity: 0.5, backgroundColor: '#f9fafb' }]}
+                    onPress={() => handleExport(item)}
+                >
                     <Ionicons name="share-outline" size={20} color={colors.text} />
                     <Text
                         style={{ color: colors.text, fontSize: 11, textAlign: 'center', width: '100%' }}
