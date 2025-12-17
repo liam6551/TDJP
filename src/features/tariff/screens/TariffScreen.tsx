@@ -680,7 +680,6 @@ export default function TariffScreen() {
             showBonusRow={athlete.autoBonus}
             bonusValues={pass1Bonuses}
             illegalIndices={pass1IllegalIndices}
-            warningMessages={pass1Warnings}
             onSlotWidthMeasured={handlePass1SlotWidthMeasured}
           />
         </View>
