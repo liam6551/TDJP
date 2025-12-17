@@ -1,5 +1,6 @@
 import * as SecureStore from 'expo-secure-store';
 import { API_URL } from '../../../shared/state/auth';
+import { t } from '../../../shared/i18n';
 
 // Types of Persona Modes
 export type AIMode = 'twist' | 'flicki' | 'discussion';
@@ -51,12 +52,10 @@ export const AIService = {
 
         } catch (error: any) {
             console.error('AI Service Error:', error);
-            // Return a fallback error message so the chat doesn't crash
+            // Return a fallback generic error message
             return [{
                 sender: mode === 'discussion' ? 'twist' : mode,
-                text: lang === 'he'
-                    ? `שגיאה בתקשורת עם השרת: ${error.message || 'אנא נסה שוב מאוחר יותר.'}`
-                    : `Connection error: ${error.message || 'Please try again later.'}`
+                text: t(lang, 'aiChat.error' as any)
             }];
         }
     }

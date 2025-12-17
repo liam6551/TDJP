@@ -5,9 +5,7 @@ import {
     LayoutAnimation, UIManager
 } from 'react-native';
 
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-    UIManager.setLayoutAnimationEnabledExperimental(true);
-}
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useAppTheme } from '@/shared/theme/theme';
@@ -291,7 +289,7 @@ export default function AIChatScreen() {
                         ? { backgroundColor: bubbleColor, borderBottomRightRadius: 4, marginRight: 10 }
                         : { backgroundColor: '#fff', borderTopLeftRadius: 4, elevation: 2, marginLeft: 10, flexWrap: 'wrap' } // flexShrink removed
                 ]}>
-                    <View style={{ paddingHorizontal: 8, paddingVertical: 6, minWidth: 60 }}>
+                    <View style={{ paddingHorizontal: 8, paddingTop: 12, paddingBottom: 14, minWidth: 60 }}>
                         {!isUser && mode === 'discussion' && (
                             <Text style={{
                                 fontSize: 10,

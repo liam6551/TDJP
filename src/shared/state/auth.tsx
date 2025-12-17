@@ -6,8 +6,8 @@ import Constants from 'expo-constants';
 const debuggerHost = Constants.expoConfig?.hostUri ?? Constants.manifest2?.extra?.expoClient?.hostUri ?? Constants.manifest?.debuggerHost;
 const localhost = debuggerHost?.split(':').shift() || 'localhost';
 
-export const API_URL = `http://${localhost}:10000`;
-// export const API_URL = 'https://tdjp-auth-api.onrender.com'; // Keep for prod
+// export const API_URL = `http://${localhost}:10000`;
+export const API_URL = 'https://tdjp-auth-api.onrender.com'; // Keep for prod
 const API_BASE = API_URL;
 
 export type User = {

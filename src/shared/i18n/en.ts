@@ -382,11 +382,12 @@ const en = {
     close: 'Close',
   },
   aiChat: {
+    history: 'Chat History',
     title: 'My Assistants',
     twistName: 'Twist (Judge)',
     flickiName: 'Flicki (Coach)',
     discussionMode: 'Joint Discussion',
-    welcomeTwist: "Greetings, colleague. I am Twist, your Virtual Head Judge. I am here to provide accurate and objective analysis according to the Code of Points. With me, there are no shortcuts – only professional truth.",
+    welcomeTwist: "Hello dear judge! \nMy name is Twist, and I am your virtual Head Judge. I have memorized all the codes, skills, and judging analysis by heart, and I am here to answer any question you have ;)\nWhat would you like to know?",
     welcomeFlicki: "Hey Coach! I'm Flicki! ⚡ I'm here to identify the potential and explosive power in your athletes. Let's look at the glass half full and push them forward!",
     welcomeDiscussion: "We are pleased to assist you. Twist will provide the strict judging deduction, while Flicki will offer the coaching perspective on potential. We help you see the full picture of the athlete.",
     discussionIntroTwist: "In this discussion, I represent the judge's stance. Competitive sport requires precision, and we must not ignore deviations from the Code.",
@@ -396,6 +397,7 @@ const en = {
     disagreeWithTwist: 'Twist is being a bit too harsh in my opinion, the energy was good!',
     agreeWithFlicki: 'I agree with Flicki that the performance is dynamic, but the Code is clear.',
     disagreeWithFlicki: 'Flicki is optimistic, but strictly speaking, this does not pass.',
+    error: 'There is a system error, please try again later',
   },
 } as const;
 

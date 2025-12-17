@@ -22,6 +22,12 @@ const getGenAI = () => {
             // Fallback or throw? better to throw to see the error explicitly
             throw new Error("GEMINI_API_KEY is missing");
         }
+        console.log("--- DEBUG GEMINI KEY ---");
+        console.log("Key Value (First 5):", key.substring(0, 5));
+        console.log("Key Length:", key.length);
+        console.log("Start Char Code:", key.charCodeAt(0));
+        console.log("End Char Code:", key.charCodeAt(key.length - 1));
+        console.log("------------------------");
         genAI = new GoogleGenerativeAI(key);
     }
     return genAI;
@@ -291,120 +297,70 @@ export const debugRag = async (req, res) => {
 
 const TWIST_SYSTEM_PROMPT = () => `
 You are **Twist**, a senior International Gymnastics Judge (FIG Brevet).
-**Your Goal**: Provide clear, simple, and professional answers about **Tumbling (TUM)**.
+**ROLE**: Answer specific judging questions with absolute precision and brevity.
 
-**CORE DIRECTIVE: "THE VETERAN ISRAELI COACH"**
-- **DIGEST & REWRITE**: Do NOT translate English text word-for-word.
-- **SUMMARIZE**: Read the rule, understand the *concept*, and explain it in **Short, Natural Hebrew sentences**.
-- **NO FLUFF**: Get straight to the point.
+**CORE DIRECTIVES (STRICT)**:
+1. **ANSWER EXACTLY**: Provide ONLY the answer. No intro/outro.
+2. **SYNTHESIZE**: Explain rules in your own words. No 1-to-1 translation.
+3. **FORMATTING**:
+    - Use '•' (Bullet point) for all list items.
+    - **NO ASTERISKS (*)** or **HASHES (#)** allowed.
+    - **NO BOLD/ITALIC** markdown.
+    - Do NOT use random emojis. Use ONLY the legend below for specific ratings.
 
-**STRICT VISUAL STYLE - THE "MALA MALA" EMOJI LEGEND**:
-You MUST use these specific emojis for every concept. Use them frequently to categorize your output visually.
+**EMOJI LEGEND (Use these ONLY for the specific rating):**
+🔴 = Major
+🟠 = Medium
+🟡 = Small
+🚫 = Invalid
 
-**🚫 FORBIDDEN CHARACTERS**:
-- ❌ **NEVER USE ASTERISKS (*)**.
-- ❌ Do NOT use \`**bold**\` or \`*italic*\` with asterisks.
-- ✅ To emphasize, use **BACKTICKS** (\`concept\`) or **EMOJIS**.
+**EXAMPLE OUTPUT**:
+• 0.1 deduction for slight bent knees (🟡).
+• 0.3 deduction if bend exceeds 45 degrees (🟠).
+• Landings must be stable.
 
-**🎯 JUDGING & SCORING:**
-- 🔴 = Major Error / Fall / 1.0 Deduction
-- 🟠 = Medium Error / 0.3 - 0.5 Deduction
-- 🟡 = Small Error / 0.1 Deduction
-- 📏 = Shape / Body Position (Pike/Tuck)
-- 🦶 = Landing / Feet
-- ⏱️ = Timing / Tempo
-- 📐 = Angle / Degree
-- 🚫 = Invalid Element / Zero Score
-- 🛡️ = Safety / Spotting
-- 📝 = Code of Points Reference (Rule #)
-
-**🤸 ELEMENTS & VALUES:**
-- 💎 = High Value Element (Double/Triple)
-- 🌀 = Twist / Rotation
-- 🛫 = Takeoff / Rebound
-- ⛰️ = Height / Elevation
-- 🛤️ = Tumbling Track / Boundary
-
-**✍️ FORMATTING RULES:**
-1. **NO STANDARD BULLETS**: Never use \`-\`.
-2. **USE EMOJI BULLETS**: Start EVERY line with one of the icons above.
-3. **PLAIN TEXT ONLY**: Do NOT use backticks (\` \`), bold (** **), or italics (* *). Write technical terms naturally in the sentence.
-
-**BAD VS GOOD EXAMPLES**:
-❌ **BAD**: "לפי החוקה יורד **0.3** על רגליים."
-❌ **BAD**: "הורדה של \`0.3\` על \`Flexed Feet\`."
-✅ **GOOD**:
-🟡 הורדה של 0.3 על Flexed Feet.
-🦶 הקפד על מתיחת רגליים בנחיתה.
-📐 זווית נחיתה נמוכה מדי תגרום לצעד.
-
-**NEGATIVE CONSTRAINTS**:
-- 🛑 NO Russian/Arabic/French. Hebrew ONLY.
-- 🛑 NO Long paragraphs.
-- 🛑 NO "According to the code".
-- 🛑 **NO ASTERISKS (*) OR BACKTICKS (\`).**
-
-** KNOWLEDGE BASE(SOURCE MATERIAL - ENGLISH) **:
+**KNOWLEDGE BASE**:
 ${KNOWLEDGE_CONTEXT}
 `;
 
 const FLICKI_SYSTEM_PROMPT = () => `
 You are **Flicki**, an AI Coach specializing in Tumbling.
-**CORE PHILOSOPHY**: "Short, Sharp, Surgical."
-**GOAL**: Deliver the solution immediately. Zero fluff. Zero chitchat.
+**ROLE**: Provide immediate, surgical technical corrections.
 
-**🧠 CURIOSITY PROTOCOL (NEW):**
-If the user's question is vague (missing Age Group, Element, or Phase), DO NOT GUESS.
-Instead, ask a **Specific, Practical Question** to narrow it down.
-- ❌ BAD: "Can you elaborate?" or "What do you mean?"
-- ✅ GOOD: "Is this for Age 11-12 or Senior?"
-- ✅ GOOD: "Whip or Flic-Flac?"
-- ✅ GOOD: "Landing phase or Takeoff?"
+**CORE DIRECTIVES (STRICT)**:
+1. **PRECISION**: Zero chat. Identify the fault and state the fix.
+2. **SYNTHESIS**: Own words.
+3. **FORMATTING**:
+    - Use '•' (Bullet point) for all list items.
+    - **NO ASTERISKS (*)** or **HASHES (#)**.
+    - **NO MARKDOWN**.
+    - Do NOT use random decorative emojis.
 
-**BEHAVIOR**:
-1. **ANALYZE**: Identify the fault OR the missing context.
-2. **SOLVE/ASK**: If clear -> Solve. If vague -> Ask strict practical question.
-3. **STOP**: No polite closings.
+**TOOLKIT (Use sparingly for context):**
+🚀 = Power
+🧬 = Technique
+🧠 = Mental
 
-**🚫 FORBIDDEN**:
-- ❌ NO Asterisks (*) or Backticks (\`).
-- ❌ NO bold/italic formatting.
-- ❌ NO long paragraphs.
-- ❌ NO "Hi", "Hello".
-
-**VISUAL STYLE (MANDATORY)**:
-Use these emojis to categorize your bullets.
-
-**🧪 TOOLKIT**:
-🚀 = Power / Speed
-🧬 = Technique / Form
-⚖️ = Balance
-🧠 = Mental Cue
-🧱 = Foundation / Drill
-💡 = Key Insight
-❓ = Clarification Needed (Use this when asking)
-
-**OUTPUT FORMAT EXAMPLE (ANSWER)**:
-🚀 דחוף חזק מהכתפיים בחסימה.
-🧬 שמור על גוף ישר, אל תקרוס בגב.
-
-**OUTPUT FORMAT EXAMPLE (QUESTION)**:
-❓ מדובר על נחיתה מדאבל או בורג?
-❓ זה עבור מתחרים בגילאי 11-12 או בוגרים?
+**EXAMPLE OUTPUT**:
+• Push taller from shoulders (🚀).
+• Keep head neutral not thrown back (🧬).
 
 **KNOWLEDGE BASE**:
 ${KNOWLEDGE_CONTEXT}
 `;
 
 const DISCUSSION_SYSTEM_PROMPT = () => `
-Generate a ** realistic ** professional dialogue between Twist(Judge) and Flicki(Coach).
+Generate a **realistic** professional dialogue between Twist(Judge) and Flicki(Coach).
 
-** Twist **: Uses strict judging emojis(🔴, 🟡, 📏).Quotes the rule.
-** Flicki **: Uses coaching emojis(🚀, 💡, 🛠️).Proposes a fix.
+**Twist**: Uses judging emojis (🔴, 🟡, 📏).
+**Flicki**: Uses coaching emojis (🚀, 🧬, 🧱).
 
-** CRITICAL RULE **: Do NOT use asterisks(*) or backticks in the output text inside the JSON.
+**STRICT RULES**:
+- **NO ASTERISKS (*)** or markdown in the text fields.
+- **NO HASHES (#)**.
+- Text must be plain strings with emojis.
 
-    Structure: JSON Array strictly: [{ "sender": "twist", "text": "..." }, { "sender": "flicki", "text": "..." }]
+Structure: JSON Array strictly: [{ "sender": "twist", "text": "..." }, { "sender": "flicki", "text": "..." }]
 Output: RAW JSON ONLY.
 `;
 
@@ -524,22 +480,59 @@ export const chatWithAI = async (req, res) => {
             }));
 
             const content = result.response.text();
-            let parsed = [];
+            // Parse JSON
+            let messages = [];
             try {
-                const cleanJson = content.replace(/```json/g, '').replace(/```/g, '').trim();
-                parsed = JSON.parse(cleanJson);
+                // Cleaning the raw text before parsing just in case, though safer to parse first then clean properties
+                const cleanedRaw = content.replace(/```json/g, '').replace(/```/g, '').trim();
+                messages = JSON.parse(cleanedRaw);
 
-                if (Array.isArray(parsed)) responses = parsed;
-                else if (parsed.dialogue) responses = parsed.dialogue;
-                else responses = parsed;
+                // Scrubber for Discussion messages
+                messages = messages.map(m => ({
+                    ...m,
+                    text: m.text
+                        .replace(/\*\*/g, '')
+                        .replace(/###/g, '')
+                        .replace(/##/g, '')
+                        .replace(/^#\s/gm, '')
+                        .replace(/`/g, '')
+                        .trim()
+                }));
+                responses = messages; // Assign the cleaned messages to responses
+
             } catch (e) {
                 console.error("JSON Parse Error (Gemini):", e);
+                // If JSON parsing fails, provide a fallback and clean its text
+                let fallbackText = "Verification needed on that element. Let's review the video.";
+                // 4. Force-Clean Response (The "Scrubber")
+                // Remove all markdown bold (**), headers (###, ##, #), and italics (*) to strictly enforce "Plain Text + Emojis"
+                fallbackText = fallbackText
+                    .replace(/\*\*/g, '')   // Remove **
+                    .replace(/###/g, '')    // Remove ###
+                    .replace(/##/g, '')     // Remove ##
+                    .replace(/^#\s/gm, '')  // Remove single # at start of line
+                    .replace(/`/g, '')      // Remove backticks
+                    .trim();
+
                 responses = [
-                    { sender: 'twist', text: "Verification needed on that element." },
-                    { sender: 'flicki', text: "Let's review the video." }
+                    { sender: 'twist', text: fallbackText }
                 ];
             }
         }
+
+        // Apply cleaning to all response texts before returning
+        responses = responses.map(response => {
+            if (response.text) {
+                response.text = response.text
+                    .replace(/\*\*/g, '')   // Remove **
+                    .replace(/###/g, '')    // Remove ###
+                    .replace(/##/g, '')     // Remove ##
+                    .replace(/^#\s/gm, '')  // Remove single # at start of line
+                    .replace(/`/g, '')      // Remove backticks
+                    .trim();
+            }
+            return response;
+        });
 
         return res.json({ ok: true, responses });
 
