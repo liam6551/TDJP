@@ -188,11 +188,9 @@ export default function TariffScreen() {
           setCurrentStep(STEP_HOME);
           return true;
         }
-        // If at Home, let default behavior happen (exit/nav back)
-        // Actually user wants "Back" button behavior. 
-        // If at Home, maybe just go to previous tab screen? 
-        // Returning false falls back to default.
-        return false;
+        // If at Home, Navigate to Main Home Screen
+        nav.navigate('Home');
+        return true;
       };
 
       const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
