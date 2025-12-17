@@ -119,30 +119,38 @@ export default function SavedTariffsScreen() {
     const filtered = tariffs.filter(t => t.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
     const renderItem = ({ item }: { item: SavedTariff }) => (
-        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <View style={styles.cardHeader}>
-                <Text style={[styles.cardTitle, { color: colors.text, textAlign: isRTL ? 'right' : 'left' }]}>
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border, flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+            {/* Info Section */}
+            <View style={{ flex: 1, alignItems: isRTL ? 'flex-end' : 'flex-start', justifyContent: 'center' }}>
+                <Text style={[styles.cardTitle, { color: colors.text }]}>
                     {item.name}
                 </Text>
-                <Text style={[styles.cardDate, { color: colors.muted, textAlign: isRTL ? 'right' : 'left' }]}>
+                <Text style={[styles.cardDate, { color: colors.muted }]}>
                     {new Date(item.updated_at).toLocaleDateString()}
                 </Text>
             </View>
 
+            {/* Actions Section */}
             <View style={[styles.actions, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
                 <Pressable style={styles.actionBtn} onPress={() => handleDelete(item.id)}>
                     <Ionicons name="trash-outline" size={20} color="#ef4444" />
-                    <Text style={{ color: '#ef4444', fontSize: 12 }}>{t(lang, 'tariff.saved.actions.delete')}</Text>
+                    <Text style={{ color: '#ef4444', fontSize: 12 }} numberOfLines={1}>
+                        {t(lang, 'tariff.saved.actions.delete')}
+                    </Text>
                 </Pressable>
 
                 <Pressable style={styles.actionBtn} onPress={() => handleEdit(item)}>
                     <Ionicons name="create-outline" size={20} color={colors.tint} />
-                    <Text style={{ color: colors.tint, fontSize: 12 }}>{t(lang, 'tariff.saved.actions.edit')}</Text>
+                    <Text style={{ color: colors.tint, fontSize: 12 }} numberOfLines={1}>
+                        {t(lang, 'tariff.saved.actions.edit')}
+                    </Text>
                 </Pressable>
 
                 <Pressable style={styles.actionBtn} onPress={() => handleExport(item)}>
                     <Ionicons name="share-outline" size={20} color={colors.text} />
-                    <Text style={{ color: colors.text, fontSize: 12 }}>{t(lang, 'tariff.saved.actions.export')}</Text>
+                    <Text style={{ color: colors.text, fontSize: 12 }} numberOfLines={1}>
+                        {t(lang, 'tariff.saved.actions.export')}
+                    </Text>
                 </Pressable>
             </View>
         </View>
@@ -152,7 +160,8 @@ export default function SavedTariffsScreen() {
         <View style={[styles.container, { backgroundColor: colors.bg }]}>
             <TopBar
                 title={t(lang, 'tabs.tariff')}
-            // Back behavior handled by Stack, but TopBar default is to show back button if canGoBack
+                showBack={true}
+                onBack={() => nav.goBack()}
             />
 
             {/* Sub-Header matching TariffScreen style */}
@@ -166,7 +175,7 @@ export default function SavedTariffsScreen() {
                 <Ionicons name="search" size={20} color={colors.muted} style={{ marginHorizontal: 8 }} />
                 <TextInput
                     style={[styles.searchInput, { color: colors.text, textAlign: isRTL ? 'right' : 'left' }]}
-                    placeholder={t(lang, 'tariff.saved.searchPlaceholder')}
+                    placeholder=""
                     placeholderTextColor={colors.muted}
                     value={searchQuery}
                     onChangeText={setSearchQuery}
