@@ -151,9 +151,16 @@ export default function SavedTariffsScreen() {
     return (
         <View style={[styles.container, { backgroundColor: colors.bg }]}>
             <TopBar
-                title={t(lang, 'tariff.saved.title')}
-            // back? yes
+                title={t(lang, 'tabs.tariff')}
+            // Back behavior handled by Stack, but TopBar default is to show back button if canGoBack
             />
+
+            {/* Sub-Header matching TariffScreen style */}
+            <View style={styles.subHeader}>
+                <Text style={[styles.subHeaderText, { color: colors.text }]}>
+                    {t(lang, 'tariff.saved.title')}
+                </Text>
+            </View>
 
             <View style={styles.searchContainer}>
                 <Ionicons name="search" size={20} color={colors.muted} style={{ marginHorizontal: 8 }} />
@@ -189,10 +196,20 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
     },
+    subHeader: {
+        alignItems: 'center',
+        marginVertical: 16, // Matches TariffScreen margins roughly
+    },
+    subHeaderText: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        opacity: 0.7,
+    },
     searchContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        margin: 16,
+        marginHorizontal: 16,
+        marginBottom: 16, // Space below search
         padding: 8,
         borderRadius: 8,
         backgroundColor: 'rgba(150,150,150, 0.1)',

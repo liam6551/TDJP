@@ -10,7 +10,7 @@ import { t } from '@/shared/i18n';
 import HomeScreen from '@/features/home';
 import CalculatorScreen from '@/features/calculator';
 import FlashcardsScreen from '@/features/flashcards';
-import TariffScreen from '@/features/tariff';
+import TariffStack from '@/app/navigation/TariffStack';
 import QuizStack from '@/app/navigation/QuizStack';
 
 const Tab = createBottomTabNavigator();
@@ -54,7 +54,7 @@ export default function Tabs() {
   const isRTL = lang === 'he';
 
   const screensRTL = [
-    { name: 'Tariff', component: TariffScreen, icon: 'document-text-outline' as const, label: t(lang, 'tabs.tariff') },
+    { name: 'Tariff', component: TariffStack, icon: 'document-text-outline' as const, label: t(lang, 'tabs.tariff') },
     { name: 'Calculator', component: CalculatorScreen, icon: 'calculator-outline' as const, label: t(lang, 'tabs.calc') },
     { name: 'Home', component: HomeScreen, icon: 'home-outline' as const, label: '' },
     { name: 'Quiz', component: QuizStack, icon: 'help-circle-outline' as const, label: t(lang, 'tabs.quiz') },
@@ -66,7 +66,7 @@ export default function Tabs() {
     { name: 'Quiz', component: QuizStack, icon: 'help-circle-outline' as const, label: t(lang, 'tabs.quiz') },
     { name: 'Home', component: HomeScreen, icon: 'home-outline' as const, label: '' },
     { name: 'Calculator', component: CalculatorScreen, icon: 'calculator-outline' as const, label: t(lang, 'tabs.calc') },
-    { name: 'Tariff', component: TariffScreen, icon: 'document-text-outline' as const, label: t(lang, 'tabs.tariff') }
+    { name: 'Tariff', component: TariffStack, icon: 'document-text-outline' as const, label: t(lang, 'tabs.tariff') }
   ];
 
   const SCREENS = isRTL ? screensRTL : screensLTR;
