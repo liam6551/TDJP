@@ -312,15 +312,6 @@ export default function UserHome() {
                             color={['#84fab0', '#8fd3f4'] as const}
                             onPress={() => setShowTheoreticalModal(true)}
                         />
-                        <QuickAction
-                            icon="refresh"
-                            label="Reset"
-                            color={['#ff9966', '#ff5e62'] as const}
-                            onPress={async () => {
-                                await import('@react-native-async-storage/async-storage').then(m => m.default.removeItem('@did_onboarding'));
-                                navigation.reset({ index: 0, routes: [{ name: 'Onboarding' }] });
-                            }}
-                        />
                     </WalkthroughableView>
                 </CopilotStep>
             </ScrollView>

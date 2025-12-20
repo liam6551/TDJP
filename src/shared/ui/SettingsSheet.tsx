@@ -161,6 +161,34 @@ export default function SettingsSheet({ visible, onClose }: Props) {
             </View>
           </View>
 
+          {/* Reset App Button */}
+          <Text style={[styles.section, { color: colors.text, textAlign: isRTL ? 'right' : 'left' }]}>
+            {isRTL ? 'איפוס אפליקציה' : 'Reset App'}
+          </Text>
+          <Pressable
+            onPress={async () => {
+              onClose(); // Close settings first
+              logout(); // Ensure we are logged out to see GuestHome
+              await AsyncStorage.removeItem('@did_onboarding');
+              navigation.reset({ index: 0, routes: [{ name: 'Onboarding' }] });
+            }}
+            style={({ pressed }) => [
+              styles.feedbackButton, // Reusing feedback button style for consistency
+              {
+                borderColor: '#ef4444',
+                backgroundColor: pressed ? 'rgba(239, 68, 68, 0.1)' : 'transparent',
+                marginBottom: 12
+              }
+            ]}
+          >
+            <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+              <Text style={[styles.feedbackText, { color: '#ef4444' }]}>
+                {isRTL ? 'התחל הדרכה מחדש' : 'Restart Tutorial / Reset'}
+              </Text>
+              <Ionicons name="refresh-circle-outline" size={20} color="#ef4444" />
+            </View>
+          </Pressable>
+
           {/* שפה */}
           <Text style={[styles.section, { color: colors.text, textAlign: isRTL ? 'right' : 'left' }]}>{isRTL ? 'שפה' : 'Language'}</Text>
           <View style={[styles.row, { flexDirection: isRTL ? 'row-reverse' : 'row', justifyContent: 'flex-start' }]}>

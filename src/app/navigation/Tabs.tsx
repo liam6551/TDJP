@@ -73,19 +73,7 @@ export default function Tabs() {
   const route = useRoute<any>();
   const { start, copilotEvents } = useCopilot();
 
-  React.useEffect(() => {
-    if (route.params?.startTutorial) {
-      setTimeout(async () => {
-        try {
-          // If user is guest (no user object), start with the guest prompt
-          const startStep = user ? 'home_quick_actions' : 'guest_login_prompt';
-          await start(startStep);
-        } catch (e) {
-          console.error('Copilot start error:', e);
-        }
-      }, 1000);
-    }
-  }, [route.params]);
+
 
   React.useEffect(() => {
     const listener = (step: any) => {

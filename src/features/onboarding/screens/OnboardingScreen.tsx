@@ -43,9 +43,12 @@ export default function OnboardingScreen() {
 
     const handleStart = async (withTutorial: boolean) => {
         await AsyncStorage.setItem('@did_onboarding', 'true');
+        if (withTutorial) {
+            await AsyncStorage.setItem('pending_guest_tutorial', 'true');
+        }
         navigation.reset({
             index: 0,
-            routes: [{ name: 'Tabs', params: { startTutorial: withTutorial } }],
+            routes: [{ name: 'Tabs' }],
         });
     };
 

@@ -46,7 +46,8 @@ export default function App() {
             <CopilotProvider
               tooltipComponent={TutorialTooltip}
               stepNumberComponent={() => null}
-              overlay="view"
+              overlay="svg"
+              backdropColor="rgba(0,0,0,0.8)"
               animated={true}
               arrowColor="transparent"
               labels={{ finish: "סיום", next: "הבא", previous: "הקודם", skip: "דלג" }}
